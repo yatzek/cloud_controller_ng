@@ -469,13 +469,29 @@ module VCAP::CloudController
       route_mappings = RouteMapping.select_all(RouteMapping.table_name).where(:"#{RouteMapping.table_name}__app_id" => self.id)
       route_app_port_map = {}
       route_mappings.each { |route_map| route_app_port_map[route_map.route_id] = route_map.app_port }
-      info = routes.map do |r|
-        info = { 'hostname' => r.uri }
-        info['route_service_url'] = r.route_binding.route_service_url if r.route_binding && r.route_binding.route_service_url
-        info['port'] = route_app_port_map[r.id] if route_app_port_map[r.id] != nil
-        info
+      http_info = Array.new
+      tcp_info = Array.new
+      routes.map do |r|
+        if r.domain.router_group_guid.nil?
+          info = { 'hostname' => r.uri }
+          info['route_service_url'] = r.route_binding.route_service_url if r.route_binding && r.route_binding.route_service_url
+          info['port'] = route_app_port_map[r.id] if route_app_port_map[r.id] != nil
+          http_info.push(info)
+        elsif !route_app_port_map[r.id].nil?
+          info = { 'router_group_guid' => r.domain.router_group_guid }
+          info['external_port'] = r.port
+          info['container_port'] = route_app_port_map[r.id]
+          tcp_info.push(info)
+        end
       end
-      { 'http_routes' => info }
+      route_info = {}
+      if !http_info.blank?
+        route_info['http_routes'] = http_info
+      end
+      if !tcp_info.blank?
+        route_info['tcp_routes'] = tcp_info
+      end
+      route_info
     end
 
     def mark_as_staged
