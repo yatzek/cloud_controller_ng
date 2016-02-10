@@ -380,3 +380,6 @@ security_event_logging:
 
 bits_service:
   enabled: <%= p("cc.bits_service.enabled") %>
+  <% if p("cc.bits_service.enabled") %>
+  endpoint: <%= p("cc.bits_service.endpoint") %>
+  <% end %>
