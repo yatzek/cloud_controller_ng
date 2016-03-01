@@ -557,7 +557,7 @@ module VCAP::CloudController
 
         context 'app does not have a droplet' do
           let(:guid) { nil }
-          
+
           it 'returns an error' do
             get "/staging/droplets/#{app_obj.guid}/download"
             expect(last_response.status).to eq(400)
