@@ -9,7 +9,14 @@ module VCAP::CloudController
 
     get "#{path_guid}/download", :download
     def download(guid)
-      find_guid_and_validate_access(:read, guid)
+      app = find_guid_and_validate_access(:read, guid)
+
+      if use_bits_service
+        raise Errors::ApiError.new_from_details('AppPackageNotFound', guid) unless app.package_hash
+        url = bits_client.download_url(:packages, app.package_hash)
+        return [HTTP::FOUND, { 'Location' => url }, nil]
+      end
+
       blob_dispatcher.send_or_redirect(guid: guid)
     rescue CloudController::Errors::BlobNotFound
       Loggregator.emit_error(guid, "Could not find package for #{guid}")
@@ -25,6 +32,14 @@ module VCAP::CloudController
 
     def blob_dispatcher
       BlobDispatcher.new(blobstore: @blobstore, controller: self)
+    end
+
+    def bits_client
+      @bits_client ||= CloudController::DependencyLocator.instance.bits_client
+    end
+
+    def use_bits_service
+      !!bits_client
     end
   end
 end
