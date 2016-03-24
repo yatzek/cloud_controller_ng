@@ -8,8 +8,8 @@ module VCAP::CloudController
 
     validates_with NoAdditionalParamsValidator
 
-    validates_numericality_of :page, greater_than: 0, allow_nil: true, only_integer: true
-    validates_numericality_of :per_page, greater_than: 0, allow_nil: true, only_integer: true
+    validates :page, numericality: { greater_than: 0 }, allow_nil: true, integer: true
+    validates :per_page, numericality: { greater_than: 0 }, allow_nil: true, integer: true
 
     def initialize(params={})
       super(params.symbolize_keys)

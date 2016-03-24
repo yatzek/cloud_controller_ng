@@ -1,9 +1,11 @@
 require 'active_model'
 require 'mappers/order_by_mapper'
+require 'messages/validators'
 
 module VCAP::CloudController
   class PaginationOptions
     include ActiveModel::Model
+    include Validators
 
     PAGE_DEFAULT      = 1
     PER_PAGE_DEFAULT  = 50
@@ -14,12 +16,13 @@ module VCAP::CloudController
 
     attr_accessor :page, :per_page, :order_by, :order_direction
 
-    validates :page, numericality: { only_integer: true, greater_than: 0 }
+    validates :page, numericality: { greater_than: 0 }, integer: true
     validates :per_page, numericality: {
-        only_integer:          true,
         greater_than:          0,
         less_than_or_equal_to: PER_PAGE_MAX,
-        message:               "must be between 1 and #{PER_PAGE_MAX}" }
+        message:               "must be between 1 and #{PER_PAGE_MAX}"
+      },
+      integer: true
     validates :order_by, inclusion: {
         in:      %w(created_at updated_at id),
         message: "can only be 'created_at' or 'updated_at'"

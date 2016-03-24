@@ -8,9 +8,9 @@ module VCAP::CloudController
 
     validates_with NoAdditionalKeysValidator
 
-    validates :instances, numericality: { only_integer: true }, allow_nil: true
-    validates :memory_in_mb, numericality: { only_integer: true, greater_than: 0 }, allow_nil: true
-    validates :disk_in_mb, numericality: { only_integer: true, greater_than: 0 }, allow_nil: true
+    validates :instances, allow_nil: true, integer: true
+    validates :memory_in_mb, numericality: { greater_than: 0 }, allow_nil: true, integer: true
+    validates :disk_in_mb, numericality: { greater_than: 0 }, allow_nil: true, integer: true
 
     def self.create_from_http_request(body)
       ProcessScaleMessage.new(body.symbolize_keys)

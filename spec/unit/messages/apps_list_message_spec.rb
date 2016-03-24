@@ -117,7 +117,7 @@ module VCAP::CloudController
           it 'validates it is a number' do
             message = AppsListMessage.new page: 'not number'
             expect(message).to be_invalid
-            expect(message.errors[:page].length).to eq 1
+            expect(message.errors[:page]).to include('is not a number')
           end
 
           it 'is invalid if page is 0' do
@@ -143,7 +143,7 @@ module VCAP::CloudController
           it 'validates it is a number' do
             message = AppsListMessage.new per_page: 'not number'
             expect(message).to be_invalid
-            expect(message.errors[:per_page].length).to eq 1
+            expect(message.errors[:per_page]).to include('is not a number')
           end
 
           it 'is invalid if per_page is 0' do

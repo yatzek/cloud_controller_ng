@@ -37,7 +37,7 @@ module VCAP::CloudController
         end
       end
 
-      context 'when memory_limit is not an number' do
+      context 'when memory_limit is not an integer' do
         let(:params) do
           {
             memory_limit: 'silly string thing',
@@ -49,7 +49,7 @@ module VCAP::CloudController
           message = DropletCreateMessage.new(params)
 
           expect(message).not_to be_valid
-          expect(message.errors[:memory_limit]).to include('is not a number')
+          expect(message.errors[:memory_limit]).to include('must be an integer')
         end
       end
 
@@ -81,7 +81,7 @@ module VCAP::CloudController
           message = DropletCreateMessage.new(params)
 
           expect(message).not_to be_valid
-          expect(message.errors[:disk_limit]).to include('is not a number')
+          expect(message.errors[:disk_limit]).to include('must be an integer')
         end
       end
 

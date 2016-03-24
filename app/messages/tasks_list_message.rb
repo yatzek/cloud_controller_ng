@@ -14,8 +14,8 @@ module VCAP::CloudController
     validates :app_guids, array: true, allow_nil: true
     validates :organization_guids, array: true, allow_nil: true
     validates :space_guids, array: true, allow_nil: true
-    validates_numericality_of :page, greater_than: 0, allow_nil: true, only_integer: true
-    validates_numericality_of :per_page, greater_than: 0, allow_nil: true, only_integer: true
+    validates :page, numericality: { greater_than: 0 }, allow_nil: true, integer: true
+    validates :per_page, numericality: { greater_than: 0 }, allow_nil: true, integer: true
 
     validate :app_nested_request, if: -> { app_guid.present? }
 

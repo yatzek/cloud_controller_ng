@@ -51,10 +51,10 @@ module VCAP::CloudController
 
       describe 'validations' do
         describe 'page' do
-          it 'validates it is a number' do
+          it 'validates it is an integer' do
             message = PackagesListMessage.new page: 'not number'
             expect(message).to be_invalid
-            expect(message.errors[:page].length).to eq 1
+            expect(message.errors[:page]).to include('must be an integer')
           end
 
           it 'is invalid if page is 0' do
@@ -77,10 +77,10 @@ module VCAP::CloudController
         end
 
         describe 'per_page' do
-          it 'validates it is a number' do
+          it 'validates it is an integer' do
             message = PackagesListMessage.new per_page: 'not number'
             expect(message).to be_invalid
-            expect(message.errors[:per_page].length).to eq 1
+            expect(message.errors[:per_page]).to include('must be an integer')
           end
 
           it 'is invalid if per_page is 0' do

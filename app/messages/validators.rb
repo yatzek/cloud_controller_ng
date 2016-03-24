@@ -13,6 +13,12 @@ module VCAP::CloudController::Validators
     end
   end
 
+  class IntegerValidator < ActiveModel::EachValidator
+    def validate_each(record, attribute, value)
+      record.errors.add attribute, 'must be an integer' unless value.is_a?(Integer)
+    end
+  end
+
   class HashValidator < ActiveModel::EachValidator
     def validate_each(record, attribute, value)
       record.errors.add attribute, 'must be a hash' unless value.is_a?(Hash)

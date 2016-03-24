@@ -12,8 +12,8 @@ module VCAP::CloudController
     validates :guids, array: true, allow_nil: true
     validates :organization_guids, array: true, allow_nil: true
     validates :space_guids, array: true, allow_nil: true
-    validates_numericality_of :page, greater_than: 0, allow_nil: true, only_integer: true
-    validates_numericality_of :per_page, greater_than: 0, allow_nil: true, only_integer: true
+    validates :page, integer: true, allow_nil: true, numericality: { greater_than: 0 }
+    validates :per_page, integer: true, allow_nil: true, numericality: { greater_than: 0 }
     validates :order_by, string: true, allow_nil: true
 
     def initialize(params={})

@@ -15,8 +15,8 @@ module VCAP::CloudController
     validates_with NoAdditionalKeysValidator
     validates_with LifecycleValidator, if: lifecycle_requested?
 
-    validates :memory_limit, numericality: { only_integer: true }, allow_nil: true
-    validates :disk_limit, numericality: { only_integer: true }, allow_nil: true
+    validates :memory_limit, integer: true, allow_nil: true
+    validates :disk_limit, integer: true, allow_nil: true
     validates :environment_variables, environment_variables: true, allow_nil: true
 
     validates :lifecycle_type,

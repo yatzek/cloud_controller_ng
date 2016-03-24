@@ -116,25 +116,25 @@ module VCAP::CloudController
 
     describe 'validations' do
       describe 'page' do
-        context 'when page is not an number' do
+        context 'when page is a string' do
           let(:params) { { page: 'silly string thing' } }
 
           it 'is not valid' do
             message = PaginationOptions.new(params)
 
             expect(message).not_to be_valid
-            expect(message.errors.full_messages[0]).to include('is not a number')
+            expect(message.errors[:page]).to include('must be an integer')
           end
         end
 
-        context 'when page is not an integer' do
+        context 'when page is a float' do
           let(:params) { { page: 3.5 } }
 
           it 'is not valid' do
             message = PaginationOptions.new(params)
 
             expect(message).not_to be_valid
-            expect(message.errors.full_messages[0]).to include('must be an integer')
+            expect(message.errors[:page]).to include('must be an integer')
           end
         end
 
@@ -145,31 +145,31 @@ module VCAP::CloudController
             message = PaginationOptions.new(params)
 
             expect(message).not_to be_valid
-            expect(message.errors.full_messages[0]).to include('must be greater than 0')
+            expect(message.errors[:page]).to include('must be greater than 0')
           end
         end
       end
 
       describe 'per_page' do
-        context 'when per_page is not an number' do
+        context 'when per_page is a string' do
           let(:params) { { per_page: 'silly string thing' } }
 
           it 'is not valid' do
             message = PaginationOptions.new(params)
 
             expect(message).not_to be_valid
-            expect(message.errors.full_messages[0]).to include('must be between 1 and 5000')
+            expect(message.errors[:per_page]).to include('must be an integer')
           end
         end
 
-        context 'when per_page is not an integer' do
+        context 'when per_page is a float' do
           let(:params) { { per_page: 3.5 } }
 
           it 'is not valid' do
             message = PaginationOptions.new(params)
 
             expect(message).not_to be_valid
-            expect(message.errors.full_messages[0]).to include('must be between 1 and 5000')
+            expect(message.errors[:per_page]).to include('must be an integer')
           end
         end
 
@@ -180,7 +180,7 @@ module VCAP::CloudController
             message = PaginationOptions.new(params)
 
             expect(message).not_to be_valid
-            expect(message.errors.full_messages[0]).to include('must be between 1 and 5000')
+            expect(message.errors[:per_page]).to include('must be between 1 and 5000')
           end
         end
 
@@ -191,7 +191,7 @@ module VCAP::CloudController
             message = PaginationOptions.new(params)
 
             expect(message).not_to be_valid
-            expect(message.errors.full_messages[0]).to include('must be between 1 and 5000')
+            expect(message.errors[:per_page]).to include('must be between 1 and 5000')
           end
         end
       end
@@ -212,7 +212,7 @@ module VCAP::CloudController
           expect(message2).to be_valid
           expect(message3).to be_valid
           expect(invalid_message).to_not be_valid
-          expect(invalid_message.errors.full_messages[0]).to include("can only be 'created_at' or 'updated_at'")
+          expect(invalid_message.errors[:order_by]).to include("can only be 'created_at' or 'updated_at'")
         end
       end
 
@@ -229,7 +229,7 @@ module VCAP::CloudController
           expect(message1).to be_valid
           expect(message2).to be_valid
           expect(message3).to_not be_valid
-          expect(message3.errors.full_messages[0]).to include("can only be 'asc' or 'desc'")
+          expect(message3.errors[:order_direction]).to include("can only be 'asc' or 'desc'")
         end
       end
     end

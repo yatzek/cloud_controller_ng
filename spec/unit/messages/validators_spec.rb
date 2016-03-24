@@ -50,6 +50,31 @@ module VCAP::CloudController::Validators
       end
     end
 
+    describe 'IntegerValidator' do
+      let(:integer_class) do
+        Class.new(fake_class) do
+          validates :field, integer: true
+        end
+      end
+
+      it 'creates an error if the field is not an integer' do
+        fake_class = integer_class.new field: '25'
+        expect(fake_class.valid?).to be_falsey
+        expect(fake_class.errors[:field]).to include 'must be an integer'
+      end
+
+      it 'creates an error if the field is a float' do
+        fake_class = integer_class.new field: 2.5
+        expect(fake_class.valid?).to be_falsey
+        expect(fake_class.errors[:field]).to include 'must be an integer'
+      end
+
+      it 'does not create an error if the field is an integer' do
+        fake_class = integer_class.new field: 25
+        expect(fake_class.valid?).to be_truthy
+      end
+    end
+
     describe 'HashValidator' do
       let(:hash_class) do
         Class.new(fake_class) do

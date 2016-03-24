@@ -8,8 +8,8 @@ module VCAP::CloudController
     attr_accessor(*ALLOWED_KEYS)
 
     validates_with NoAdditionalParamsValidator
-    validates_numericality_of :page, greater_than: 0, allow_nil: true, only_integer: true
-    validates_numericality_of :per_page, greater_than: 0, allow_nil: true, only_integer: true
+    validates :page, numericality: { greater_than: 0 }, allow_nil: true, integer: true
+    validates :per_page, numericality: { greater_than: 0 }, allow_nil: true, integer: true
     validates_format_of :order_by, with: /[+-]?(#{VALID_ORDER_BY_KEYS})/, allow_nil: true
 
     def self.from_params(params)
