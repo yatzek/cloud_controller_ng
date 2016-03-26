@@ -9,14 +9,15 @@ module CloudController
       let(:options) do
         {
           private_endpoint: 'http://localhost',
-          public_endpoint:  'http://localhost.public'
+          public_endpoint: 'http://localhost.public',
+          ca_cert_path: File.join(Paths::FIXTURES, 'certs/webdav_ca.crt')
         }
       end
       let(:directory_key) { 'droplets' }
       let(:root_dir) { nil }
 
       describe 'conforms to blobstore client interface' do
-        let(:ssl_config) { instance_double(HTTPClient::SSLConfig, :verify_mode= => nil, set_default_paths: nil) }
+        let(:ssl_config) { instance_double(HTTPClient::SSLConfig, :verify_mode= => nil, set_default_paths: nil, add_trust_ca: nil) }
         let(:httpclient) { instance_double(HTTPClient, ssl_config: ssl_config) }
         let(:deletable_blob) { instance_double(DavBlob, key: nil) }
 
@@ -35,6 +36,7 @@ module CloudController
       describe '#configure_ssl' do
         let(:httpclient) { HTTPClient.new }
         let(:skip_cert_verify) { true }
+        let(:ca_cert_path) { File.join(Paths::FIXTURES, 'certs/webdav_ca.crt') }
         let(:config) { { skip_cert_verify: skip_cert_verify } }
 
         before do
@@ -45,16 +47,50 @@ module CloudController
           httpclient.ssl_config.clear_cert_store
           expect(httpclient.ssl_config.cert_store_items).not_to include(:default)
 
-          client.configure_ssl(httpclient)
+          client.configure_ssl(httpclient, ca_cert_path)
 
           expect(httpclient.ssl_config.cert_store_items).to include(:default)
+        end
+
+        context 'when a ca cert is provided' do
+          it 'loads it into the cert store along with the default store' do
+            httpclient.ssl_config.clear_cert_store
+            expect(httpclient.ssl_config.cert_store_items).not_to include(:default)
+
+            client.configure_ssl(httpclient, ca_cert_path)
+
+            expect(httpclient.ssl_config.cert_store_items).to include(:default)
+            expect(httpclient.ssl_config.cert_store_items).to include(ca_cert_path)
+          end
+
+          context 'and the file does not exist' do
+            it 'does not load the ca cert' do
+              httpclient.ssl_config.clear_cert_store
+              expect(httpclient.ssl_config.cert_store_items).not_to include(:default)
+
+              client.configure_ssl(httpclient, '/sup/dawg')
+
+              expect(httpclient.ssl_config.cert_store_items).to include(:default)
+            end
+          end
+
+          context 'and the file is empty' do
+            it 'does not load the ca cert' do
+              httpclient.ssl_config.clear_cert_store
+              expect(httpclient.ssl_config.cert_store_items).not_to include(:default)
+
+              client.configure_ssl(httpclient, File.join(Paths::FIXTURES, 'certs/webdav_empty_ca.crt'))
+
+              expect(httpclient.ssl_config.cert_store_items).to include(:default)
+            end
+          end
         end
 
         context 'when skip_cert_verify is true' do
           let(:skip_cert_verify) { true }
 
           it 'uses the VERIFY_NONE mode of ssl validation' do
-            client.configure_ssl(httpclient)
+            client.configure_ssl(httpclient, ca_cert_path)
 
             expect(httpclient.ssl_config.verify_mode).to eq(OpenSSL::SSL::VERIFY_NONE)
           end
@@ -64,7 +100,7 @@ module CloudController
           let(:skip_cert_verify) { false }
 
           it 'uses the VERIFY_PEER mode of ssl validation' do
-            client.configure_ssl(httpclient)
+            client.configure_ssl(httpclient, ca_cert_path)
 
             expect(httpclient.ssl_config.verify_mode).to eq(OpenSSL::SSL::VERIFY_PEER)
           end
@@ -72,7 +108,7 @@ module CloudController
       end
 
       describe 'basic auth' do
-        let(:ssl_config) { instance_double(HTTPClient::SSLConfig, :verify_mode= => nil, set_default_paths: nil) }
+        let(:ssl_config) { instance_double(HTTPClient::SSLConfig, :verify_mode= => nil, set_default_paths: nil, add_trust_ca: nil) }
         let(:httpclient) { instance_double(HTTPClient, ssl_config: ssl_config) }
 
         before do
@@ -91,7 +127,7 @@ module CloudController
       end
 
       describe '#exists?' do
-        let(:ssl_config) { instance_double(HTTPClient::SSLConfig, :verify_mode= => nil, set_default_paths: nil) }
+        let(:ssl_config) { instance_double(HTTPClient::SSLConfig, :verify_mode= => nil, set_default_paths: nil, add_trust_ca: nil) }
         let(:httpclient) { instance_double(HTTPClient, ssl_config: ssl_config) }
 
         before do
@@ -124,7 +160,7 @@ module CloudController
       end
 
       describe '#download_from_blobstore' do
-        let(:ssl_config) { instance_double(HTTPClient::SSLConfig, :verify_mode= => nil, set_default_paths: nil) }
+        let(:ssl_config) { instance_double(HTTPClient::SSLConfig, :verify_mode= => nil, set_default_paths: nil, add_trust_ca: nil) }
         let(:httpclient) { instance_double(HTTPClient, ssl_config: ssl_config) }
         let(:destination_path) { Dir::Tmpname.make_tmpname(Dir.mktmpdir, nil) }
 
@@ -188,7 +224,7 @@ module CloudController
       end
 
       describe '#cp_to_blobstore' do
-        let(:ssl_config) { instance_double(HTTPClient::SSLConfig, :verify_mode= => nil, set_default_paths: nil) }
+        let(:ssl_config) { instance_double(HTTPClient::SSLConfig, :verify_mode= => nil, set_default_paths: nil, add_trust_ca: nil) }
         let(:httpclient) { instance_double(HTTPClient, ssl_config: ssl_config) }
         let!(:tmpfile) do
           Tempfile.open('') do |tmpfile|
@@ -312,7 +348,7 @@ module CloudController
       end
 
       describe '#cp_r_to_blobstore' do
-        let(:ssl_config) { instance_double(HTTPClient::SSLConfig, :verify_mode= => nil, set_default_paths: nil) }
+        let(:ssl_config) { instance_double(HTTPClient::SSLConfig, :verify_mode= => nil, set_default_paths: nil, add_trust_ca: nil) }
         let(:httpclient) { instance_double(HTTPClient, ssl_config: ssl_config) }
         let(:source_dir) { Dir.mktmpdir }
         let!(:tmpfile1) do
@@ -427,7 +463,7 @@ module CloudController
       end
 
       describe '#cp_file_between_keys' do
-        let(:ssl_config) { instance_double(HTTPClient::SSLConfig, :verify_mode= => nil, set_default_paths: nil) }
+        let(:ssl_config) { instance_double(HTTPClient::SSLConfig, :verify_mode= => nil, set_default_paths: nil, add_trust_ca: nil) }
         let(:httpclient) { instance_double(HTTPClient, ssl_config: ssl_config) }
 
         before do
@@ -488,7 +524,7 @@ module CloudController
       end
 
       describe '#delete' do
-        let(:ssl_config) { instance_double(HTTPClient::SSLConfig, :verify_mode= => nil, set_default_paths: nil) }
+        let(:ssl_config) { instance_double(HTTPClient::SSLConfig, :verify_mode= => nil, set_default_paths: nil, add_trust_ca: nil) }
         let(:httpclient) { instance_double(HTTPClient, ssl_config: ssl_config) }
 
         before do
@@ -529,7 +565,7 @@ module CloudController
       end
 
       describe '#delete_all' do
-        let(:ssl_config) { instance_double(HTTPClient::SSLConfig, :verify_mode= => nil, set_default_paths: nil) }
+        let(:ssl_config) { instance_double(HTTPClient::SSLConfig, :verify_mode= => nil, set_default_paths: nil, add_trust_ca: nil) }
         let(:httpclient) { instance_double(HTTPClient, ssl_config: ssl_config) }
         let(:root_dir) { 'buildpack_cache' }
 
@@ -561,7 +597,7 @@ module CloudController
       end
 
       describe '#delete_all_in_path' do
-        let(:ssl_config) { instance_double(HTTPClient::SSLConfig, :verify_mode= => nil, set_default_paths: nil) }
+        let(:ssl_config) { instance_double(HTTPClient::SSLConfig, :verify_mode= => nil, set_default_paths: nil, add_trust_ca: nil) }
         let(:httpclient) { instance_double(HTTPClient, ssl_config: ssl_config) }
         let(:root_dir) { 'buildpack_cache' }
 
@@ -593,7 +629,7 @@ module CloudController
       end
 
       describe '#blob' do
-        let(:ssl_config) { instance_double(HTTPClient::SSLConfig, :verify_mode= => nil, set_default_paths: nil) }
+        let(:ssl_config) { instance_double(HTTPClient::SSLConfig, :verify_mode= => nil, set_default_paths: nil, add_trust_ca: nil) }
         let(:httpclient) { instance_double(HTTPClient, ssl_config: ssl_config) }
 
         before do
@@ -627,7 +663,7 @@ module CloudController
       end
 
       describe '#delete_blob' do
-        let(:ssl_config) { instance_double(HTTPClient::SSLConfig, :verify_mode= => nil, set_default_paths: nil) }
+        let(:ssl_config) { instance_double(HTTPClient::SSLConfig, :verify_mode= => nil, set_default_paths: nil, add_trust_ca: nil) }
         let(:httpclient) { instance_double(HTTPClient, ssl_config: ssl_config) }
 
         before do
@@ -655,7 +691,7 @@ module CloudController
       end
 
       context 'when root_dir is configured' do
-        let(:ssl_config) { instance_double(HTTPClient::SSLConfig, :verify_mode= => nil, set_default_paths: nil) }
+        let(:ssl_config) { instance_double(HTTPClient::SSLConfig, :verify_mode= => nil, set_default_paths: nil, add_trust_ca: nil) }
         let(:httpclient) { instance_double(HTTPClient, ssl_config: ssl_config) }
         let(:root_dir) { 'root_dir' }
 
