@@ -256,6 +256,7 @@ module VCAP::CloudController
           context 'when no custom ports are specified' do
             it 'sets the ports to 8080' do
               post '/v2/apps', MultiJson.dump(initial_hash.merge(diego: true)), json_headers(admin_headers)
+
               expect(last_response.status).to eq(201)
               expect(decoded_response['entity']['ports']).to match([8080])
               expect(decoded_response['entity']['diego']).to be true
@@ -451,7 +452,6 @@ module VCAP::CloudController
             expect(last_response.status).to eq(201)
             expect(decoded_response['entity']['ports']).to match([8080])
             expect(decoded_response['entity']['diego']).to be true
-            expect(route_mapping.reload.app_port).to eq(8080)
           end
         end
 
