@@ -83,6 +83,10 @@ module VCAP::CloudController
       lifecycle_type == DockerLifecycleDataModel::LIFECYCLE_TYPE
     end
 
+    def blobstore_key
+      File.join(guid, droplet_hash) if droplet_hash
+    end
+
     def staged?
       self.state == STAGED_STATE
     end
@@ -102,6 +106,10 @@ module VCAP::CloudController
     end
 
     private
+
+    def use_bits_service?
+      CloudController::DependencyLocator.instance.use_bits_service
+    end
 
     def entering_staged?
       column_changed?(:state) && self.state == STAGED_STATE
