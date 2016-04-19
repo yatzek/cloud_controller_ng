@@ -1,7 +1,7 @@
 module VCAP::CloudController
   class BuildpackBitsController < RestController::ModelController
     def self.dependencies
-      [:buildpack_blobstore, :upload_handler, :blob_sender]
+      [:buildpack_blobstore, :upload_handler]
     end
 
     path_base 'buildpacks'
@@ -43,10 +43,9 @@ module VCAP::CloudController
     def download(guid)
       obj = Buildpack.find(guid: guid)
 
-      blob = buildpack_blobstore.blob(obj.key) if obj && obj.key
-      raise Errors::ApiError.new_from_details('NotFound', guid) unless blob
-
-      blob_dispatcher.send_or_redirect(local: @buildpack_blobstore.local?, blob: blob)
+      blob_dispatcher.send_or_redirect(guid: obj.key)
+    rescue VCAP::Errors::BlobNotFound
+      raise Errors::ApiError.new_from_details('NotFound', guid)
     end
 
     private
@@ -54,14 +53,13 @@ module VCAP::CloudController
     attr_reader :buildpack_blobstore, :upload_handler
 
     def blob_dispatcher
-      BlobDispatcher.new(blob_sender: @blob_sender, controller: self)
+      BlobDispatcher.new(blobstore: buildpack_blobstore, controller: self)
     end
 
     def inject_dependencies(dependencies)
       super
       @buildpack_blobstore = dependencies[:buildpack_blobstore]
       @upload_handler = dependencies[:upload_handler]
-      @blob_sender = dependencies[:blob_sender]
     end
   end
 end

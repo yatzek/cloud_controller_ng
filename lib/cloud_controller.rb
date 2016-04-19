@@ -9,8 +9,9 @@ require 'allowy'
 require 'eventmachine/schedule_sync'
 
 require 'vcap/common'
-require 'vcap/errors/details'
 require 'vcap/errors/api_error'
+require 'vcap/errors/blob_not_found'
+require 'vcap/errors/details'
 require 'uaa/token_coder'
 
 require 'sinatra/vcap'

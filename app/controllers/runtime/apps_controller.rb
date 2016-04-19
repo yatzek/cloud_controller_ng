@@ -135,16 +135,15 @@ module VCAP::CloudController
     def download_droplet(guid)
       app = find_guid_and_validate_access(:read, guid)
 
-      droplet = app.current_droplet
-      raise VCAP::Errors::ApiError.new_from_details('ResourceNotFound', "Droplet not found for app with guid #{app.guid}") unless droplet && droplet.blob
-
-      blob_dispatcher.send_or_redirect(local: @blobstore.local?, blob: droplet.blob)
+      blob_dispatcher.send_or_redirect_blob(app.current_droplet.try(:blob))
+    rescue VCAP::Errors::BlobNotFound
+      raise VCAP::Errors::ApiError.new_from_details('ResourceNotFound', "Droplet not found for app with guid #{app.guid}")
     end
 
     private
 
     def blob_dispatcher
-      BlobDispatcher.new(blob_sender: @blob_sender, controller: self)
+      BlobDispatcher.new(blobstore: @blobstore, controller: self)
     end
 
     def before_create

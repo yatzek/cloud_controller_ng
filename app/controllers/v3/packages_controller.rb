@@ -61,8 +61,7 @@ class PackagesController < ApplicationController
     unprocessable!('Package type must be bits.') unless package.type == 'bits'
     unprocessable!('Package has no bits to download.') unless package.state == 'READY'
 
-    blob = blobstore.blob(package.guid)
-    BlobDispatcher.new(blob_sender: blob_sender, controller: self).send_or_redirect(local: blobstore.local?, blob: blob)
+    BlobDispatcher.new(blobstore: package_blobstore, controller: self).send_or_redirect(guid: package.guid)
   end
 
   def show
@@ -141,11 +140,7 @@ class PackagesController < ApplicationController
     @package_presenter ||= PackagePresenter.new
   end
 
-  def blob_sender
-    CloudController::DependencyLocator.instance.blob_sender
-  end
-
-  def blobstore
+  def package_blobstore
     CloudController::DependencyLocator.instance.package_blobstore
   end
 
