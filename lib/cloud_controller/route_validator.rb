@@ -16,7 +16,7 @@ module VCAP::CloudController
         validate_host_not_included
         validate_path_not_included
         validate_port_included
-        validate_port_not_taken
+        validate_port_not_taken if route.new? || route.modified?(:port)
         validate_port_number
       else
         validate_port_not_included
@@ -27,12 +27,12 @@ module VCAP::CloudController
 
     def routing_api_client
       routing_api_client = CloudController::DependencyLocator.instance.routing_api_client
-      raise RoutingApi::Client::RoutingApiDisabled unless routing_api_client
+      raise RoutingApi::RoutingApiDisabled unless routing_api_client.enabled?
       routing_api_client
     end
 
     def is_tcp_router_group?
-      route.domain.router_group_guid && !router_group.nil? && router_group.type == 'tcp'
+      !route.domain.nil? && route.domain.shared? && !route.domain.router_group_guid.nil? && !router_group.nil? && router_group.type == 'tcp'
     end
 
     def router_group
@@ -42,28 +42,34 @@ module VCAP::CloudController
     def validate_host_not_included
       unless route.host.blank?
         route.errors.add(:host, :host_and_path_domain_tcp)
+        # raise RouteInvalid.new('Host and path are not supported, as domain belongs to a TCP router group.')
       end
     end
 
     def validate_path_not_included
       unless route.path.blank?
         route.errors.add(:host, :host_and_path_domain_tcp)
+        # raise RouteInvalid.new('Host and path are not supported, as domain belongs to a TCP router group.')
       end
     end
 
     def validate_port_included
       if route.port.nil?
         route.errors.add(:port, :port_required)
+        # raise RouteInvalid.new('For TCP routes you must specify a port or request a random one.')
       end
     end
 
     def validate_port_not_included
       if route.port.present?
         route.errors.add(:port, :port_unsupported)
+        # raise RouteInvalid.new('Port is supported for domains of TCP router groups only.')
       end
     end
 
     def validate_port_number
+      # err_msg = 'The requested port is not available for reservation. Try a different port or request a random one be generated for you.'
+      # raise RouteInvalid.new(err_msg)
       unless router_group.reservable_ports.include? route.port
         route.errors.add(:port, :port_unavailable)
       end
@@ -71,6 +77,7 @@ module VCAP::CloudController
 
     def validate_port_not_taken
       if port_taken?(route.port, route.domain.router_group_guid)
+        # raise RoutePortTaken.new(port_taken_error_message(port))
         route.errors.add(:port, :port_taken)
       end
     end

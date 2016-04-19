@@ -2,9 +2,9 @@ require 'spec_helper'
 
 module VCAP::CloudController
   describe RouteValidator do
-    let(:route) { Route.new port: port, host: host, path: path, domain: domain }
+    let(:route) { Route.new port: port, host: host, path: path, domain: domain, space: Space.make }
     let(:validator) { RouteValidator.new(route) }
-    let(:routing_api_client) { double('routing_api', router_group: router_group) }
+    let(:routing_api_client) { double('routing_api', router_group: router_group, enabled?: true) }
     let(:router_group) { double(:router_group, type: router_group_type, guid: router_group_guid, reservable_ports: [3, 4, 5, 8080]) }
     let(:router_group_type) { 'tcp' }
     let(:router_group_guid) { 'router-group-guid' }
@@ -93,26 +93,29 @@ module VCAP::CloudController
         end
 
         context 'when port is already taken in the same router group' do
+          let(:another_route) { Route.new(domain: domain, port: port, space: Space.make) }
+
           before do
-            domain_in_same_router_group = SharedDomain.make(router_group_guid: router_group_guid)
-            Route.make(domain: domain_in_same_router_group, port: port)
+            route.save
           end
 
           it 'adds a route_port_taken error to the route' do
-            validator.validate
-            expect(route.errors.on(:port)).to include(:port_taken)
+            RouteValidator.new(another_route).validate
+            expect(another_route.errors.on(:port)).to include(:port_taken)
           end
         end
 
         context 'when port is already taken in a different router group' do
+          let(:domain_in_different_router_group) {SharedDomain.make(router_group_guid: 'different-router-group')}
+          let(:another_route) {Route.new(domain: domain_in_different_router_group, port: port, space: Space.make)}
+
           before do
-            domain_in_different_router_group = SharedDomain.make(router_group_guid: 'different-router-group')
-            Route.make(domain: domain_in_different_router_group, port: port)
+            route.save
           end
 
           it 'does not add an error to the route' do
-            validator.validate
-            expect(route.errors).to be_empty
+            RouteValidator.new(another_route).validate
+            expect(another_route.errors).to be_empty
           end
         end
       end
