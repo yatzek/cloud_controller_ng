@@ -1,5 +1,7 @@
 require 'spec_helper'
 require_relative '../client_shared'
+require 'webdav_client'
+require 'tempfile'
 
 module CloudController
   module Blobstore
@@ -7,7 +9,7 @@ module CloudController
       subject(:client) do
         DavClient.new(
           directory_key: directory_key,
-          httpclient:    httpclient,
+          webdav_client:    webdav_client,
           signer:        signer,
           endpoint:      'http://localhost',
           user:          user,
@@ -16,7 +18,7 @@ module CloudController
           min_size:      min_size,
           max_size:      max_size)
       end
-      let(:httpclient) { instance_double(HTTPClient) }
+      let(:webdav_client) { WebDAVClient::Mock.new }
       let(:response) { instance_double(HTTP::Message) }
       let(:signer) { instance_double(NginxSecureLinkSigner) }
       let(:directory_key) { 'droplets' }
@@ -56,27 +58,29 @@ module CloudController
 
       describe '#exists?' do
         it 'should return true for an object that already exists' do
-          allow(response).to receive_messages(status: 200)
-          allow(httpclient).to receive_messages(head: response)
+          # allow(response).to receive_messages(status: 200)
+          # allow(httpclient).to receive_messages(head: response)
+          tempfile = Tempfile.new('coolfile')
+          client.cp_to_blobstore(tempfile.path, 'foobar')
 
           expect(client.exists?('foobar')).to be(true)
-          expect(httpclient).to have_received(:head).with('http://localhost/admin/droplets/fo/ob/foobar', header: {})
+          # expect(httpclient).to have_received(:head).with('http://localhost/admin/droplets/fo/ob/foobar', header: {})
         end
 
         it 'should return false for an object that does not exist' do
-          allow(response).to receive_messages(status: 404)
-          allow(httpclient).to receive_messages(head: response)
+          # allow(response).to receive_messages(status: 404)
+          # allow(httpclient).to receive_messages(head: response)
 
           expect(client.exists?('foobar')).to be(false)
-          expect(httpclient).to have_received(:head).with('http://localhost/admin/droplets/fo/ob/foobar', header: {})
+          # expect(httpclient).to have_received(:head).with('http://localhost/admin/droplets/fo/ob/foobar', header: {})
         end
 
         it 'should raise a BlobstoreError if response status is neither 200 nor 404' do
-          allow(response).to receive_messages(status: 500, content: '')
-          allow(httpclient).to receive_messages(head: response)
+          # allow(response).to receive_messages(status: 500, content: '')
+          # allow(httpclient).to receive_messages(head: response)
 
           expect { client.exists?('foobar') }.to raise_error BlobstoreError, /Could not get object existence/
-          expect(httpclient).to have_received(:head).with('http://localhost/admin/droplets/fo/ob/foobar', header: {})
+          # expect(httpclient).to have_received(:head).with('http://localhost/admin/droplets/fo/ob/foobar', header: {})
         end
 
         context 'when an OpenSSL::SSL::SSLError is raised' do

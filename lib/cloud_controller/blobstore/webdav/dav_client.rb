@@ -9,7 +9,7 @@ module CloudController
     class DavClient < BaseClient
       def initialize(
         directory_key:,
-        httpclient:,
+        webdav_client:,
         signer:,
         endpoint:,
         user: nil,
@@ -22,7 +22,7 @@ module CloudController
         @min_size      = min_size || 0
         @max_size      = max_size
         @root_dir      = root_dir
-        @client        = httpclient
+        @client        = webdav_client
         @endpoint      = endpoint
         @headers       = {}
 
@@ -53,17 +53,9 @@ module CloudController
       end
 
       def exists?(key)
-        response = with_error_handling do
-          @client.head(url(key), header: @headers)
-        end
-
-        if response.status == 200
-          true
-        elsif response.status == 404
-          false
-        else
-          raise BlobstoreError.new("Could not get object existence, #{response.status}/#{response.content}")
-        end
+        @client.exists?(url(key), header: @headers)
+      rescue WebDAVError => e
+        raise BlobstoreError.new(e.message)
       end
 
       def download_from_blobstore(source_key, destination_path, mode: nil)
@@ -93,7 +85,7 @@ module CloudController
           next unless within_limits?(size)
 
           with_retries(retries, 'cp', destination_key: destination_key) do
-            response = with_error_handling { @client.put(url(destination_key), file, @headers) }
+            response = with_error_handling { @client.upload(url(destination_key), file, @headers) }
 
             raise BlobstoreError.new("Could not create object, #{response.status}/#{response.content}") if response.status != 201 && response.status != 204
           end
