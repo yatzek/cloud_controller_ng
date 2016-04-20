@@ -36,17 +36,30 @@ class AppBitsPackage
       raise InvalidZip.new('The zip provided was not valid') unless valid_zip?(package_path)
       raise ZipSizeExceeded if max_package_size && package_size(package_path) > max_package_size
 
-      # by unpacking and repacking, we remove unneeded directory listings, which
-      # may contain directory permissions that cause problems during staging
-      CloudController::Blobstore::LocalAppBits.from_compressed_bits(package_path, tmp_dir) do |local_app_bits|
-        rezipped_package = local_app_bits.create_package
-        package_blobstore.cp_to_blobstore(rezipped_package.path, package_guid)
+      bits_client = CloudController::DependencyLocator.instance.bits_client
+
+      if bits_client
+        package_hash = bits_client.upload_package(package_path)
 
         package.db.transaction do
           package.lock!
-          package.package_hash = Digester.new.digest_path(rezipped_package)
+          package.package_hash = package_hash
           package.state = VCAP::CloudController::PackageModel::READY_STATE
           package.save
+        end
+      else
+        # by unpacking and repacking, we remove unneeded directory listings, which
+        # may contain directory permissions that cause problems during staging
+        CloudController::Blobstore::LocalAppBits.from_compressed_bits(package_path, tmp_dir) do |local_app_bits|
+          rezipped_package = local_app_bits.create_package
+          package_blobstore.cp_to_blobstore(rezipped_package.path, package_guid)
+
+          package.db.transaction do
+            package.lock!
+            package.package_hash = Digester.new.digest_path(rezipped_package)
+            package.state = VCAP::CloudController::PackageModel::READY_STATE
+            package.save
+          end
         end
       end
 
