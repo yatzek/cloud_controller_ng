@@ -15,12 +15,18 @@ module VCAP::CloudController
           raise 'destination package does not exist' unless dest_package
           src_package = VCAP::CloudController::PackageModel.find(guid: @src_package_guid)
           raise 'source package does not exist' unless src_package
+          dest_package_hash = src_package.package_hash
 
-          CloudController::DependencyLocator.instance.package_blobstore.cp_file_between_keys(@src_package_guid, @dest_package_guid)
+          bits_client = CloudController::DependencyLocator.instance.bits_client
+          if bits_client
+            dest_package_hash = bits_client.duplicate_package(src_package.package_hash)
+          else
+            CloudController::DependencyLocator.instance.package_blobstore.cp_file_between_keys(@src_package_guid, @dest_package_guid)
+          end
 
           dest_package.db.transaction do
             dest_package.lock!
-            dest_package.package_hash = src_package.package_hash
+            dest_package.package_hash = dest_package_hash
             dest_package.state        = VCAP::CloudController::PackageModel::READY_STATE
             dest_package.save
           end
