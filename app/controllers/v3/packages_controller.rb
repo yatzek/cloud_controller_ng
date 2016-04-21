@@ -139,6 +139,15 @@ class PackagesController < ApplicationController
 
   def send_package_blob(package)
     package_blobstore = CloudController::DependencyLocator.instance.package_blobstore
-    BlobDispatcher.new(blobstore: package_blobstore, controller: self).send_or_redirect(guid: package.guid)
+    key = bits_service_enabled ? package.package_hash : package.guid
+    BlobDispatcher.new(blobstore: package_blobstore, controller: self).send_or_redirect(guid: key)
+  end
+
+  def list_fetcher
+    PackageListFetcher.new
+  end
+
+  def bits_service_enabled
+    CloudController::DependencyLocator.instance.use_bits_service
   end
 end
