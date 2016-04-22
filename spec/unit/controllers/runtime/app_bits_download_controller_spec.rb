@@ -62,6 +62,7 @@ module VCAP::CloudController
           allow(App).to receive(:find).with(guid: app_obj.guid).and_return(app_model)
           allow_any_instance_of(CloudController::DependencyLocator).to receive(:bits_client).and_return(bits_client)
           allow(bits_client).to receive(:download_url).with(:packages, package_hash).and_return(url)
+          set_current_user(user)
         end
 
         context 'when using nginx' do
@@ -70,14 +71,14 @@ module VCAP::CloudController
           end
 
           it 'uses nginx to redirect internally' do
-            get "/v2/apps/#{app_guid}/download", {}, headers_for(developer)
+            get "/v2/apps/#{app_guid}/download"
             expect(last_response.status).to eq(200)
             expect(last_response.headers.fetch('X-Accel-Redirect')).to eq("/bits_redirect/#{url}")
           end
         end
 
         it 'redirects to the correct url' do
-          get "/v2/apps/#{app_guid}/download", {}, headers_for(developer)
+          get "/v2/apps/#{app_guid}/download"
           expect(last_response.status).to eq(302)
           expect(last_response.headers.fetch('Location')).to eq(url)
         end
@@ -86,7 +87,7 @@ module VCAP::CloudController
           let(:package_hash) { nil }
 
           it 'raises the correct error' do
-            get "/v2/apps/#{app_guid}/download", {}, headers_for(developer)
+            get "/v2/apps/#{app_guid}/download"
             expect(last_response.status).to eq(404)
             expect(JSON.parse(last_response.body)['description']).to include app_guid
           end
