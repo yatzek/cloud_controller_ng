@@ -554,7 +554,7 @@ module VCAP::CloudController
           let(:use_nginx) { true }
 
           it 'uses nginx to redirect internally' do
-            get "/v2/apps/#{app_obj.guid}/droplet/download", '', json_headers(admin_headers)
+            get "/staging/droplets/#{app_obj.guid}/download"
             expect(last_response.status).to eq(200)
             expect(last_response.headers.fetch('X-Accel-Redirect')).to eq("/bits_redirect/#{url}")
           end
