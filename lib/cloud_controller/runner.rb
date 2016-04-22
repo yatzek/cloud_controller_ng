@@ -32,15 +32,12 @@ module VCAP::CloudController
       setup_i18n
 
       @log_counter = Steno::Sink::Counter.new
+      StenoConfigurer.new(@config[:logging]).configure { |steno_config_hash| steno_config_hash[:sinks] << @log_counter }
+      @logger = Steno.logger('cc.runner')
     end
 
     def setup_i18n
       CloudController::Errors::ApiError.setup_i18n(Dir[File.expand_path('../../../vendor/errors/i18n/*.yml', __FILE__)], @config[:default_locale])
-    end
-
-    def logger
-      setup_logging
-      @logger ||= Steno.logger('cc.runner')
     end
 
     def options_parser
@@ -53,10 +50,6 @@ module VCAP::CloudController
           @insert_seed_data = true
         end
       end
-    end
-
-    def deprecation_warning(message)
-      puts message
     end
 
     def parse_options!
@@ -81,7 +74,7 @@ module VCAP::CloudController
 
       EM.run do
         begin
-          message_bus = MessageBus::Configurer.new(servers: @config[:message_bus_servers], logger: logger).go
+          message_bus = MessageBus::Configurer.new(servers: @config[:message_bus_servers], logger: @logger).go
 
           start_cloud_controller(message_bus)
 
@@ -99,19 +92,19 @@ module VCAP::CloudController
 
           start_thin_server(app)
         rescue => e
-          logger.error "Encountered error: #{e}\n#{e.backtrace.join("\n")}"
+          @logger.error "Encountered error: #{e}\n#{e.backtrace.join("\n")}"
           raise e
         end
       end
     end
 
     def gather_periodic_metrics(message_bus)
-      logger.info('setting up metrics')
+      @logger.info('setting up metrics')
 
-      logger.info('registering with collector')
+      @logger.info('registering with collector')
       register_with_collector(message_bus)
 
-      logger.info('starting periodic metrics updater')
+      @logger.info('starting periodic metrics updater')
       periodic_updater.setup_updates
     end
 
@@ -119,7 +112,7 @@ module VCAP::CloudController
       %w(TERM INT QUIT).each do |signal|
         trap(signal) do
           EM.add_timer(0) do
-            logger.warn("Caught signal #{signal}")
+            @logger.warn("Caught signal #{signal}")
             stop!
           end
         end
@@ -127,7 +120,7 @@ module VCAP::CloudController
 
       trap('USR1') do
         EM.add_timer(0) do
-          logger.warn('Collecting diagnostics')
+          @logger.warn('Collecting diagnostics')
           collect_diagnostics
         end
       end
@@ -135,7 +128,7 @@ module VCAP::CloudController
 
     def stop!
       stop_thin_server
-      logger.info('Stopping EventMachine')
+      @logger.info('Stopping EventMachine')
       EM.stop
     end
 
@@ -159,19 +152,9 @@ module VCAP::CloudController
       exit 1
     end
 
-    def setup_logging
-      return if @setup_logging
-      @setup_logging = true
-
-      StenoConfigurer.new(@config[:logging]).configure do |steno_config_hash|
-        steno_config_hash[:sinks] << @log_counter
-      end
-    end
-
     def setup_db
-      logger.info "db config #{@config[:db]}"
-      db_logger = Steno.logger('cc.db')
-      DB.load_models(@config[:db], db_logger)
+      @logger.info "db config #{@config[:db]}"
+      DB.load_models(@config[:db], Steno.logger('cc.db'))
     end
 
     def setup_loggregator_emitter
@@ -199,7 +182,7 @@ module VCAP::CloudController
     end
 
     def stop_thin_server
-      logger.info('Stopping Thin Server.')
+      @logger.info('Stopping Thin Server.')
       @thin_server.stop if @thin_server
     end
 
@@ -212,7 +195,7 @@ module VCAP::CloudController
         password: @config[:varz_password],
         index: @config[:index],
         nats: message_bus,
-        logger: logger,
+        logger: @logger,
         log_counter: @log_counter
       )
     end
@@ -230,7 +213,7 @@ module VCAP::CloudController
     def statsd_client
       return @statsd_client if @statsd_client
 
-      logger.info("configuring statsd server at #{@config[:statsd_host]}:#{@config[:statsd_port]}")
+      @logger.info("configuring statsd server at #{@config[:statsd_host]}:#{@config[:statsd_port]}")
       Statsd.logger = Steno.logger('statsd.client')
       @statsd_client = Statsd.new(@config[:statsd_host], @config[:statsd_port].to_i)
     end
@@ -239,9 +222,9 @@ module VCAP::CloudController
       @diagnostics_dir ||= @config[:directories][:diagnostics]
       @diagnostics_dir ||= Dir.mktmpdir
       file = VCAP::CloudController::Diagnostics.new.collect(@diagnostics_dir, periodic_updater)
-      logger.warn("Diagnostics written to #{file}")
+      @logger.warn("Diagnostics written to #{file}")
     rescue => e
-      logger.warn("Failed to capture diagnostics: #{e}")
+      @logger.warn("Failed to capture diagnostics: #{e}")
     end
   end
 end

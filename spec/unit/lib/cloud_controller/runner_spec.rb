@@ -298,10 +298,6 @@ module VCAP::CloudController
     describe '#initialize' do
       let(:argv_options) { [] }
 
-      before do
-        allow_any_instance_of(Runner).to receive(:deprecation_warning)
-      end
-
       subject { Runner.new(argv_options) }
 
       it "should set ENV['NEW_RELIC_ENV'] to production" do
