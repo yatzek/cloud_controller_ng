@@ -10,6 +10,7 @@ require 'messages/packages_list_message'
 require 'controllers/v3/mixins/app_subresource'
 
 class PackagesController < ApplicationController
+  include Concerns::UsesBitsService
   include AppSubresource
 
   before_action :check_read_permissions!, only: [:index, :show, :download]
@@ -61,7 +62,7 @@ class PackagesController < ApplicationController
     unprocessable!('Package type must be bits.') unless package.type == 'bits'
     unprocessable!('Package has no bits to download.') unless package.state == 'READY'
 
-    key = bits_service_enabled ? package.package_hash : package.guid
+    key = use_bits_service? ? package.package_hash : package.guid
     blob = blobstore.blob(key)
     BlobDispatcher.new(blob_sender: blob_sender, controller: self).send_or_redirect(local: blobstore.local?, blob: blob)
   end
@@ -148,10 +149,6 @@ class PackagesController < ApplicationController
 
   def blobstore
     CloudController::DependencyLocator.instance.package_blobstore
-  end
-
-  def bits_service_enabled
-    CloudController::DependencyLocator.instance.use_bits_service
   end
 
   def list_fetcher

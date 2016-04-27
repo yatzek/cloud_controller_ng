@@ -62,6 +62,7 @@ module VCAP::CloudController
           let(:bits_client) { double(BitsClient) }
 
           before(:each) do
+            allow(CloudController::DependencyLocator.instance).to receive(:use_bits_service).and_return(true)
             allow(CloudController::DependencyLocator.instance).to receive(:bits_client).and_return(bits_client)
           end
 

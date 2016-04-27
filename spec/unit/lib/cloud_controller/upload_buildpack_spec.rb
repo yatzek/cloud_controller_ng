@@ -36,6 +36,7 @@ module VCAP::CloudController
     context 'upload_buildpack' do
       before do
         allow(CloudController::DependencyLocator.instance).to receive(:buildpack_blobstore).and_return(buildpack_blobstore)
+        allow(CloudController::DependencyLocator.instance).to receive(:use_bits_service).and_return(!!bits_client)
         allow(CloudController::DependencyLocator.instance).to receive(:bits_client).and_return(bits_client)
       end
 

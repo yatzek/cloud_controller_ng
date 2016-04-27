@@ -51,6 +51,7 @@ module VCAP::CloudController
           let(:received_guid) { SecureRandom.uuid }
 
           before do
+            allow(CloudController::DependencyLocator.instance).to receive(:use_bits_service).and_return(true)
             allow(CloudController::DependencyLocator.instance).to receive(:bits_client).and_return(bits_client)
             allow(bits_client).to receive(:upload_droplet).and_return(double(:response, body: { guid: received_guid }.to_json))
           end

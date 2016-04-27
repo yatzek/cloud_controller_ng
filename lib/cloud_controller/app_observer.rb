@@ -1,10 +1,12 @@
 require 'cloud_controller/multi_response_message_bus_request'
 require 'models/runtime/droplet_uploader'
 require 'cloud_controller/dea/app_stopper'
+require 'cloud_controller/concerns/uses_bits_service'
 
 module VCAP::CloudController
   module AppObserver
     class << self
+      include Concerns::UsesBitsService
       extend Forwardable
 
       def configure(stagers, runners)
@@ -54,7 +56,7 @@ module VCAP::CloudController
       def delete_package(app)
         return if app.is_v3?
 
-        guid = CloudController::DependencyLocator.instance.use_bits_service ? app.package_hash : app.guid
+        guid = use_bits_service? ? app.package_hash : app.guid
         delete_job = Jobs::Runtime::BlobstoreDelete.new(guid, :package_blobstore)
         Jobs::Enqueuer.new(delete_job, queue: 'cc-generic').enqueue
       end

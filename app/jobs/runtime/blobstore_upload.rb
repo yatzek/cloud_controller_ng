@@ -2,6 +2,8 @@ module VCAP::CloudController
   module Jobs
     module Runtime
       class BlobstoreUpload < VCAP::CloudController::Jobs::CCJob
+        include Concerns::UsesBitsService
+
         attr_reader :local_path, :blobstore_key, :blobstore_name
         attr_reader :max_attempts
 
@@ -38,16 +40,6 @@ module VCAP::CloudController
           if job.attempts >= max_attempts - 1
             FileUtils.rm_f(local_path)
           end
-        end
-
-        private
-
-        def use_bits_service?
-          !!bits_client
-        end
-
-        def bits_client
-          CloudController::DependencyLocator.instance.bits_client
         end
       end
     end

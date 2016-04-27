@@ -1,7 +1,11 @@
+require 'cloud_controller/concerns/uses_bits_service'
+
 module VCAP::CloudController
   module Jobs
     module Runtime
       class AppBitsCopier < VCAP::CloudController::Jobs::CCJob
+        include Concerns::UsesBitsService
+
         def initialize(src_app, dest_app, app_event_repo, user, email)
           @user           = user
           @email          = email
@@ -14,7 +18,7 @@ module VCAP::CloudController
           logger = Steno.logger('cc.background')
           logger.info("Copying the app bits from app '#{@src_app.guid}' to app '#{@dest_app.guid}'")
 
-          if CloudController::DependencyLocator.instance.use_bits_service
+          if use_bits_service?
             @dest_app.package_hash = bits_client.duplicate_package(@src_app.package_hash)
           else
             package_blobstore = CloudController::DependencyLocator.instance.package_blobstore
@@ -34,12 +38,6 @@ module VCAP::CloudController
 
         def max_attempts
           1
-        end
-
-        private
-
-        def bits_client
-          @bits_client ||= CloudController::DependencyLocator.instance.bits_client
         end
       end
     end

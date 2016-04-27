@@ -1,5 +1,6 @@
 module VCAP::CloudController
   class DropletModel < Sequel::Model(:v3_droplets)
+    include Concerns::UsesBitsService
     include Serializer
 
     DROPLET_STATES = [
@@ -94,10 +95,6 @@ module VCAP::CloudController
     end
 
     private
-
-    def use_bits_service?
-      CloudController::DependencyLocator.instance.use_bits_service
-    end
 
     def entering_staged?
       column_changed?(:state) && self.state == STAGED_STATE

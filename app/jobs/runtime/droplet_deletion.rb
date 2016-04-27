@@ -2,6 +2,8 @@ module VCAP::CloudController
   module Jobs
     module Runtime
       class DropletDeletion < VCAP::CloudController::Jobs::CCJob
+        include Concerns::UsesBitsService
+
         attr_accessor :new_droplet_key, :old_droplet_key
 
         def initialize(new_droplet_key, old_droplet_key)
@@ -13,7 +15,7 @@ module VCAP::CloudController
           logger = Steno.logger('cc.background')
           logger.info("Deleting droplet '#{new_droplet_key}' (and '#{old_droplet_key}') from droplet blobstore")
 
-          if use_bits_service
+          if use_bits_service?
             bits_client.delete_droplet(new_droplet_key)
             return
           end
@@ -36,16 +38,6 @@ module VCAP::CloudController
 
         def max_attempts
           3
-        end
-
-        private
-
-        def bits_client
-          @bits_client ||= CloudController::DependencyLocator.instance.bits_client
-        end
-
-        def use_bits_service
-          !!bits_client
         end
       end
     end

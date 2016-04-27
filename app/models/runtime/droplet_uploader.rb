@@ -1,5 +1,9 @@
+require 'cloud_controller/concerns/uses_bits_service'
+
 module CloudController
   class DropletUploader
+    include VCAP::CloudController::Concerns::UsesBitsService
+
     def initialize(app, blobstore)
       @app = app
       @blobstore = blobstore
@@ -35,14 +39,6 @@ module CloudController
       JSON.parse(response.body)['guid']
     rescue BitsClient::Errors::Error => e
       raise VCAP::Errors::ApiError.new_from_details('BitsServiceError', e.message)
-    end
-
-    def use_bits_service?
-      !!bits_client
-    end
-
-    def bits_client
-      CloudController::DependencyLocator.instance.bits_client
     end
 
     attr_reader :blobstore, :app

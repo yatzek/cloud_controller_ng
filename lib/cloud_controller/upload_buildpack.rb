@@ -1,5 +1,7 @@
 module VCAP::CloudController
   class UploadBuildpack
+    include Concerns::UsesBitsService
+
     attr_reader :buildpack_blobstore
 
     def initialize(blobstore)
@@ -61,14 +63,6 @@ module VCAP::CloudController
       JSON.parse(response.body)['guid']
     rescue BitsClient::Errors::Error => e
       raise Errors::ApiError.new_from_details('BitsServiceError', e.message)
-    end
-
-    def use_bits_service?
-      !!bits_client
-    end
-
-    def bits_client
-      CloudController::DependencyLocator.instance.bits_client
     end
 
     def new_bits?(buildpack, key)
