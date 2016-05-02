@@ -10,6 +10,7 @@ module VCAP::CloudController
           'per_page' => 5,
           'app_guid' => 'some-app-guid',
           'types'     => 'web',
+          'space_guids' => 'the_space_guid',
         }
       end
 
@@ -21,6 +22,7 @@ module VCAP::CloudController
         expect(message.per_page).to eq(5)
         expect(message.app_guid).to eq('some-app-guid')
         expect(message.types).to eq(['web'])
+        expect(message.space_guids).to eq(['the_space_guid'])
       end
 
       it 'converts requested keys to symbols' do
@@ -30,6 +32,7 @@ module VCAP::CloudController
         expect(message.requested?(:per_page)).to be_truthy
         expect(message.requested?(:app_guid)).to be_truthy
         expect(message.requested?(:types)).to be_truthy
+        expect(message.requested?(:space_guids)).to be_truthy
       end
     end
 

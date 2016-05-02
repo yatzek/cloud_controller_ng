@@ -7,7 +7,7 @@ describe 'Processes' do
   let(:developer_headers) { headers_for(developer) }
 
   describe 'GET /v3/processes' do
-    let!(:process1) {
+    let!(:web_process) {
       VCAP::CloudController::ProcessModel.make(
         :process,
         app:        app_model,
@@ -20,7 +20,7 @@ describe 'Processes' do
       )
     }
 
-    let!(:process2) {
+    let!(:worker_process) {
       VCAP::CloudController::ProcessModel.make(
         :process,
         app:        app_model,
@@ -33,9 +33,7 @@ describe 'Processes' do
       )
     }
 
-    let!(:process3) {
-      VCAP::CloudController::ProcessModel.make(:process, app: app_model, space: space)
-    }
+    before { VCAP::CloudController::ProcessModel.make(:process, app: app_model, space: space) }
 
     it 'returns a paginated list of processes' do
       get '/v3/processes?per_page=2', nil, developer_headers
@@ -50,7 +48,7 @@ describe 'Processes' do
         },
         'resources' => [
           {
-            'guid'         => process1.guid,
+            'guid'         => web_process.guid,
             'type'         => 'web',
             'command'      => 'rackup',
             'instances'    => 2,
@@ -66,15 +64,15 @@ describe 'Processes' do
             'created_at'   => iso8601,
             'updated_at'   => nil,
             'links'        => {
-              'self'  => { 'href' => "/v3/processes/#{process1.guid}" },
-              'scale' => { 'href' => "/v3/processes/#{process1.guid}/scale", 'method' => 'PUT' },
+              'self'  => { 'href' => "/v3/processes/#{web_process.guid}" },
+              'scale' => { 'href' => "/v3/processes/#{web_process.guid}/scale", 'method' => 'PUT' },
               'app'   => { 'href' => "/v3/apps/#{app_model.guid}" },
               'space' => { 'href' => "/v2/spaces/#{space.guid}" },
-              'stats' => { 'href' => "/v3/processes/#{process1.guid}/stats" },
+              'stats' => { 'href' => "/v3/processes/#{web_process.guid}/stats" },
             },
           },
           {
-            'guid'         => process2.guid,
+            'guid'         => worker_process.guid,
             'type'         => 'worker',
             'command'      => 'start worker',
             'instances'    => 1,
@@ -90,11 +88,11 @@ describe 'Processes' do
             'created_at'   => iso8601,
             'updated_at'   => nil,
             'links'        => {
-              'self'  => { 'href' => "/v3/processes/#{process2.guid}" },
-              'scale' => { 'href' => "/v3/processes/#{process2.guid}/scale", 'method' => 'PUT' },
+              'self'  => { 'href' => "/v3/processes/#{worker_process.guid}" },
+              'scale' => { 'href' => "/v3/processes/#{worker_process.guid}/scale", 'method' => 'PUT' },
               'app'   => { 'href' => "/v3/apps/#{app_model.guid}" },
               'space' => { 'href' => "/v2/spaces/#{space.guid}" },
-              'stats' => { 'href' => "/v3/processes/#{process2.guid}/stats" },
+              'stats' => { 'href' => "/v3/processes/#{worker_process.guid}/stats" },
             },
           }
         ]
@@ -120,7 +118,7 @@ describe 'Processes' do
           },
           'resources' => [
             {
-              'guid'         => process2.guid,
+              'guid'         => worker_process.guid,
               'type'         => 'worker',
               'command'      => 'start worker',
               'instances'    => 1,
@@ -136,11 +134,76 @@ describe 'Processes' do
               'created_at'   => iso8601,
               'updated_at'   => nil,
               'links'        => {
-                'self'  => { 'href' => "/v3/processes/#{process2.guid}" },
-                'scale' => { 'href' => "/v3/processes/#{process2.guid}/scale", 'method' => 'PUT' },
+                'self'  => { 'href' => "/v3/processes/#{worker_process.guid}" },
+                'scale' => { 'href' => "/v3/processes/#{worker_process.guid}/scale", 'method' => 'PUT' },
                 'app'   => { 'href' => "/v3/apps/#{app_model.guid}" },
                 'space' => { 'href' => "/v2/spaces/#{space.guid}" },
-                'stats' => { 'href' => "/v3/processes/#{process2.guid}/stats" },
+                'stats' => { 'href' => "/v3/processes/#{worker_process.guid}/stats" },
+              },
+            },
+          ]
+        }
+
+        parsed_response = MultiJson.load(last_response.body)
+
+        expect(last_response.status).to eq(200)
+        expect(parsed_response).to be_a_response_like(expected_response)
+      end
+    end
+
+    context 'given a space guid filter' do
+      let!(:other_space) { VCAP::CloudController::Space.make(organization: space.organization) }
+      let!(:other_space_process) {
+        VCAP::CloudController::ProcessModel.make(
+          :process,
+          app:        app_model,
+          space:      other_space,
+          type:       'web',
+          instances:  2,
+          memory:     1024,
+          disk_quota: 1024,
+          command:    'rackup',
+        )
+      }
+
+      before do
+        other_space.add_developer developer
+      end
+
+      it 'returns only the matching process' do
+        get "/v3/processes?per_page=2&space_guids=#{other_space.guid}", nil, developer_headers
+
+        expected_response = {
+          'pagination' => {
+            'total_results' => 1,
+            'first'         => { 'href' => "/v3/processes?page=1&per_page=2&space_guids=#{other_space.guid}" },
+            'last'          => { 'href' => "/v3/processes?page=1&per_page=2&space_guids=#{other_space.guid}" },
+            'next'          => nil,
+            'previous'      => nil,
+          },
+          'resources' => [
+            {
+              'guid'         => other_space_process.guid,
+              'type'         => 'web',
+              'command'      => 'rackup',
+              'instances'    => 2,
+              'memory_in_mb' => 1024,
+              'disk_in_mb'   => 1024,
+              'ports'        => [8080],
+              'health_check' => {
+                'type' => 'port',
+                'data' => {
+                  'timeout' => nil
+                }
+              },
+              'created_at'   => iso8601,
+              'updated_at'   => nil,
+              'links'        => {
+                'self'  => { 'href' => "/v3/processes/#{other_space_process.guid}" },
+                'scale' => { 'href' => "/v3/processes/#{other_space_process.guid}/scale", 'method' => 'PUT' },
+                'app'   => { 'href' => "/v3/apps/#{app_model.guid}" },
+                'space' => { 'href' => "/v2/spaces/#{other_space.guid}" },
+                'stats' => { 'href' => "/v3/processes/#{other_space_process.guid}/stats" },
               },
             },
           ]
@@ -637,6 +700,71 @@ describe 'Processes' do
                 'stats' => { 'href' => "/v3/processes/#{process2.guid}/stats" },
               },
             }
+          ]
+        }
+
+        parsed_response = MultiJson.load(last_response.body)
+
+        expect(last_response.status).to eq(200)
+        expect(parsed_response).to be_a_response_like(expected_response)
+      end
+    end
+
+    context 'given a space guid filter' do
+      let!(:other_space) { VCAP::CloudController::Space.make(organization: space.organization) }
+      let!(:other_space_process) {
+        VCAP::CloudController::ProcessModel.make(
+          :process,
+          app:        app_model,
+          space:      other_space,
+          type:       'web',
+          instances:  2,
+          memory:     1024,
+          disk_quota: 1024,
+          command:    'rackup',
+        )
+      }
+
+      before do
+        other_space.add_developer developer
+      end
+
+      it 'returns only the matching process' do
+        get "/v3/apps/#{app_model.guid}/processes?per_page=2&space_guids=#{other_space.guid}", nil, developer_headers
+
+        expected_response = {
+          'pagination' => {
+            'total_results' => 1,
+            'first'         => { 'href' => "/v3/apps/#{app_model.guid}/processes?page=1&per_page=2&space_guids=#{other_space.guid}" },
+            'last'          => { 'href' => "/v3/apps/#{app_model.guid}/processes?page=1&per_page=2&space_guids=#{other_space.guid}" },
+            'next'          => nil,
+            'previous'      => nil,
+          },
+          'resources' => [
+            {
+              'guid'         => other_space_process.guid,
+              'type'         => 'web',
+              'command'      => 'rackup',
+              'instances'    => 2,
+              'memory_in_mb' => 1024,
+              'disk_in_mb'   => 1024,
+              'ports'        => [8080],
+              'health_check' => {
+                'type' => 'port',
+                'data' => {
+                  'timeout' => nil
+                }
+              },
+              'created_at'   => iso8601,
+              'updated_at'   => nil,
+              'links'        => {
+                'self'  => { 'href' => "/v3/processes/#{other_space_process.guid}" },
+                'scale' => { 'href' => "/v3/processes/#{other_space_process.guid}/scale", 'method' => 'PUT' },
+                'app'   => { 'href' => "/v3/apps/#{app_model.guid}" },
+                'space' => { 'href' => "/v2/spaces/#{other_space.guid}" },
+                'stats' => { 'href' => "/v3/processes/#{other_space_process.guid}/stats" },
+              },
+            },
           ]
         }
 
