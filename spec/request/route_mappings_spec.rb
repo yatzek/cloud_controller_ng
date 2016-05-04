@@ -122,6 +122,26 @@ describe 'Route Mappings' do
       expect(last_response.status).to eq(200)
       expect(parsed_response).to be_a_response_like(expected_response)
     end
+
+    context 'faceted search' do
+
+      it 'filters by route guids' do
+        get "/v3/route_mappings?guids=#{route_mapping1.guid},#{route_mapping2.guid}", nil, developer_headers
+
+        expected_response = {
+          'first' => {'href' => "/v3/route_mappings/#{route_mapping1.guid}%2C#{route_mapping2.guid}"},
+          'last' => {'href' => "/v3/route_mappings/#{route_mapping1.guid}%2C#{route_mapping2.guid}"},
+          'next' => nil,
+          'previous' => nil
+        }
+
+        parsed_response = MultiJson.load(last_response.body)
+
+        expect(last_response.status).to eq(200)
+        expect(parsed_response['resources'].map { |r| r['guid']}).to match_array([route_mapping1.guid. route_mapping2.guid])
+        expect(parsed_response['pagination']).to eq(expected_response)
+      end
+    end
   end
 
   describe 'GET /v3/route_mappings/:route_mapping_guid' do

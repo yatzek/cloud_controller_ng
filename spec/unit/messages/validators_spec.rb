@@ -106,6 +106,25 @@ module VCAP::CloudController::Validators
       end
     end
 
+    describe 'GuidArrayValidator' do
+      let(:guid_array_class) do
+        Class.new(fake_class) do
+          validates :field, guid_array: true
+        end
+      end
+
+      it 'adds error if any element is not a guid' do
+        fake_class = guid_array_class.new field: ["guid", 3, 23]
+        expect(fake_class.valid?).to be_falsey
+        expect(fake_class.errors[:field]).to include('must be array of valid guids')
+      end
+
+      it 'does not add an error if all elements are guids' do
+        fake_class = guid_array_class.new field: ["guid1", "guid2"]
+        expect(fake_class.valid?).to be_truthy
+      end
+    end
+
     describe 'UriValidator' do
       let(:uri_class) do
         Class.new(fake_class) do

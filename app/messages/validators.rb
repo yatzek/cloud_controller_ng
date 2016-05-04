@@ -26,6 +26,18 @@ module VCAP::CloudController::Validators
     end
   end
 
+  class GuidArrayValidator < ActiveModel::EachValidator
+    def validate_each(record, attribute, value)
+      validator = VCAP::CloudController::BaseMessage::GuidValidator.new({ attributes: 'blah' })
+      value.each_with_index do |guid|
+        if validator.validate_each(record, attribute, guid)
+          record.errors.add attribute, 'must be array of valid guids'
+        end
+      end
+      true
+    end
+  end
+
   class UriValidator < ActiveModel::EachValidator
     def validate_each(record, attribute, value)
       record.errors.add attribute, 'must be a valid URI' unless value =~ /\A#{URI.regexp}\Z/
