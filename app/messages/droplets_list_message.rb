@@ -2,7 +2,7 @@ require 'messages/list_message'
 
 module VCAP::CloudController
   class DropletsListMessage < ListMessage
-    ALLOWED_KEYS = [:app_guid, :app_guids, :guids, :states, :page, :per_page, :order_by].freeze
+    ALLOWED_KEYS = [:app_guid, :app_guids, :guids, :page, :per_page, :order_by, :states, :space_guids].freeze
 
     attr_accessor(*ALLOWED_KEYS)
     validates_with NoAdditionalParamsValidator
@@ -21,7 +21,7 @@ module VCAP::CloudController
 
     def self.from_params(params)
       opts = params.dup
-      %w(states app_guids guids).each do |attribute|
+      %w(states app_guids guids space_guids).each do |attribute|
         to_array! opts, attribute
       end
       new(opts.symbolize_keys)

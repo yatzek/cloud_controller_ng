@@ -31,6 +31,10 @@ module VCAP::CloudController
         dataset = dataset.where("#{DropletModel.table_name}__guid".to_sym => message.guids)
       end
 
+      if message.requested?(:space_guids)
+        dataset = dataset.select_all(:v3_droplets).join(:apps_v3, guid: :app_guid, space_guid: message.space_guids)
+      end
+
       dataset
     end
   end

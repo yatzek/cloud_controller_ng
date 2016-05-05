@@ -11,7 +11,8 @@ module VCAP::CloudController
           'page'      => 1,
           'per_page'  => 5,
           'order_by'  => 'created_at',
-          'guids'     => 'guid1,guid2'
+          'guids'     => 'guid1,guid2',
+          'space_guids' => 'guid3,guid4'
         }
       end
 
@@ -25,6 +26,7 @@ module VCAP::CloudController
         expect(message.per_page).to eq(5)
         expect(message.order_by).to eq('created_at')
         expect(message.guids).to match_array(['guid1', 'guid2'])
+        expect(message.space_guids).to match_array(['guid3', 'guid4'])
       end
 
       it 'converts requested keys to symbols' do
@@ -46,7 +48,8 @@ module VCAP::CloudController
           page:      1,
           per_page:  5,
           order_by:  'created_at',
-          guids:     ['guid1', 'guid2']
+          guids:     ['guid1', 'guid2'],
+          space_guids: []
         })
         expect(message).to be_valid
       end

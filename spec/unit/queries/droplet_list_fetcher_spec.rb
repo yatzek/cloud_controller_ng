@@ -36,6 +36,16 @@ module VCAP::CloudController
         end
       end
 
+      context 'filtering space_guids' do
+        let(:filters) { { space_guids: [app1.space.guid] } }
+
+        it 'returns all of the droplets with the requested app guids' do
+          puts "space #{app1.space}"
+          results = fetcher.fetch_all(message: message).all
+          expect(results).to match_array([staged_droplet_for_app1, failed_droplet_for_app1])
+        end
+      end
+
       context 'filtering states' do
         let(:filters) { { states: [DropletModel::STAGED_STATE, DropletModel::PENDING_STATE] } }
         let!(:pending_droplet_for_other_app) { DropletModel.make(state: DropletModel::PENDING_STATE) }
