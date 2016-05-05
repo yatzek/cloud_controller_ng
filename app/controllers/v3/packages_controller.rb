@@ -20,17 +20,17 @@ class PackagesController < ApplicationController
     invalid_param!(message.errors.full_messages) unless message.valid?
 
     if app_nested?
-      app, paginated_result = list_fetcher.fetch_for_app(message: message)
+      app, dataset = list_fetcher.fetch_for_app(message: message)
       app_not_found! unless app && can_read?(app.space.guid, app.organization.guid)
     else
-      paginated_result = if roles.admin?
-                           list_fetcher.fetch_all(message: message)
-                         else
-                           list_fetcher.fetch_for_spaces(message: message, space_guids: readable_space_guids)
-                         end
+      dataset = if roles.admin?
+                  list_fetcher.fetch_all(message: message)
+                else
+                  list_fetcher.fetch_for_spaces(message: message, space_guids: readable_space_guids)
+                end
     end
 
-    render status: :ok, json: PaginatedListPresenter.new(paginated_result, base_url(resource: 'packages'), message)
+    render status: :ok, json: PaginatedListPresenter.new(dataset, base_url(resource: 'packages'), message)
   end
 
   def upload

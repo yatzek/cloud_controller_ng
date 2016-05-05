@@ -22,17 +22,17 @@ class ProcessesController < ApplicationController
     list_fetcher = ProcessListFetcher.new(message)
 
     if app_nested?
-      app, paginated_result = list_fetcher.fetch_for_app
+      app, dataset = list_fetcher.fetch_for_app
       app_not_found! unless app && can_read?(app.space.guid, app.organization.guid)
     else
-      paginated_result = if roles.admin?
-                           list_fetcher.fetch_all
-                         else
-                           list_fetcher.fetch_for_spaces(space_guids: readable_space_guids)
-                         end
+      dataset = if roles.admin?
+                  list_fetcher.fetch_all
+                else
+                  list_fetcher.fetch_for_spaces(space_guids: readable_space_guids)
+                end
     end
 
-    render status: :ok, json: PaginatedListPresenter.new(paginated_result, base_url(resource: 'processes'), message)
+    render status: :ok, json: PaginatedListPresenter.new(dataset, base_url(resource: 'processes'), message)
   end
 
   def show

@@ -43,13 +43,13 @@ class ServiceBindingsController < ApplicationController
     message = ServiceBindingsListMessage.from_params(query_params)
     invalid_param!(message.errors.full_messages) unless message.valid?
 
-    paginated_result = if roles.admin?
-                         ServiceBindingListFetcher.new.fetch_all(message: message)
-                       else
-                         ServiceBindingListFetcher.new.fetch(message: message, space_guids: readable_space_guids)
-                       end
+    dataset = if roles.admin?
+                ServiceBindingListFetcher.new.fetch_all
+              else
+                ServiceBindingListFetcher.new.fetch(space_guids: readable_space_guids)
+              end
 
-    render status: :ok, json: PaginatedListPresenter.new(paginated_result, '/v3/service_bindings', message)
+    render status: :ok, json: PaginatedListPresenter.new(dataset, '/v3/service_bindings', message)
   end
 
   def destroy

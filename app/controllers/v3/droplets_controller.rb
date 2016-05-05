@@ -19,17 +19,17 @@ class DropletsController < ApplicationController
     invalid_param!(message.errors.full_messages) unless message.valid?
 
     if app_nested?
-      app, paginated_result = list_fetcher.fetch_for_app(message: message)
+      app, dataset = list_fetcher.fetch_for_app(message: message)
       app_not_found! unless app && can_read?(app.space.guid, app.organization.guid)
     else
-      paginated_result = if roles.admin?
-                           list_fetcher.fetch_all(message: message)
-                         else
-                           list_fetcher.fetch_for_spaces(space_guids: readable_space_guids, message: message)
-                         end
+      dataset = if roles.admin?
+                  list_fetcher.fetch_all(message: message)
+                else
+                  list_fetcher.fetch_for_spaces(space_guids: readable_space_guids, message: message)
+                end
     end
 
-    render status: :ok, json: PaginatedListPresenter.new(paginated_result, base_url(resource: 'droplets'), message)
+    render status: :ok, json: PaginatedListPresenter.new(dataset, base_url(resource: 'droplets'), message)
   end
 
   def show
