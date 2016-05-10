@@ -90,4 +90,30 @@ module VCAP::CloudController
       end.flatten.compact
     end
   end
+
+
+  class MembershipClient
+    def initialize()
+        @client = HTTPClient.new
+        @headers = { 'Authorization' => VCAP::CloudController::SecurityContext.auth_token }
+    end
+
+    def has_any_roles?(roles, space_guid=nil, org_guid=nil)
+      request = {
+        roles: roles,
+        space_guid: space_guid,
+        org_guid: org_guid
+      }
+
+      result = @client.put('http://api.bosh-lite.com/v3/memberships/has_roles', MultiJson.dump(request), @headers)
+
+      return result.status == 204
+    end
+
+    def space_guids_for_roles(roles)
+      result = @client.put('http://api.bosh-lite.com/v3/memberships/space_guids', MultiJson.dump(roles), @headers)
+
+      return MultiJson.load(result.body)
+    end
+  end
 end

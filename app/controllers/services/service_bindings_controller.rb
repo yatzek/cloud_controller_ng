@@ -4,7 +4,8 @@ require 'controllers/services/lifecycle/service_instance_binding_manager'
 module VCAP::CloudController
   class ServiceBindingsController < RestController::ModelController
     define_attributes do
-      to_one :app
+      attribute :app_guid, String
+      # to_one :app
       to_one :service_instance
       attribute :binding_options, Hash, default: {}
       attribute :parameters, Hash, default: nil

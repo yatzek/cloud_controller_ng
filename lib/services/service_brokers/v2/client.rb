@@ -25,8 +25,8 @@ module VCAP::Services::ServiceBrokers::V2
       body = {
         service_id: instance.service.broker_provided_id,
         plan_id: instance.service_plan.broker_provided_id,
-        organization_guid: instance.organization.guid,
-        space_guid: instance.space.guid,
+        # organization_guid: instance.organization.guid,
+        space_guid: instance.space_guid,
       }
 
       body[:parameters] = arbitrary_parameters if arbitrary_parameters.present?

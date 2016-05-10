@@ -31,7 +31,7 @@ module VCAP::CloudController
         guid:     space.guid,
         name:     space.name,
         apps:     app_summary(space),
-        services: services_summary(space),
+        # services: services_summary(space),
       }
     end
 
@@ -42,8 +42,8 @@ module VCAP::CloudController
           guid:              app.guid,
           urls:              app.routes.map(&:uri),
           routes:            app.routes.map(&:as_summary_json),
-          service_count:     app.service_bindings_dataset.count,
-          service_names:     app.service_bindings_dataset.map(&:service_instance).map(&:name),
+          # service_count:     app.service_bindings_dataset.count,
+          # service_names:     app.service_bindings_dataset.map(&:service_instance).map(&:name),
           running_instances: instances[app.guid],
         }.merge(app.to_hash)
       end

@@ -26,7 +26,7 @@ module VCAP::CloudController
     one_to_many :service_keys
     many_to_many :routes, join_table: :route_bindings
 
-    many_to_one :space, after_set: :validate_space
+    # many_to_one :space, after_set: :validate_space
     many_to_one :service_plan_sti_eager_load,
                 class: 'VCAP::CloudController::ServicePlan',
                 dataset: -> { raise 'Must be used for eager loading' },
@@ -48,7 +48,7 @@ module VCAP::CloudController
                   end
                 }
 
-    delegate :organization, to: :space
+    # delegate :organization, to: :space
 
     encrypt :credentials, salt: :salt
 
@@ -75,12 +75,15 @@ module VCAP::CloudController
 
     def validate
       validates_presence :name
-      validates_presence :space
-      validates_unique [:space_id, :name], where: (proc do |_, obj, arr|
-                                                     vals = arr.map { |x| obj.send(x) }
-                                                     next if vals.any?(&:nil?)
-                                                     ServiceInstance.where(arr.zip(vals))
-                                                   end)
+      # validates_presence :space
+      # validates_unique [:space_id, :name], where: (proc do |_, obj, arr|
+      #                                                vals = arr.map { |x| obj.send(x) }
+      #                                                next if vals.any?(&:nil?)
+      #                                                ServiceInstance.where(arr.zip(vals))
+      # end)
+
+      validates_presence :space_guid
+      validates_unique [:space_guid, :name]
       validates_max_length 50, :name
     end
 
@@ -102,7 +105,9 @@ module VCAP::CloudController
     end
 
     def to_hash(opts={})
-      if !VCAP::CloudController::SecurityContext.admin? && !space.has_developer?(VCAP::CloudController::SecurityContext.current_user)
+      membership = MembershipClient.new
+      # if !VCAP::CloudController::SecurityContext.admin? && !space.has_developer?(VCAP::CloudController::SecurityContext.current_user)
+      if !VCAP::CloudController::SecurityContext.admin? && !membership.has_any_roles?([Membership::SPACE_DEVELOPER], service_instance.space_guid)
         opts[:redact] = ['credentials']
       end
       hash = super(opts)

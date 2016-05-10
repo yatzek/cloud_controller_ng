@@ -30,7 +30,7 @@ module VCAP::CloudController
     APP_NAME_REGEX = /\A[[:alnum:][:punct:][:print:]]+\Z/
 
     one_to_many :droplets
-    one_to_many :service_bindings
+    # one_to_many :service_bindings
     one_to_many :events, class: VCAP::CloudController::AppEvent
     many_to_one :app, class: 'VCAP::CloudController::AppModel', key: :app_guid, primary_key: :guid, without_guid_generation: true
     many_to_one :admin_buildpack, class: VCAP::CloudController::Buildpack

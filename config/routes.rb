@@ -65,6 +65,9 @@ Rails.application.routes.draw do
   get '/service_bindings', to: 'service_bindings#index'
   delete '/service_bindings/:guid', to: 'service_bindings#destroy'
 
+  put '/memberships/has_roles', to: 'memberships#has_roles'
+  put '/memberships/space_guids', to: 'memberships#space_guids'
+
   # errors
   match '404', to: 'errors#not_found', via: :all
   match '500', to: 'errors#internal_error', via: :all

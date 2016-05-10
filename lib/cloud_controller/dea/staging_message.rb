@@ -36,8 +36,12 @@ module VCAP::CloudController
         stack_env   = { 'CF_STACK' => app.stack.name }
         env         = staging_env.merge(app_env).merge(stack_env).map { |k, v| "#{k}=#{v}" }
 
+        client = ServiceBindingClient.new
         {
-          services: app.service_bindings.map { |sb| service_binding_to_staging_request(sb) },
+          # services: app.service_bindings.map { |sb| service_binding_to_staging_request(sb) },
+          services:    client.bindings_for_app(app.guid).map do |sb|
+            ServiceBindingPresenter.new(sb).to_hash
+          end,
           resources: {
             memory: app.memory,
             disk: app.disk_quota,

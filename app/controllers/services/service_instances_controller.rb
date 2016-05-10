@@ -13,7 +13,8 @@ module VCAP::CloudController
       attribute :name, String
       attribute :parameters, Hash, default: nil
       attribute :tags, [String], default: []
-      to_one :space
+      attribute :space_guid, String
+      # to_one :space
       to_one :service_plan
       to_many :service_bindings
       to_many :service_keys
@@ -79,20 +80,20 @@ module VCAP::CloudController
       service_plan = ServicePlan.first(guid: request_attrs['service_plan_guid'])
       service_plan_not_found! unless service_plan
 
-      space = Space.filter(guid: request_attrs['space_guid']).first
-      space_not_found! unless space
-      organization = space.organization if space
+      # space = Space.filter(guid: request_attrs['space_guid']).first
+      # space_not_found! unless space
+      # organization = space.organization if space
 
       service_instance = ManagedServiceInstance.new(request_attrs.except('parameters'))
       validate_access(:create, service_instance)
 
       invalid_service_instance!(service_instance) unless service_instance.valid?
 
-      if service_plan.broker_private?
-        space_not_authorized! unless service_plan.service_broker.space == space
-      else
-        org_not_authorized! unless plan_visible_to_org?(organization, service_plan)
-      end
+      # if service_plan.broker_private?
+      #   space_not_authorized! unless service_plan.service_broker.space == space
+      # else
+      #   org_not_authorized! unless plan_visible_to_org?(organization, service_plan)
+      # end
 
       service_instance = ServiceInstanceCreate.new(@services_event_repository, logger).
                          create(request_attrs, accepts_incomplete)

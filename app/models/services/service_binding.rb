@@ -2,7 +2,7 @@ module VCAP::CloudController
   class ServiceBinding < Sequel::Model
     class InvalidAppAndServiceRelation < StandardError; end
 
-    many_to_one :app
+    # many_to_one :app
     many_to_one :service_instance
 
     export_attributes :app_guid, :service_instance_guid, :credentials,
@@ -23,12 +23,14 @@ module VCAP::CloudController
     encrypt :volume_mounts, salt: :volume_mounts_salt
 
     def validate
-      validates_presence :app
+      # validates_presence :app
+      validates_presence :app_guid
       validates_presence :service_instance
-      validates_unique [:app_id, :service_instance_id]
+      # validates_unique [:app_id, :service_instance_id]
+      validates_unique [:app_guid, :service_instance_id]
       validates_max_length 65_535, :volume_mounts if !volume_mounts.nil?
 
-      validate_app_and_service_instance(app, service_instance)
+      # validate_app_and_service_instance(app, service_instance)
       validate_cannot_change_binding
     end
 
@@ -44,15 +46,19 @@ module VCAP::CloudController
     def validate_cannot_change_binding
       return if new?
 
-      app_change = column_change(:app_id)
-      errors.add(:app, :invalid_relation) if app_change && app_change[0] != app_change[1]
+      # app_change = column_change(:app_id)
+      # errors.add(:app, :invalid_relation) if app_change && app_change[0] != app_change[1]
+      app_change = column_change(:app_guid)
+      errors.add(:app_guid, :invalid_relation) if app_change && app_change[0] != app_change[1]
 
       service_change = column_change(:service_instance_id)
       errors.add(:service_instance, :invalid_relation) if service_change && service_change[0] != service_change[1]
     end
 
     def to_hash(opts={})
-      if !VCAP::CloudController::SecurityContext.admin? && !app.space.has_developer?(VCAP::CloudController::SecurityContext.current_user)
+      membership = MembershipClient.new
+      # if !VCAP::CloudController::SecurityContext.admin? && !space.has_developer?(VCAP::CloudController::SecurityContext.current_user)
+      if !VCAP::CloudController::SecurityContext.admin? && !membership.has_any_roles?([Membership::SPACE_DEVELOPER], service_instance.space_guid)
         opts[:redact] = ['credentials']
       end
       super(opts)

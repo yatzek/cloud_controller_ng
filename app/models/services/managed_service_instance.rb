@@ -24,16 +24,17 @@ module VCAP::CloudController
     add_association_dependencies service_instance_operation: :destroy
 
     def validation_policies
-      if space
-        [
-          MaxServiceInstancePolicy.new(self, organization.managed_service_instances.count, organization.quota_definition, :service_instance_quota_exceeded),
-          MaxServiceInstancePolicy.new(self, space.managed_service_instances.count, space.space_quota_definition, :service_instance_space_quota_exceeded),
-          PaidServiceInstancePolicy.new(self, organization.quota_definition, :paid_services_not_allowed_by_quota),
-          PaidServiceInstancePolicy.new(self, space.space_quota_definition, :paid_services_not_allowed_by_space_quota)
-        ]
-      else
-        []
-      end
+      []
+      # if space
+      #   [
+      #     MaxServiceInstancePolicy.new(self, organization.managed_service_instances.count, organization.quota_definition, :service_instance_quota_exceeded),
+      #     MaxServiceInstancePolicy.new(self, space.managed_service_instances.count, space.space_quota_definition, :service_instance_space_quota_exceeded),
+      #     PaidServiceInstancePolicy.new(self, organization.quota_definition, :paid_services_not_allowed_by_quota),
+      #     PaidServiceInstancePolicy.new(self, space.space_quota_definition, :paid_services_not_allowed_by_space_quota)
+      #   ]
+      # else
+      #   []
+      # end
     end
 
     def validate

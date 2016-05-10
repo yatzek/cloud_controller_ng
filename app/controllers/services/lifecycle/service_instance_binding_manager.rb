@@ -79,7 +79,7 @@ module VCAP::CloudController
       service_instance = ServiceInstance.first(guid: service_instance_guid)
       raise ServiceInstanceNotFound unless service_instance
       raise ServiceInstanceNotBindable unless service_instance.bindable?
-      raise AppNotFound unless App.first(guid: app_guid)
+      # raise AppNotFound unless App.first(guid: app_guid)
       raise VolumeMountServiceDisabled if service_instance.volume_service? && !volume_mount_services_enabled
 
       service_binding = ServiceBinding.new(binding_attrs)

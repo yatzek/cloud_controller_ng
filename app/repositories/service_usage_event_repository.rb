@@ -10,12 +10,12 @@ module VCAP::CloudController
       end
 
       def create_from_service_instance(service_instance, state_name)
-        space  = service_instance.space
+        # space  = service_instance.space
         values = {
           state:                 state_name,
-          org_guid:              space.organization_guid,
-          space_guid:            space.guid,
-          space_name:            space.name,
+          org_guid:              "TODO",
+          space_guid:            service_instance.space_guid,
+          space_name:            "TODO",
           service_instance_guid: service_instance.guid,
           service_instance_name: service_instance.name,
           service_instance_type: service_instance.type,
