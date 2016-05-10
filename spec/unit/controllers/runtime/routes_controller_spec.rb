@@ -448,7 +448,8 @@ module VCAP::CloudController
                                organization: space_quota_definition.organization)
       }
       let(:user) { User.make }
-      let(:domain_guid) { SharedDomain.make.guid }
+      let(:shared_domain) { SharedDomain.make }
+      let(:domain_guid) { shared_domain.guid }
       let(:host) { 'example' }
       let(:port) { 1050 }
       let(:req) { {
@@ -466,6 +467,29 @@ module VCAP::CloudController
         set_current_user(user)
       end
 
+      context 'when the route has a system hostname and a system domain' do
+        let(:space) { Space.make(organization: system_domain.owning_organization) }
+        let(:system_domain) { Domain.find(name: TestConfig.config[:system_domain]) }
+        let(:host) { 'api' }
+        let(:req) do
+          { domain_guid: system_domain.guid,
+            space_guid: space.guid,
+            host: host,
+            port: nil,
+            path: '/foo' }
+        end
+
+        before { TestConfig.override(system_hostnames: [host]) }
+
+        it 'fails with an RouteHostTaken' do
+          post '/v2/routes', MultiJson.dump(req)
+
+          expect(last_response).to have_status_code(400)
+          expect(decoded_response['code']).to eq(210003)
+          expect(decoded_response['description']).to eq('The host is taken: api is a system domain')
+        end
+      end
+
       context 'when the domain does not exist' do
         let(:domain_guid) { 'not-exist' }
 
@@ -480,7 +504,6 @@ module VCAP::CloudController
       context 'when the domain is a HTTP Domain' do
         context 'when the domain is a shared domain' do
           let(:shared_domain) { SharedDomain.make }
-          let(:domain_guid) { shared_domain.guid }
 
           context 'and a route already exists with the same host' do
             before do
