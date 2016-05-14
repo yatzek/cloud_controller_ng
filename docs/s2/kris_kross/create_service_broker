@@ -1,0 +1,14 @@
+title Create Service Broker
+
+CLI->Router: POST /v2/service_brokers
+Router->CC: POST /v2/service_brokers
+CC->CC: get_membership
+CC->CC: add_membership_to_request
+CC->S2: POST /internal/s2/service_brokers <modified_request>
+S2->Broker: GET /v2/catalog
+Broker-->S2: <catalog>
+S2->S2: store_broker_service_and_plans
+S2->S2: record_audit_event
+S2-->CLI: 201 Created
+
+/v3/org/:org_id/spaces/:space_id/services/.....

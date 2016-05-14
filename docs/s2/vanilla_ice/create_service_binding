@@ -1,0 +1,11 @@
+title Create Service Binding
+
+CLI->Router: POST /v2/service_bindings
+Router->S2: POST /v2/service_bindings
+S2->CC: POST /internal/memberships
+CC-->S2: <membership>
+S2->Broker: PUT /v2/service_instances/:instance_id/service_bindings/:binding_id
+Broker-->S2: <binding_details>
+S2->S2: store_binding
+S2->S2: record_audit_event
+S2-->CLI: 201 Created

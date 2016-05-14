@@ -1,0 +1,15 @@
+title Create Service Instance
+
+CLI->Router: POST /v2/service_instances
+Router->S2: POST /v2/service_instances
+S2->S2: verify_visiblity
+S2->CC: POST /internal/memberships
+CC-->S2: <membership>
+S2->CC: GET /v2/quota_definitions/:space_guid
+CC-->S2: <space-quota>
+S2->Broker: PUT /v2/service_instances/:instance_id
+Broker-->S2: <instance_details>
+S2->S2: store_service_instance
+S2->S2: record_audit_event
+S2-->CLI: 201 Created
+

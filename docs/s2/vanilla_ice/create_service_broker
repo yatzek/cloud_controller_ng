@@ -1,0 +1,11 @@
+title Create Service Broker
+
+CLI->Router: POST /v2/service_brokers
+Router->S2: POST /v2/service_brokers
+S2->CC: POST /internal/memberships
+CC-->S2: <membership>
+S2->Broker: GET /v2/catalog
+Broker-->S2: <catalog>
+S2->S2: store_broker_service_and_plans
+S2->S2: record_audit_event
+S2-->CLI: 201 Created

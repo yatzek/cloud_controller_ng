@@ -1,0 +1,7 @@
+title Create Service Visibility
+
+CLI->Router: POST /v2/service_plan_visibilities
+Router->S2: POST /v2/service_plan_visibilities
+S2->S2: store_visibility
+S2->S2: record_audit_event
+S2-->CLI: 201 Created

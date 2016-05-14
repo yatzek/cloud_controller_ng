@@ -1,0 +1,16 @@
+title Sweep Orphaned Bindings
+
+loop every so often 
+  Sweeper->S2: GET /v2/service_bindings
+  S2-->Sweeper: <bindings>
+  Sweeper->CC: GET /v2/apps
+  CC-->Sweeper: <apps>
+  Sweeper->Sweeper: filter_orphaned_bindings
+  loop orphaned_bindings
+    Sweeper->S2: DELETE /v2/service_bindings/:binding_id
+    S2->Broker: DELETE /v2/service_instances/:instance_id/service_bindings/:binding_id
+    Broker-->S2: 200
+    S2->S2: record_audit_event
+    S2-->Sweeper: 200
+  end
+end

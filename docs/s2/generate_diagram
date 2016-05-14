@@ -1,0 +1,21 @@
+#!/usr/bin/env ruby
+
+require 'net/http'
+require 'yaml'
+require 'uri'
+require 'open-uri'
+
+source = ARGV[0]
+
+abort "USAGE: #{ARGV[0]} <source-file>" unless source
+
+target = source + '.png'
+
+response = Net::HTTP.post_form(
+  URI.parse('http://www.websequencediagrams.com/index.php'),
+  'style' => 'default',
+  'message' => File.read(source)
+)
+
+appendix = YAML.load(response.body)['img']
+File.write(target, open("http://www.websequencediagrams.com/#{appendix}").read)
