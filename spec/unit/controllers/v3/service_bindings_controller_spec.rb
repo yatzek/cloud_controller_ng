@@ -311,6 +311,7 @@ describe ServiceBindingsController, type: :controller do
 
     before do
       allow_user_read_access(user, space: space)
+      allow_user_secret_access(user, space: space)
     end
 
     it 'returns a 200 OK and the service binding' do
@@ -327,6 +328,7 @@ describe ServiceBindingsController, type: :controller do
       context 'when the user has read-only permissions' do
         before do
           allow_user_read_access(user, space: space)
+          allow_user_secret_access(user, space: space)
           disallow_user_write_access(user, space: space)
         end
 
@@ -371,6 +373,19 @@ describe ServiceBindingsController, type: :controller do
           expect(response.status).to eq 404
           expect(response.body).to include 'ResourceNotFound'
           expect(response.body).to include 'Service binding not found'
+        end
+      end
+
+      context 'when the user can read, but not see secrets' do
+        before do
+          disallow_user_secret_access(user, space: service_binding.space)
+        end
+
+        it 'returns a 200 OK and the service binding' do
+          get :show, guid: service_binding.guid
+
+          expect(response.status).to eq 200
+          expect(parsed_body['data']['credentials']).to eq('[PRIVATE DATA HIDDEN]')
         end
       end
     end

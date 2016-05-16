@@ -17,7 +17,7 @@ module VCAP::CloudController
       )
     end
 
-    describe '#to_json' do
+    describe '#to_hash' do
       let(:result) { DropletPresenter.new(droplet).to_hash }
 
       context 'buildpack lifecycle' do
