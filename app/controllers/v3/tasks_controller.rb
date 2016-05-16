@@ -18,7 +18,7 @@ class TasksController < ApplicationController
 
     if app_nested?
       app, dataset = TaskListFetcher.new.fetch_for_app(message: message)
-      app_not_found! unless app && can_read?(app.space.guid, app.organization.guid)
+      app_not_found! unless app && can_read?(app.space)
     else
       dataset = if roles.admin?
                   TaskListFetcher.new.fetch_all(message: message)
@@ -36,10 +36,10 @@ class TasksController < ApplicationController
     message = TaskCreateMessage.create_from_http_request(params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
 
-    app, space, org, droplet = TaskCreateFetcher.new.fetch(app_guid: params[:app_guid], droplet_guid: message.droplet_guid)
+    app, space, _org, droplet = TaskCreateFetcher.new.fetch(app_guid: params[:app_guid], droplet_guid: message.droplet_guid)
 
-    app_not_found! unless app && can_read?(space.guid, org.guid)
-    unauthorized! unless can_write?(space.guid)
+    app_not_found! unless app && can_read?(space)
+    unauthorized! unless can_write?(space)
     droplet_not_found! if message.requested?(:droplet_guid) && droplet.nil?
 
     task = TaskCreate.new(configuration).create(app, message, current_user.guid, current_user_email, droplet: droplet)
@@ -50,10 +50,10 @@ class TasksController < ApplicationController
   end
 
   def cancel
-    task, space, org = TaskFetcher.new.fetch(task_guid: params[:task_guid])
-    task_not_found! unless task && can_read?(space.guid, org.guid)
+    task, space, _org = TaskFetcher.new.fetch(task_guid: params[:task_guid])
+    task_not_found! unless task && can_read?(space)
 
-    unauthorized! unless can_write?(space.guid)
+    unauthorized! unless can_write?(space)
 
     TaskCancel.new.cancel(task: task, user: current_user, email: current_user_email)
 
@@ -63,8 +63,8 @@ class TasksController < ApplicationController
   end
 
   def show
-    task, space, org = TaskFetcher.new.fetch(task_guid: params[:task_guid])
-    task_not_found! unless task && can_read?(space.guid, org.guid)
+    task, space, _org = TaskFetcher.new.fetch(task_guid: params[:task_guid])
+    task_not_found! unless task && can_read?(space)
 
     render status: :ok, json: TaskPresenter.new(task)
   end

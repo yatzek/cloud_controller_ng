@@ -20,7 +20,7 @@ class ServiceBindingsController < ApplicationController
     app, service_instance = ServiceBindingCreateFetcher.new.fetch(app_guid, service_instance_guid)
     app_not_found! unless app
     service_instance_not_found! unless service_instance
-    unauthorized! unless can_write?(app.space.guid)
+    unauthorized! unless can_write?(app.space)
 
     begin
       service_binding = ServiceBindingCreate.new(current_user.guid, current_user_email).create(app, service_instance, message, volume_services_enabled?)
@@ -37,7 +37,7 @@ class ServiceBindingsController < ApplicationController
   def show
     service_binding = VCAP::CloudController::ServiceBindingModel.find(guid: params[:guid])
 
-    service_binding_not_found! unless service_binding && can_read?(service_binding.space.guid, service_binding.space.organization.guid)
+    service_binding_not_found! unless service_binding && can_read?(service_binding.space)
     render status: :ok, json: ServiceBindingModelPresenter.new(service_binding)
   end
 
@@ -57,8 +57,8 @@ class ServiceBindingsController < ApplicationController
   def destroy
     service_binding = VCAP::CloudController::ServiceBindingModel.find(guid: params[:guid])
 
-    service_binding_not_found! unless service_binding && can_read?(service_binding.space.guid, service_binding.space.organization.guid)
-    unauthorized! unless can_write?(service_binding.space.guid)
+    service_binding_not_found! unless service_binding && can_read?(service_binding.space)
+    unauthorized! unless can_write?(service_binding.space)
 
     ServiceBindingModelDelete.new(current_user.guid, current_user_email).synchronous_delete(service_binding)
 

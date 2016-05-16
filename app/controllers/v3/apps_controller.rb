@@ -33,11 +33,11 @@ class AppsV3Controller < ApplicationController
   end
 
   def show
-    app, space, org = AppFetcher.new.fetch(params[:guid])
+    app, space, _org = AppFetcher.new.fetch(params[:guid])
 
-    app_not_found! unless app && can_read?(space.guid, org.guid)
+    app_not_found! unless app && can_read?(space)
 
-    render status: :ok, json: AppPresenter.new(app, can_see_secrets?(space.guid, org.guid))
+    render status: :ok, json: AppPresenter.new(app, can_see_secrets?(space))
   end
 
   def create
@@ -46,8 +46,8 @@ class AppsV3Controller < ApplicationController
 
     space = Space.where(guid: message.space_guid).first
     space_not_found! unless space
-    space_not_found! unless can_read?(space.guid, space.organization_guid)
-    unauthorized! unless can_write?(message.space_guid)
+    space_not_found! unless can_read?(space)
+    unauthorized! unless can_write?(space)
 
     if message.lifecycle_type == VCAP::CloudController::PackageModel::DOCKER_TYPE
       FeatureFlag.raise_unless_enabled!('diego_docker')
@@ -67,10 +67,10 @@ class AppsV3Controller < ApplicationController
     message = AppUpdateMessage.create_from_http_request(params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
 
-    app, space, org = AppFetcher.new.fetch(params[:guid])
+    app, space, _org = AppFetcher.new.fetch(params[:guid])
 
-    app_not_found! unless app && can_read?(space.guid, org.guid)
-    unauthorized! unless can_write?(space.guid)
+    app_not_found! unless app && can_read?(space)
+    unauthorized! unless can_write?(space)
 
     lifecycle = AppLifecycleProvider.provide_for_update(message, app)
     unprocessable!(lifecycle.errors.full_messages) unless lifecycle.valid?
@@ -85,10 +85,10 @@ class AppsV3Controller < ApplicationController
   end
 
   def destroy
-    app, space, org = AppDeleteFetcher.new.fetch(params[:guid])
+    app, space, _org = AppDeleteFetcher.new.fetch(params[:guid])
 
-    app_not_found! unless app && can_read?(space.guid, org.guid)
-    unauthorized! unless can_write?(space.guid)
+    app_not_found! unless app && can_read?(space)
+    unauthorized! unless can_write?(space)
 
     AppDelete.new(current_user.guid, current_user_email).delete(app)
 
@@ -98,10 +98,10 @@ class AppsV3Controller < ApplicationController
   end
 
   def start
-    app, space, org = AppFetcher.new.fetch(params[:guid])
-    app_not_found! unless app && can_read?(space.guid, org.guid)
+    app, space, _org = AppFetcher.new.fetch(params[:guid])
+    app_not_found! unless app && can_read?(space)
     droplet_not_found! unless app.droplet
-    unauthorized! unless can_write?(space.guid)
+    unauthorized! unless can_write?(space)
     if app.droplet.lifecycle_type == DockerLifecycleDataModel::LIFECYCLE_TYPE
       FeatureFlag.raise_unless_enabled!('diego_docker')
     end
@@ -114,9 +114,9 @@ class AppsV3Controller < ApplicationController
   end
 
   def stop
-    app, space, org = AppFetcher.new.fetch(params[:guid])
-    app_not_found! unless app && can_read?(space.guid, org.guid)
-    unauthorized! unless can_write?(space.guid)
+    app, space, _org = AppFetcher.new.fetch(params[:guid])
+    app_not_found! unless app && can_read?(space)
+    unauthorized! unless can_write?(space)
 
     AppStop.new(current_user, current_user_email).stop(app)
 
@@ -126,9 +126,9 @@ class AppsV3Controller < ApplicationController
   end
 
   def show_environment
-    app, space, org = AppFetcher.new.fetch(params[:guid])
-    app_not_found! unless app && can_read?(space.guid, org.guid)
-    unauthorized! unless can_write?(space.guid)
+    app, space, _org = AppFetcher.new.fetch(params[:guid])
+    app_not_found! unless app && can_read?(space)
+    unauthorized! unless can_write?(space)
 
     FeatureFlag.raise_unless_enabled!('space_developer_env_var_visibility') unless roles.admin?
 
@@ -138,10 +138,10 @@ class AppsV3Controller < ApplicationController
   def assign_current_droplet
     app_guid = params[:guid]
     droplet_guid = params[:body]['droplet_guid']
-    app, space, org, droplet = AssignCurrentDropletFetcher.new.fetch(app_guid, droplet_guid)
+    app, space, _org, droplet = AssignCurrentDropletFetcher.new.fetch(app_guid, droplet_guid)
 
-    app_not_found! unless app && can_read?(space.guid, org.guid)
-    unauthorized! unless can_write?(space.guid)
+    app_not_found! unless app && can_read?(space)
+    unauthorized! unless can_write?(space)
     unprocessable!('Stop the app before changing droplet') if app.desired_state != 'STOPPED'
 
     droplet_not_found! if droplet.nil?
@@ -154,8 +154,8 @@ class AppsV3Controller < ApplicationController
   end
 
   def current_droplet
-    app, space, org = AppFetcher.new.fetch(params[:guid])
-    app_not_found! unless app && can_read?(space.guid, org.guid)
+    app, space, _org = AppFetcher.new.fetch(params[:guid])
+    app_not_found! unless app && can_read?(space)
     droplet = DropletModel.where(guid: app.droplet_guid).eager(:space, space: :organization).all.first
 
     droplet_not_found! unless droplet

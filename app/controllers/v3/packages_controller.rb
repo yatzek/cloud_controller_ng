@@ -21,7 +21,7 @@ class PackagesController < ApplicationController
 
     if app_nested?
       app, dataset = PackageListFetcher.new.fetch_for_app(message: message)
-      app_not_found! unless app && can_read?(app.space.guid, app.organization.guid)
+      app_not_found! unless app && can_read?(app.space)
     else
       dataset = if roles.admin?
                   PackageListFetcher.new.fetch_all(message: message)
@@ -40,8 +40,8 @@ class PackagesController < ApplicationController
     unprocessable!(message.errors.full_messages) unless message.valid?
 
     package = PackageModel.where(guid: params[:guid]).eager(:space, space: :organization).eager(:docker_data).all.first
-    package_not_found! unless package && can_read?(package.space.guid, package.space.organization.guid)
-    unauthorized! unless can_write?(package.space.guid)
+    package_not_found! unless package && can_read?(package.space)
+    unauthorized! unless can_write?(package.space)
 
     unprocessable!('Package type must be bits.') unless package.type == 'bits'
     bits_already_uploaded! if package.state != PackageModel::CREATED_STATE
@@ -57,7 +57,7 @@ class PackagesController < ApplicationController
 
   def download
     package = PackageModel.where(guid: params[:guid]).eager(:space, space: :organization).eager(:docker_data).all.first
-    package_not_found! unless package && can_read?(package.space.guid, package.space.organization.guid)
+    package_not_found! unless package && can_read?(package.space)
 
     unprocessable!('Package type must be bits.') unless package.type == 'bits'
     unprocessable!('Package has no bits to download.') unless package.state == 'READY'
@@ -73,15 +73,15 @@ class PackagesController < ApplicationController
 
   def show
     package = PackageModel.where(guid: params[:guid]).eager(:space, space: :organization).eager(:docker_data).all.first
-    package_not_found! unless package && can_read?(package.space.guid, package.space.organization.guid)
+    package_not_found! unless package && can_read?(package.space)
 
     render status: :ok, json: PackagePresenter.new(package)
   end
 
   def destroy
     package = PackageModel.where(guid: params[:guid]).eager(:space, space: :organization).all.first
-    package_not_found! unless package && can_read?(package.space.guid, package.space.organization.guid)
-    unauthorized! unless can_write?(package.space.guid)
+    package_not_found! unless package && can_read?(package.space)
+    unauthorized! unless can_write?(package.space)
 
     PackageDelete.new(current_user.guid, current_user_email).delete(package)
 
@@ -101,8 +101,8 @@ class PackagesController < ApplicationController
     unprocessable!(message.errors.full_messages) unless message.valid?
 
     app = AppModel.where(guid: params[:app_guid]).eager(:space, :organization).all.first
-    app_not_found! unless app && can_read?(app.space.guid, app.organization.guid)
-    unauthorized! unless can_write?(app.space.guid)
+    app_not_found! unless app && can_read?(app.space)
+    unauthorized! unless can_write?(app.space)
 
     package = PackageCreate.new(current_user.guid, current_user_email).create(message)
 
@@ -113,12 +113,12 @@ class PackagesController < ApplicationController
 
   def create_copy
     destination_app = AppModel.where(guid: params[:app_guid]).eager(:space, :organization).all.first
-    app_not_found! unless destination_app && can_read?(destination_app.space.guid, destination_app.organization.guid)
-    unauthorized! unless can_write?(destination_app.space.guid)
+    app_not_found! unless destination_app && can_read?(destination_app.space)
+    unauthorized! unless can_write?(destination_app.space)
 
     source_package = PackageModel.where(guid: params[:source_package_guid]).eager(:app, :space, space: :organization).eager(:docker_data).all.first
-    package_not_found! unless source_package && can_read?(source_package.space.guid, source_package.space.organization.guid)
-    unauthorized! unless can_write?(source_package.space.guid)
+    package_not_found! unless source_package && can_read?(source_package.space)
+    unauthorized! unless can_write?(source_package.space)
 
     package = PackageCopy.new(current_user.guid, current_user_email).copy(params[:app_guid], source_package)
 

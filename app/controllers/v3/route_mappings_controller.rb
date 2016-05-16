@@ -19,7 +19,7 @@ class RouteMappingsController < ApplicationController
 
     if app_nested?
       app, dataset = fetcher.fetch_for_app(app_guid: params[:app_guid])
-      app_not_found! unless app && can_read?(app.space.guid, app.organization.guid)
+      app_not_found! unless app && can_read?(app.space)
     else
       dataset = if roles.admin?
                   fetcher.fetch_all
@@ -37,14 +37,14 @@ class RouteMappingsController < ApplicationController
 
     process_type = message.process_type || 'web'
 
-    app, route, process, space, org = AddRouteFetcher.new.fetch(
+    app, route, process, space, _org = AddRouteFetcher.new.fetch(
       message.app_guid,
       message.route_guid,
       process_type
     )
 
-    app_not_found! unless app && can_read?(space.guid, org.guid)
-    unauthorized! unless can_write?(space.guid)
+    app_not_found! unless app && can_read?(space)
+    unauthorized! unless can_write?(space)
     route_not_found! unless route
 
     begin
@@ -58,15 +58,15 @@ class RouteMappingsController < ApplicationController
 
   def show
     route_mapping = RouteMappingModel.where(guid: params[:route_mapping_guid]).eager(:space, space: :organization).first
-    route_mapping_not_found! unless route_mapping && can_read?(route_mapping.space.guid, route_mapping.space.organization.guid)
+    route_mapping_not_found! unless route_mapping && can_read?(route_mapping.space)
     render status: :ok, json: RouteMappingPresenter.new(route_mapping)
   end
 
   def destroy
     route_mapping = RouteMappingModel.where(guid: params['route_mapping_guid']).eager(:route, :space, space: :organization, app: :processes).all.first
 
-    route_mapping_not_found! unless route_mapping && can_read?(route_mapping.space.guid, route_mapping.space.organization.guid)
-    unauthorized! unless can_write?(route_mapping.space.guid)
+    route_mapping_not_found! unless route_mapping && can_read?(route_mapping.space)
+    unauthorized! unless can_write?(route_mapping.space)
 
     RouteMappingDelete.new(current_user, current_user_email).delete(route_mapping)
     head :no_content

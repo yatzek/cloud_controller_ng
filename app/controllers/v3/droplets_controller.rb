@@ -20,7 +20,7 @@ class DropletsController < ApplicationController
 
     if app_nested?
       app, dataset = DropletListFetcher.new(message: message).fetch_for_app
-      app_not_found! unless app && can_read?(app.space.guid, app.organization.guid)
+      app_not_found! unless app && can_read?(app.space)
     else
       dataset = if roles.admin?
                   DropletListFetcher.new(message: message).fetch_all
@@ -34,15 +34,15 @@ class DropletsController < ApplicationController
 
   def show
     droplet = DropletModel.where(guid: params[:guid]).eager(:space, space: :organization).all.first
-    droplet_not_found! unless droplet && can_read?(droplet.space.guid, droplet.space.organization.guid)
+    droplet_not_found! unless droplet && can_read?(droplet.space)
     render status: :ok, json: DropletPresenter.new(droplet)
   end
 
   def destroy
-    droplet, space, org = DropletDeleteFetcher.new.fetch(params[:guid])
-    droplet_not_found! unless droplet && can_read?(space.guid, org.guid)
+    droplet, space, _org = DropletDeleteFetcher.new.fetch(params[:guid])
+    droplet_not_found! unless droplet && can_read?(space)
 
-    unauthorized! unless can_write?(space.guid)
+    unauthorized! unless can_write?(space)
 
     droplet_deletor = DropletDelete.new(current_user.guid, current_user_email)
     droplet_deletor.delete(droplet)
@@ -55,12 +55,12 @@ class DropletsController < ApplicationController
     unprocessable!(message.errors.full_messages) unless message.valid?
 
     source_droplet = DropletModel.where(guid: params[:guid]).eager(:space, space: :organization).all.first
-    droplet_not_found! unless source_droplet && can_read?(source_droplet.space.guid, source_droplet.space.organization.guid)
+    droplet_not_found! unless source_droplet && can_read?(source_droplet.space)
     unable_to_perform!('Droplet copy', 'source droplet is not staged') unless source_droplet.staged?
 
     destination_app = AppModel.where(guid: message.app_guid).eager(:space, :organization).all.first
-    app_not_found! unless destination_app && can_read?(destination_app.space.guid, destination_app.organization.guid)
-    unauthorized! unless can_write?(destination_app.space.guid)
+    app_not_found! unless destination_app && can_read?(destination_app.space)
+    unauthorized! unless can_write?(destination_app.space)
 
     droplet = DropletCopy.new(source_droplet).copy(destination_app, current_user.guid, current_user_email)
 
@@ -72,14 +72,14 @@ class DropletsController < ApplicationController
     unprocessable!(staging_message.errors.full_messages) unless staging_message.valid?
 
     package = PackageModel.where(guid: params[:package_guid]).eager(:app, :space, space: :organization, app: :buildpack_lifecycle_data).all.first
-    package_not_found! unless package && can_read?(package.space.guid, package.space.organization.guid)
+    package_not_found! unless package && can_read?(package.space)
     staging_in_progress! if package.app.staging_in_progress?
 
     if package.type == VCAP::CloudController::PackageModel::DOCKER_TYPE
       FeatureFlag.raise_unless_enabled!('diego_docker')
     end
 
-    unauthorized! unless can_write?(package.space.guid)
+    unauthorized! unless can_write?(package.space)
 
     lifecycle = LifecycleProvider.provide(package, staging_message)
     unprocessable!(lifecycle.errors.full_messages) unless lifecycle.valid?

@@ -21,7 +21,7 @@ class ProcessesController < ApplicationController
 
     if app_nested?
       app, dataset = ProcessListFetcher.new(message).fetch_for_app
-      app_not_found! unless app && can_read?(app.space.guid, app.organization.guid)
+      app_not_found! unless app && can_read?(app.space)
     else
       dataset = if roles.admin?
                   ProcessListFetcher.new(message).fetch_all
@@ -35,12 +35,12 @@ class ProcessesController < ApplicationController
 
   def show
     if app_nested?
-      process, app, space, org = ProcessFetcher.new.fetch_for_app_by_type(app_guid: params[:app_guid], process_type: params[:type])
-      app_not_found! unless app && can_read?(space.guid, org.guid)
+      process, app, space, _org = ProcessFetcher.new.fetch_for_app_by_type(app_guid: params[:app_guid], process_type: params[:type])
+      app_not_found! unless app && can_read?(space)
       process_not_found! unless process
     else
-      process, space, org = ProcessFetcher.new.fetch(process_guid: params[:process_guid])
-      process_not_found! unless process && can_read?(space.guid, org.guid)
+      process, space, _org = ProcessFetcher.new.fetch(process_guid: params[:process_guid])
+      process_not_found! unless process && can_read?(space)
     end
 
     render status: :ok, json: ProcessPresenter.new(process, base_process_url)
@@ -52,8 +52,8 @@ class ProcessesController < ApplicationController
     unprocessable!(message.errors.full_messages) unless message.valid?
 
     process = ProcessModel.where(guid: guid).eager(:space, :organization).all.first
-    process_not_found! unless process && can_read?(process.space.guid, process.organization.guid)
-    unauthorized! unless can_write?(process.space.guid)
+    process_not_found! unless process && can_read?(process.space)
+    unauthorized! unless can_write?(process.space)
 
     ProcessUpdate.new(current_user.guid, current_user_email).update(process, message)
 
@@ -64,15 +64,15 @@ class ProcessesController < ApplicationController
 
   def terminate
     if app_nested?
-      process, app, space, org = ProcessFetcher.new.fetch_for_app_by_type(process_type: params[:type], app_guid: params[:app_guid])
-      app_not_found! unless app && can_read?(space.guid, org.guid)
+      process, app, space, _org = ProcessFetcher.new.fetch_for_app_by_type(process_type: params[:type], app_guid: params[:app_guid])
+      app_not_found! unless app && can_read?(space)
       process_not_found! unless process
     else
-      process, space, org = ProcessFetcher.new.fetch(process_guid: params[:process_guid])
-      process_not_found! unless process && can_read?(space.guid, org.guid)
+      process, space, _org = ProcessFetcher.new.fetch(process_guid: params[:process_guid])
+      process_not_found! unless process && can_read?(space)
     end
 
-    unauthorized! unless can_write?(space.guid)
+    unauthorized! unless can_write?(space)
 
     ProcessTerminate.new(current_user.guid, current_user_email, process, params[:index].to_i).terminate
 
@@ -88,15 +88,15 @@ class ProcessesController < ApplicationController
     unprocessable!(message.errors.full_messages) if message.invalid?
 
     if app_nested?
-      process, app, space, org = ProcessFetcher.new.fetch_for_app_by_type(process_type: params[:type], app_guid: params[:app_guid])
-      app_not_found! unless app && can_read?(space.guid, org.guid)
+      process, app, space, _org = ProcessFetcher.new.fetch_for_app_by_type(process_type: params[:type], app_guid: params[:app_guid])
+      app_not_found! unless app && can_read?(space)
       process_not_found! unless process
     else
-      process, space, org = ProcessFetcher.new.fetch(process_guid: params[:process_guid])
-      process_not_found! unless process && can_read?(space.guid, org.guid)
+      process, space, _org = ProcessFetcher.new.fetch(process_guid: params[:process_guid])
+      process_not_found! unless process && can_read?(space)
     end
 
-    unauthorized! unless can_write?(space.guid)
+    unauthorized! unless can_write?(space)
 
     ProcessScale.new(current_user, current_user_email, process, message).scale
 
@@ -107,12 +107,12 @@ class ProcessesController < ApplicationController
 
   def stats
     if app_nested?
-      process, app, space, org = ProcessFetcher.new.fetch_for_app_by_type(process_type: params[:type], app_guid: params[:app_guid])
-      app_not_found! unless app && can_read?(space.guid, org.guid)
+      process, app, space, _org = ProcessFetcher.new.fetch_for_app_by_type(process_type: params[:type], app_guid: params[:app_guid])
+      app_not_found! unless app && can_read?(space)
       process_not_found! unless process
     else
-      process, space, org = ProcessFetcher.new.fetch(process_guid: params[:process_guid])
-      process_not_found! unless process && can_read?(space.guid, org.guid)
+      process, space, _org = ProcessFetcher.new.fetch(process_guid: params[:process_guid])
+      process_not_found! unless process && can_read?(space)
     end
 
     process_stats = instances_reporters.stats_for_app(process)
