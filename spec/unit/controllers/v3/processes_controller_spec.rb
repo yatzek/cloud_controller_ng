@@ -135,6 +135,7 @@ describe ProcessesController, type: :controller do
 
     before do
       allow_user_read_access(user, space: space)
+      allow_user_secret_access(user, space: space)
     end
 
     it 'returns 200 OK with process' do
@@ -227,6 +228,20 @@ describe ProcessesController, type: :controller do
           expect(response.status).to eq(404)
           expect(response.body).to include('ResourceNotFound')
           expect(response.body).to include('Process not found')
+        end
+      end
+
+      context 'when the user can read but not see secrets' do
+        before do
+          allow_user_read_access(user, space: space)
+          disallow_user_secret_access(user, space: space)
+        end
+
+        it 'redacts command' do
+          get :show, { process_guid: process_type.guid }
+
+          expect(response.status).to eq(200)
+          expect(parsed_body['command']).to eq('[PRIVATE DATA HIDDEN]')
         end
       end
     end

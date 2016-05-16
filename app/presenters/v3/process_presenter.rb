@@ -6,16 +6,17 @@ module VCAP::CloudController
   class ProcessPresenter
     attr_reader :process, :base_url
 
-    def initialize(process, base_url=nil)
+    def initialize(process, base_url=nil, show_secrets: true)
       @process = process
       @base_url = base_url || "/v3/processes/#{process.guid}"
+      @show_secrets = show_secrets
     end
 
     def to_hash
       {
         guid:         process.guid,
         type:         process.type,
-        command:      process.command,
+        command:      @show_secrets ? process.command : '[PRIVATE DATA HIDDEN]',
         instances:    process.instances,
         memory_in_mb: process.memory,
         disk_in_mb:   process.disk_quota,

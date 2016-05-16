@@ -43,7 +43,7 @@ class ProcessesController < ApplicationController
       process_not_found! unless process && can_read?(space)
     end
 
-    render status: :ok, json: ProcessPresenter.new(process, base_process_url)
+    render status: :ok, json: ProcessPresenter.new(process, base_process_url, show_secrets: can_see_secrets?(space))
   end
 
   def update
