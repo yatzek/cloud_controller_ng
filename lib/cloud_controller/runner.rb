@@ -4,15 +4,12 @@ require 'i18n'
 require 'i18n/backend/fallbacks'
 require 'vcap/uaa_token_decoder'
 require 'vcap/uaa_verification_key'
-require 'cf_message_bus/message_bus'
 require 'loggregator_emitter'
 require 'loggregator'
 require 'cloud_controller/rack_app_builder'
 require 'cloud_controller/metrics/periodic_updater'
 require 'cloud_controller/metrics/request_metrics'
 
-require_relative 'seeds'
-require_relative 'message_bus_configurer'
 
 module VCAP::CloudController
   class Runner
@@ -80,16 +77,14 @@ module VCAP::CloudController
 
       EM.run do
         begin
-          message_bus = MessageBus::Configurer.new(servers: @config[:message_bus_servers], logger: logger).go
-
-          start_cloud_controller(message_bus)
+          start_cloud_controller
 
 
 
           VCAP::Component.varz.threadsafe! # initialize varz
 
           request_metrics = VCAP::CloudController::Metrics::RequestMetrics.new(statsd_client)
-          gather_periodic_metrics(message_bus)
+          gather_periodic_metrics
 
           builder = RackAppBuilder.new
           app     = builder.build(@config, request_metrics)
@@ -102,11 +97,9 @@ module VCAP::CloudController
       end
     end
 
-    def gather_periodic_metrics(message_bus)
+    def gather_periodic_metrics
       logger.info('setting up metrics')
 
-      logger.info('registering with collector')
-      register_with_collector(message_bus)
 
       logger.info('starting periodic metrics updater')
       periodic_updater.setup_updates
@@ -138,14 +131,13 @@ module VCAP::CloudController
 
     private
 
-    def start_cloud_controller(message_bus)
+    def start_cloud_controller
       setup_logging
       setup_db
       Config.configure_components(@config)
       setup_loggregator_emitter
 
       @config[:external_host] = VCAP.local_ip(@config[:local_route])
-      Config.configure_components_depending_on_message_bus(message_bus)
     end
 
     def create_pidfile
@@ -200,26 +192,12 @@ module VCAP::CloudController
       @thin_server.stop if @thin_server
     end
 
-    def register_with_collector(message_bus)
-      VCAP::Component.register(
-        type: 'CloudController',
-        host: @config[:external_host],
-        port: @config[:varz_port],
-        user: @config[:varz_user],
-        password: @config[:varz_password],
-        index: @config[:index],
-        nats: message_bus,
-        logger: logger,
-        log_counter: @log_counter
-      )
-    end
 
     def periodic_updater
       @periodic_updater ||= VCAP::CloudController::Metrics::PeriodicUpdater.new(
-        ::VCAP::Component.varz.synchronize { ::VCAP::Component.varz[:start] }, # this can become Time.now.utc after we remove varz
+        Time.now.utc, # this can become Time.now.utc after we remove varz
         @log_counter,
         [
-          VCAP::CloudController::Metrics::VarzUpdater.new,
           VCAP::CloudController::Metrics::StatsdUpdater.new(statsd_client)
         ])
     end

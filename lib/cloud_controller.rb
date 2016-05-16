@@ -6,11 +6,9 @@ require 'delayed_job'
 
 require 'allowy'
 
-require 'eventmachine/schedule_sync'
 
 require 'vcap/common'
 require 'cloud_controller/errors/api_error'
-require 'cloud_controller/errors/blob_not_found'
 require 'cloud_controller/errors/details'
 require 'uaa/token_coder'
 
@@ -59,7 +57,6 @@ require 'cloud_controller/structured_error'
 require 'cloud_controller/http_request_error'
 require 'cloud_controller/http_response_error'
 
-require 'cloud_controller/errors/instances_unavailable'
 
 require 'cloud_controller/uaa/errors'
 require 'cloud_controller/uaa/uaa_client'

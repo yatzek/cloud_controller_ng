@@ -8,7 +8,6 @@ gem 'rake'
 # nats wants to lock us to an older version. we already use eventmachine 1.0.9, so do not want a downgrade.
 gem 'eventmachine', '~> 1.0.9'
 
-gem 'fog'
 gem 'i18n'
 gem 'nokogiri', '~> 1.6.2'
 gem 'unf'
@@ -23,7 +22,6 @@ gem 'mime-types', '~> 2.6.2'
 gem 'membrane', '~> 1.0'
 gem 'httpclient'
 gem 'steno'
-gem 'cloudfront-signer'
 gem 'vcap_common', '~> 4.0.4'
 gem 'allowy'
 gem 'loggregator_emitter', '~> 5.0'
@@ -46,7 +44,6 @@ gem 'nats', git: 'https://github.com/nats-io/ruby-nats', ref: '8571cf9d685b60630
 # firewalls
 gem 'vcap-concurrency', git: 'https://github.com/cloudfoundry/vcap-concurrency.git', ref: '2a5b0179'
 gem 'cf-uaa-lib', '~> 3.1.0', git: 'https://github.com/cloudfoundry/cf-uaa-lib.git', ref: 'b1e11235dc6cd7d8d4680e005526de37201305ea'
-gem 'cf-message-bus', '~> 0.3.0'
 
 group :db do
   gem 'mysql2', '0.3.20'

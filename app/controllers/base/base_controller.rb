@@ -2,8 +2,6 @@ require 'cloud_controller/rest_controller/common_params'
 require 'cloud_controller/rest_controller/messages'
 require 'cloud_controller/rest_controller/routes'
 require 'cloud_controller/security/access_context'
-require 'cloud_controller/basic_auth/basic_auth_authenticator'
-require 'cloud_controller/basic_auth/dea_basic_auth_authenticator'
 
 module VCAP::CloudController::RestController
   # The base class for all api endpoints.

@@ -274,14 +274,7 @@ module VCAP::CloudController
         run_initializers(config)
       end
 
-      def configure_components_depending_on_message_bus(message_bus)
-        @message_bus = message_bus
-        dependency_locator = CloudController::DependencyLocator.instance
-        dependency_locator.config = @config
 
-
-
-      end
 
       def config_dir
         @config_dir ||= File.expand_path('../../../config', __FILE__)
