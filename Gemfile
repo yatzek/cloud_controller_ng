@@ -35,14 +35,8 @@ gem 'actionpack', '~> 4.2.5.2'
 gem 'actionview', '~> 4.2.5.2'
 gem 'public_suffix'
 
-# Requiring this particular commit to get a fix to a race condition when subscribing before a connection is made.
-# (see https://github.com/nats-io/ruby-nats/commit/3f3efc6bc41cc483f2d90cb9d401ba4aa3e727d3)
-# If a release newer than 0.5.1 is made that includes this commit, we may wish to switch to that.
-gem 'nats', git: 'https://github.com/nats-io/ruby-nats', ref: '8571cf9d685b6063002486614b66a28bad254a64'
-
 # We need to use https for git urls as the git protocol is blocked by various
 # firewalls
-gem 'vcap-concurrency', git: 'https://github.com/cloudfoundry/vcap-concurrency.git', ref: '2a5b0179'
 gem 'cf-uaa-lib', '~> 3.1.0', git: 'https://github.com/cloudfoundry/cf-uaa-lib.git', ref: 'b1e11235dc6cd7d8d4680e005526de37201305ea'
 
 group :db do

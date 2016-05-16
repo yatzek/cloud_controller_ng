@@ -42,12 +42,10 @@ require 'cloud_controller/config'
 require 'cloud_controller/db'
 require 'cloud_controller/runner'
 
-require 'cloud_controller/collection_transformers'
 require 'cloud_controller/controllers'
 require 'cloud_controller/roles'
 require 'cloud_controller/encryptor'
 require 'cloud_controller/membership'
-require 'cloud_controller/permissions'
 require 'cloud_controller/serializer'
 require 'cloud_controller/dependency_locator'
 

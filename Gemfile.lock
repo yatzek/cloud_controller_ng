@@ -16,24 +16,6 @@ GIT
       tzinfo
 
 GIT
-  remote: https://github.com/cloudfoundry/vcap-concurrency.git
-  revision: 2a5b0179642cb3d3e7f912a6453ec5731979d115
-  ref: 2a5b0179
-  specs:
-    vcap-concurrency (0.1.0)
-
-GIT
-  remote: https://github.com/nats-io/ruby-nats
-  revision: 8571cf9d685b6063002486614b66a28bad254a64
-  ref: 8571cf9d685b6063002486614b66a28bad254a64
-  specs:
-    nats (0.5.1)
-      daemons (~> 1.1, >= 1.2.2)
-      eventmachine (~> 1.0, >= 1.0.7)
-      json_pure (~> 1.8, >= 1.8.1)
-      thin (~> 1.6, >= 1.6.3)
-
-GIT
   remote: https://github.com/zipmark/rspec_api_documentation.git
   revision: de69a7a87adace29f39cbe937ae7bb8da9a4c9c1
   specs:
@@ -127,6 +109,11 @@ GEM
     multipart-post (2.0.0)
     mustache (0.99.8)
     mysql2 (0.3.20)
+    nats (0.5.0)
+      daemons (~> 1.1, >= 1.2.2)
+      eventmachine (~> 1.0, >= 1.0.7)
+      json_pure (~> 1.8, >= 1.8.1)
+      thin (~> 1.6, >= 1.6.3)
     netaddr (1.5.0)
     newrelic_rpm (3.12.0.288)
     nokogiri (1.6.7.2)
@@ -293,7 +280,6 @@ DEPENDENCIES
   mime-types (~> 2.6.2)
   multi_json
   mysql2 (= 0.3.20)
-  nats!
   netaddr
   newrelic_rpm (= 3.12.0.288)
   nokogiri (~> 1.6.2)
@@ -321,7 +307,6 @@ DEPENDENCIES
   thin (~> 1.6.0)
   timecop
   unf
-  vcap-concurrency!
   vcap_common (~> 4.0.4)
   webmock
   yajl-ruby

@@ -79,10 +79,6 @@ module VCAP::CloudController
         begin
           start_cloud_controller
 
-
-
-          VCAP::Component.varz.threadsafe! # initialize varz
-
           request_metrics = VCAP::CloudController::Metrics::RequestMetrics.new(statsd_client)
           gather_periodic_metrics
 

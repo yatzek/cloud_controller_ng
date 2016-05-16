@@ -1,5 +1,4 @@
 require 'vcap/config'
-require 'cloud_controller/account_capacity'
 require 'uri'
 require 'repositories/service_event_repository'
 
@@ -267,9 +266,6 @@ module VCAP::CloudController
         @config = config
 
         Encryptor.db_encryption_key = config[:db_encryption_key]
-        AccountCapacity.configure(config)
-
-
 
         run_initializers(config)
       end
