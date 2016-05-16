@@ -2,10 +2,13 @@ require 'presenters/v3/pagination_presenter'
 
 module VCAP::CloudController
   class AppPresenter
+    REDACTED_MESSAGE = '[PRIVATE DATA HIDDEN]'.freeze
+
     attr_reader :app
 
-    def initialize(app)
+    def initialize(app, show_secrets=true)
       @app = app
+      @show_secrets = show_secrets
     end
 
     def to_hash
@@ -20,7 +23,7 @@ module VCAP::CloudController
           type: app.lifecycle_type,
           data: app.lifecycle_data.to_hash
         },
-        environment_variables:   app.environment_variables || {},
+        environment_variables:   @show_secrets ? (app.environment_variables || {}) : REDACTED_MESSAGE,
         links:                   build_links
       }
     end
