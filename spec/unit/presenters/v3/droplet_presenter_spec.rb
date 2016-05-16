@@ -52,6 +52,16 @@ module VCAP::CloudController
           expect(result[:links][:assign_current_droplet][:method]).to eq('PUT')
         end
 
+        context 'when show_secrets is false' do
+          let(:result) { DropletPresenter.new(droplet, false).to_hash }
+
+          it 'redacts the environment_variables' do
+            expect(result[:environment_variables]).to eq('[PRIVATE DATA HIDDEN]')
+            expect(result[:result][:process_types]).to eq('[PRIVATE DATA HIDDEN]')
+            expect(result[:result][:execution_metadata]).to eq('[PRIVATE DATA HIDDEN]')
+          end
+        end
+
         describe 'result' do
           context 'when droplet is in a "complete" state' do
             before do

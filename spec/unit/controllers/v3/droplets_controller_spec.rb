@@ -527,6 +527,7 @@ describe DropletsController, type: :controller do
 
     before do
       allow_user_read_access(user, space: space)
+      allow_user_secret_access(user, space: space)
     end
 
     it 'returns a 200 OK and the droplet' do
@@ -572,6 +573,20 @@ describe DropletsController, type: :controller do
 
           expect(response.status).to eq(404)
           expect(response.body).to include('ResourceNotFound')
+        end
+      end
+
+      context 'when the user can read but not see secrets' do
+        before do
+          allow_user_read_access(user, space: space)
+          disallow_user_secret_access(user, space: space)
+        end
+
+        it 'redacts env variables' do
+          get :show, guid: droplet.guid
+
+          expect(response.status).to eq 200
+          expect(parsed_body['environment_variables']).to eq('[PRIVATE DATA HIDDEN]')
         end
       end
     end

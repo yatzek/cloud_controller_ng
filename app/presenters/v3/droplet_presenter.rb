@@ -1,9 +1,11 @@
 module VCAP::CloudController
   class DropletPresenter
+    REDACTED_MESSAGE = '[PRIVATE DATA HIDDEN]'.freeze
     attr_reader :droplet
 
-    def initialize(droplet)
+    def initialize(droplet, show_secrets=true)
       @droplet = droplet
+      @show_secrets = show_secrets
     end
 
     def to_hash
@@ -18,7 +20,7 @@ module VCAP::CloudController
         memory_limit:          droplet.memory_limit,
         disk_limit:            droplet.disk_limit,
         result:                result_for_lifecycle,
-        environment_variables: droplet.environment_variables || {},
+        environment_variables: redact(droplet.environment_variables || {}),
         created_at:            droplet.created_at,
         updated_at:            droplet.updated_at,
         links:                 build_links,
@@ -28,6 +30,10 @@ module VCAP::CloudController
     private
 
     DEFAULT_HASHING_ALGORITHM = 'sha1'.freeze
+
+    def redact(value)
+      @show_secrets ? value : REDACTED_MESSAGE
+    end
 
     def build_links
       {
@@ -61,8 +67,8 @@ module VCAP::CloudController
                          end
 
       {
-        execution_metadata: droplet.execution_metadata,
-        process_types:      droplet.process_types
+        execution_metadata: redact(droplet.execution_metadata),
+        process_types:      redact(droplet.process_types)
       }.merge(lifecycle_result)
     end
 
