@@ -1,7 +1,7 @@
 #!/var/vcap/packages/ruby-2.3/bin/ruby --disable-all
 
-$LOAD_PATH.unshift('/var/vcap/packages/cloud_controller_ng/cloud_controller_ng/app')
-$LOAD_PATH.unshift('/var/vcap/packages/cloud_controller_ng/cloud_controller_ng/lib')
+$LOAD_PATH.unshift('/var/vcap/packages/ss/ss/app')
+$LOAD_PATH.unshift('/var/vcap/packages/ss/ss/lib')
 
 require 'cloud_controller/drain'
 

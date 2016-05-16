@@ -1,9 +1,9 @@
 #!/bin/bash
 
-export CC_JOB_DIR=/var/vcap/jobs/cloud_controller_ng
+export CC_JOB_DIR=/var/vcap/jobs/ss
 source $CC_JOB_DIR/bin/ruby_version.sh
 
-CC_PACKAGE_DIR=/var/vcap/packages/cloud_controller_ng
+CC_PACKAGE_DIR=/var/vcap/packages/ss
 
 RUN_DIR=/var/vcap/sys/run/cloud_controller_migration
 LOG_DIR=/var/vcap/sys/log/cloud_controller_migration
@@ -11,7 +11,7 @@ PIDFILE=$RUN_DIR/cloud_controller_migration.pid
 
 export CONFIG_DIR=$CC_JOB_DIR/config
 export CLOUD_CONTROLLER_NG_CONFIG=$CONFIG_DIR/cloud_controller_ng.yml
-export BUNDLE_GEMFILE=$CC_PACKAGE_DIR/cloud_controller_ng/Gemfile
+export BUNDLE_GEMFILE=$CC_PACKAGE_DIR/ss/Gemfile
 export HOME=/home/vcap # rake needs it to be set to run tasks
 
 export C_INCLUDE_PATH=/var/vcap/packages/libpq/include:$C_INCLUDE_PATH
@@ -37,7 +37,7 @@ case $1 in
     echo "$$" > $PIDFILE
     chown vcap:vcap $PIDFILE
 
-    cd $CC_PACKAGE_DIR/cloud_controller_ng
+    cd $CC_PACKAGE_DIR/ss
 
     # Run the migrations only on the first CC launch
     <% if spec.index.to_i == 0 %>

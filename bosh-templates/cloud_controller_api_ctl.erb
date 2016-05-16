@@ -2,10 +2,10 @@
 
 export RAILS_ENV=production
 
-export CC_JOB_DIR=/var/vcap/jobs/cloud_controller_ng
+export CC_JOB_DIR=/var/vcap/jobs/ss
 source $CC_JOB_DIR/bin/ruby_version.sh
 
-CC_PACKAGE_DIR=/var/vcap/packages/cloud_controller_ng
+CC_PACKAGE_DIR=/var/vcap/packages/ss
 
 RUN_DIR=/var/vcap/sys/run/cloud_controller_ng
 LOG_DIR=/var/vcap/sys/log/cloud_controller_ng
@@ -13,7 +13,7 @@ PIDFILE=$RUN_DIR/cloud_controller_ng.pid
 
 export CONFIG_DIR=$CC_JOB_DIR/config
 export CLOUD_CONTROLLER_NG_CONFIG=$CONFIG_DIR/cloud_controller_ng.yml
-export BUNDLE_GEMFILE=$CC_PACKAGE_DIR/cloud_controller_ng/Gemfile
+export BUNDLE_GEMFILE=$CC_PACKAGE_DIR/ss/Gemfile
 export HOME=/home/vcap # rake needs it to be set to run tasks
 export TMPDIR=/var/vcap/data/cloud_controller_ng/tmp
 
@@ -86,8 +86,8 @@ case $1 in
     cd $CC_PACKAGE_DIR/cloud_controller_ng
 
     <% if spec.index.to_i == 0 %>
-    exec chpst -u vcap:vcap $CC_PACKAGE_DIR/cloud_controller_ng/bin/cloud_controller --insert-seed \<% else %>
-    exec chpst -u vcap:vcap $CC_PACKAGE_DIR/cloud_controller_ng/bin/cloud_controller \<% end %>
+    exec chpst -u vcap:vcap $CC_PACKAGE_DIR/ss/bin/cloud_controller --insert-seed \<% else %>
+    exec chpst -u vcap:vcap $CC_PACKAGE_DIR/ss/bin/cloud_controller \<% end %>
       -c $CLOUD_CONTROLLER_NG_CONFIG
     ;;
 
