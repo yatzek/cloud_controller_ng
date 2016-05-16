@@ -11,32 +11,22 @@ module VCAP::CloudController::Metrics
 
     def setup_updates
       update!
-      EM.add_periodic_timer(600) { record_user_count }
       EM.add_periodic_timer(30) { update_job_queue_length }
       EM.add_periodic_timer(30) { update_thread_info }
       EM.add_periodic_timer(30) { update_failed_job_count }
       EM.add_periodic_timer(30) { update_vitals }
       EM.add_periodic_timer(30) { update_log_counts }
-      EM.add_periodic_timer(30) { update_task_stats }
     end
 
     def update!
-      record_user_count
       update_job_queue_length
       update_thread_info
       update_failed_job_count
       update_vitals
       update_log_counts
-      update_task_stats
     end
 
-    def update_task_stats
-      running_tasks = VCAP::CloudController::TaskModel.where(state: VCAP::CloudController::TaskModel::RUNNING_STATE)
-      running_task_count = running_tasks.count
-      running_task_memory = running_tasks.sum(:memory_in_mb)
-      running_task_memory = 0 if running_task_memory.nil?
-      @updaters.each { |u| u.update_task_stats(running_task_count, running_task_memory) }
-    end
+
 
     def update_log_counts
       counts = @log_counter.counts
@@ -49,11 +39,7 @@ module VCAP::CloudController::Metrics
       @updaters.each { |u| u.update_log_counts(hash) }
     end
 
-    def record_user_count
-      user_count = VCAP::CloudController::User.count
 
-      @updaters.each { |u| u.record_user_count(user_count) }
-    end
 
     def update_job_queue_length
       jobs_by_queue_with_count = Delayed::Job.where(attempts: 0).group_and_count(:queue)

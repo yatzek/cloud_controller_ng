@@ -2,13 +2,6 @@ module VCAP::CloudController
   module Seeds
     class << self
       def write_seed_data(config)
-        create_seed_quota_definitions(config)
-        create_seed_stacks
-        create_seed_security_groups(config)
-        system_org = create_seed_organizations(config)
-        create_seed_domains(config, system_org)
-        create_seed_lockings
-        create_seed_environment_variable_groups
       end
 
       def create_seed_quota_definitions(config)

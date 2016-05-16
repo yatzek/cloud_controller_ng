@@ -7,7 +7,6 @@ require 'vcap/uaa_verification_key'
 require 'cf_message_bus/message_bus'
 require 'loggregator_emitter'
 require 'loggregator'
-require 'cloud_controller/dea/sub_system'
 require 'cloud_controller/rack_app_builder'
 require 'cloud_controller/metrics/periodic_updater'
 require 'cloud_controller/metrics/request_metrics'
@@ -85,9 +84,7 @@ module VCAP::CloudController
 
           start_cloud_controller(message_bus)
 
-          Seeds.write_seed_data(@config) if @insert_seed_data
 
-          Dea::SubSystem.setup!(message_bus)
 
           VCAP::Component.varz.threadsafe! # initialize varz
 

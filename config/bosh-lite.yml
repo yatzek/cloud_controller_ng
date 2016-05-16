@@ -88,12 +88,7 @@ doppler:
   enabled: false
 
 db: &db
-#  database: postgres://ccadmin:admin@10.244.0.30:5524/ssdb
-#  max_connections: 25
-#  pool_timeout: 10
-#  log_level: debug2
-#
-  database: postgres://ccadmin:admin@10.244.0.30:5524/ccdb
+  database: postgres://ccadmin:admin@10.244.0.30:5524/ssdb
   max_connections: 25
   pool_timeout: 10
   log_level: debug2

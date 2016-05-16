@@ -2,7 +2,7 @@ module VCAP::CloudController
   class ServiceBroker < Sequel::Model
     one_to_many :services
     one_to_many :service_dashboard_client
-    many_to_one :space
+    # many_to_one :space
 
     import_attributes :name, :broker_url, :auth_username, :auth_password
     export_attributes :name, :broker_url, :auth_username, :space_guid
@@ -29,7 +29,7 @@ module VCAP::CloudController
     end
 
     def private?
-      !!space_id
+      !!space_guid
     end
 
     def self.user_visibility_filter(user)

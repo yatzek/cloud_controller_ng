@@ -1,16 +1,5 @@
-require 'repositories/app_event_repository'
-require 'repositories/space_event_repository'
-require 'repositories/route_event_repository'
 require 'cloud_controller/rest_controller/object_renderer'
 require 'cloud_controller/rest_controller/paginated_collection_renderer'
-require 'cloud_controller/upload_handler'
-require 'cloud_controller/blob_sender/nginx_blob_sender'
-require 'cloud_controller/blob_sender/default_blob_sender'
-require 'cloud_controller/blob_sender/missing_blob_handler'
-require 'cloud_controller/diego/stager_client'
-require 'cloud_controller/diego/tps_client'
-require 'cloud_controller/diego/messenger'
-require 'cloud_controller/blobstore/client_provider'
 
 module CloudController
   class DependencyLocator

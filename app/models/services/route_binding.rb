@@ -2,7 +2,7 @@ module VCAP::CloudController
   class RouteBinding < Sequel::Model
     plugin :after_initialize
 
-    many_to_one :route
+    # many_to_one :route
     many_to_one :service_instance
 
     export_attributes :route_service_url
@@ -11,11 +11,11 @@ module VCAP::CloudController
 
     delegate :service, :service_plan, :client, to: :service_instance
 
-    def notify_diego
-      route.apps.each do |app|
-        app.handle_update_route(route) if app.diego
-      end
-    end
+    # def notify_diego
+    #   route.apps.each do |app|
+    #     app.handle_update_route(route) if app.diego
+    #   end
+    # end
 
     def after_initialize
       super
@@ -24,9 +24,9 @@ module VCAP::CloudController
 
     def validate
       validates_presence :service_instance
-      validates_presence :route
+      # validates_presence :route
       validate_routing_service
-      validate_space_match
+      # validate_space_match
     end
 
     def required_parameters

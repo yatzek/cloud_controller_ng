@@ -16,10 +16,10 @@ module VCAP::CloudController
     end
 
     def create(params)
-      if params[:space_guid]
-        space_id = get_space_id_from_guid(params)
-        params = params.merge({ space_id: space_id })
-      end
+      # if params[:space_guid]
+      #   space_id = get_space_id_from_guid(params)
+        # params = params.merge({ space_id: space_id })
+      # end
 
       broker = ServiceBroker.new(params)
       access_validator.validate_access(:create, broker, params)
