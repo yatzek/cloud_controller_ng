@@ -1,7 +1,8 @@
 require 'presenters/message_bus/service_instance_presenter'
+require 'presenters/v3/mixins/redactor'
 
 class ServiceBindingPresenter
-  REDACTED_MESSAGE = '[PRIVATE DATA HIDDEN]'.freeze
+  include Redactor
 
   def initialize(service_binding, show_secrets: true, include_instance: false)
     @service_binding = service_binding
@@ -25,13 +26,9 @@ class ServiceBindingPresenter
 
   private
 
-  def redact(value)
-    @show_secrets ? value : REDACTED_MESSAGE
-  end
-
   def present_service_binding(service_binding)
     {
-      credentials: redact(service_binding.credentials),
+      credentials: redact(service_binding.credentials, @show_secrets),
       syslog_drain_url: service_binding.syslog_drain_url,
       volume_mounts: ServiceBindingPresenter.censor_volume_mounts(service_binding.volume_mounts)
     }

@@ -1,9 +1,10 @@
-require 'presenters/v3/pagination_presenter'
-require 'presenters/v3/process_stats_presenter'
+require 'presenters/v3/mixins/redactor'
 require 'cloud_controller/diego/protocol/open_process_ports'
 
 module VCAP::CloudController
   class ProcessPresenter
+    include Redactor
+
     attr_reader :process, :base_url
 
     def initialize(process, base_url=nil, show_secrets: true)
@@ -16,7 +17,7 @@ module VCAP::CloudController
       {
         guid:         process.guid,
         type:         process.type,
-        command:      @show_secrets ? process.command : '[PRIVATE DATA HIDDEN]',
+        command:      redact(process.command, @show_secrets),
         instances:    process.instances,
         memory_in_mb: process.memory,
         disk_in_mb:   process.disk_quota,

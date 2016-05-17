@@ -1,8 +1,8 @@
-require 'presenters/v3/pagination_presenter'
+require 'presenters/v3/mixins/redactor'
 
 module VCAP::CloudController
   class AppPresenter
-    REDACTED_MESSAGE = '[PRIVATE DATA HIDDEN]'.freeze
+    include Redactor
 
     attr_reader :app
 
@@ -23,7 +23,7 @@ module VCAP::CloudController
           type: app.lifecycle_type,
           data: app.lifecycle_data.to_hash
         },
-        environment_variables:   @show_secrets ? (app.environment_variables || {}) : REDACTED_MESSAGE,
+        environment_variables:   redact(app.environment_variables || {}, @show_secrets),
         links:                   build_links
       }
     end

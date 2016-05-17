@@ -1,6 +1,9 @@
+require 'presenters/v3/mixins/redactor'
+
 module VCAP::CloudController
   class DropletPresenter
-    REDACTED_MESSAGE = '[PRIVATE DATA HIDDEN]'.freeze
+    include Redactor
+
     attr_reader :droplet
 
     def initialize(droplet, show_secrets=true)
@@ -20,7 +23,7 @@ module VCAP::CloudController
         memory_limit:          droplet.memory_limit,
         disk_limit:            droplet.disk_limit,
         result:                result_for_lifecycle,
-        environment_variables: redact(droplet.environment_variables || {}),
+        environment_variables: redact(droplet.environment_variables || {}, @show_secrets),
         created_at:            droplet.created_at,
         updated_at:            droplet.updated_at,
         links:                 build_links,
@@ -30,10 +33,6 @@ module VCAP::CloudController
     private
 
     DEFAULT_HASHING_ALGORITHM = 'sha1'.freeze
-
-    def redact(value)
-      @show_secrets ? value : REDACTED_MESSAGE
-    end
 
     def build_links
       {
@@ -67,8 +66,8 @@ module VCAP::CloudController
                          end
 
       {
-        execution_metadata: redact(droplet.execution_metadata),
-        process_types:      redact(droplet.process_types)
+        execution_metadata: redact(droplet.execution_metadata, @show_secrets),
+        process_types:      redact(droplet.process_types, @show_secrets)
       }.merge(lifecycle_result)
     end
 
