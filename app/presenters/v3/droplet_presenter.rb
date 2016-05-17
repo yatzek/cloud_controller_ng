@@ -6,7 +6,7 @@ module VCAP::CloudController
 
     attr_reader :droplet
 
-    def initialize(droplet, show_secrets=true)
+    def initialize(droplet, show_secrets: true)
       @droplet = droplet
       @show_secrets = show_secrets
     end

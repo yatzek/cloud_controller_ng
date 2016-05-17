@@ -89,7 +89,7 @@ module VCAP::CloudController
       end
 
       context 'when show_secrets is false' do
-        let(:result) { AppPresenter.new(app, false).to_hash }
+        let(:result) { AppPresenter.new(app, show_secrets: false).to_hash }
 
         it 'redacts the environment_variables' do
           expect(result[:environment_variables]).to eq('[PRIVATE DATA HIDDEN]')

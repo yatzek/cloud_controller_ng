@@ -6,7 +6,7 @@ module VCAP::CloudController
 
     attr_reader :app
 
-    def initialize(app, show_secrets=true)
+    def initialize(app, show_secrets: true)
       @app = app
       @show_secrets = show_secrets
     end

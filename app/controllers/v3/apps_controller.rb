@@ -37,7 +37,7 @@ class AppsV3Controller < ApplicationController
 
     app_not_found! unless app && can_read?(space)
 
-    render status: :ok, json: AppPresenter.new(app, can_see_secrets?(space))
+    render status: :ok, json: AppPresenter.new(app, show_secrets: can_see_secrets?(space))
   end
 
   def create

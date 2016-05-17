@@ -1,5 +1,6 @@
 require 'presenters/v3/paginated_list_presenter'
 require 'presenters/v3/process_presenter'
+require 'presenters/v3/process_stats_presenter'
 require 'cloud_controller/paging/pagination_options'
 require 'actions/process_delete'
 require 'queries/process_list_fetcher'

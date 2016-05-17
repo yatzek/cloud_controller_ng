@@ -53,7 +53,7 @@ module VCAP::CloudController
         end
 
         context 'when show_secrets is false' do
-          let(:result) { DropletPresenter.new(droplet, false).to_hash }
+          let(:result) { DropletPresenter.new(droplet, show_secrets: false).to_hash }
 
           it 'redacts the environment_variables' do
             expect(result[:environment_variables]).to eq('[PRIVATE DATA HIDDEN]')
