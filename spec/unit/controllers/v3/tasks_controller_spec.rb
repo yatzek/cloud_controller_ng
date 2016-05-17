@@ -254,6 +254,7 @@ describe TasksController, type: :controller do
 
     before do
       allow_user_read_access(user, space: space)
+      allow_user_secret_access(user, space: space)
     end
 
     it 'returns a 200 and the task' do
@@ -302,6 +303,21 @@ describe TasksController, type: :controller do
           get :show, task_guid: task.guid
 
           expect(response.status).to eq 200
+        end
+      end
+
+      context 'when the user has read permissions but cannot see secrets' do
+        before do
+          allow_user_read_access(user, space: space)
+          disallow_user_secret_access(user, space: space)
+        end
+
+        it 'redacts command and environment_variables' do
+          get :show, task_guid: task.guid
+
+          expect(response.status).to eq 200
+          expect(parsed_body['command']).to eq('[PRIVATE DATA HIDDEN]')
+          expect(parsed_body['environment_variables']).to eq('[PRIVATE DATA HIDDEN]')
         end
       end
     end

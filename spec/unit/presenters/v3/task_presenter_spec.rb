@@ -35,6 +35,15 @@ module VCAP::CloudController
         expect(result[:updated_at]).to eq(task.updated_at.iso8601)
         expect(result[:links]).to eq(links)
       end
+
+      context 'when show_secrets is false' do
+        let(:presenter) { TaskPresenter.new(task, show_secrets: false) }
+
+        it 'redacts command and environment_variables' do
+          expect(result[:command]).to eq('[PRIVATE DATA HIDDEN]')
+          expect(result[:environment_variables]).to eq('[PRIVATE DATA HIDDEN]')
+        end
+      end
     end
   end
 end
