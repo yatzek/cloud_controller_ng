@@ -827,6 +827,36 @@ describe DropletsController, type: :controller do
           expect(response.status).to eq(200)
         end
       end
+
+      context 'when the user can read but not see secrets in some spaces' do
+        let(:secret_droplet) { VCAP::CloudController::DropletModel.make }
+        let(:space_2) { secret_droplet.space }
+        before do
+          allow_user_read_access(user, space: space)
+          allow_user_read_access(user, space: space_2)
+          allow_user_secret_access(user, space: space)
+          disallow_user_secret_access(user, space: space_2)
+          allow(permissions_double(user)).to receive(:readable_space_guids).and_return([space.guid, space_2.guid])
+        end
+
+        it 'redacts env variables' do
+          get :index
+
+          expect(response.status).to eq 200
+          result = {}
+          parsed_body['resources'].each do |r|
+            result[r['guid']] = r
+          end
+
+          expect(result[user_droplet_1.guid]['environment_variables']).not_to eq('[PRIVATE DATA HIDDEN]')
+          # expect(result[user_droplet_1.guid]['result']['process_types']).not_to eq('[PRIVATE DATA HIDDEN]')
+          # expect(result[user_droplet_1.guid]['result']['execution_metadata']).not_to eq('[PRIVATE DATA HIDDEN]')
+
+          expect(result[secret_droplet.guid]['environment_variables']).to eq('[PRIVATE DATA HIDDEN]')
+          # expect(result[secret_droplet.guid]['result']['process_types']).to eq('[PRIVATE DATA HIDDEN]')
+          # expect(result[secret_droplet.guid]['result']['execution_metadata']).to eq('[PRIVATE DATA HIDDEN]')
+        end
+      end
     end
   end
 end

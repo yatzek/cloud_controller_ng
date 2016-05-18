@@ -458,6 +458,19 @@ describe ServiceBindingsController, type: :controller do
       end
     end
 
+    # context 'when the user can read, but not see secrets' do
+    #   before do
+    #     disallow_user_secret_access(user, space: service_binding.space)
+    #   end
+
+    #   it 'returns a 200 OK and the service binding' do
+    #     get :index
+
+    #     expect(response.status).to eq 200
+    #     expect(parsed_body['data']['credentials']).to eq('[PRIVATE DATA HIDDEN]')
+    #   end
+    # end
+
     context 'when parameters are invalid' do
       context 'because there are unknown parameters' do
         let(:params) { { 'invalid' => 'thing', 'bad' => 'stuff' } }

@@ -59,6 +59,7 @@ module UserHelpers
 
   def disallow_user_secret_access(user, space:)
     allow(permissions_double(user)).to receive(:can_see_secrets_in_space?).with(space.guid, space.organization_guid).and_return(false)
+    allow(membership_double(user)).to receive(:space_guids_for_roles).with(VCAP::CloudController::Membership::SPACE_AUDITOR).and_return([space.guid])
   end
 
   def disallow_user_write_access(user, space:)
@@ -74,6 +75,15 @@ module UserHelpers
     @permissions[user.guid] ||= begin
       instance_double(VCAP::CloudController::Permissions).tap do |permissions|
         allow(VCAP::CloudController::Permissions).to receive(:new).with(user).and_return(permissions)
+      end
+    end
+  end
+
+  def membership_double(user)
+    @memberships ||= {}
+    @memberships[user.guid] ||= begin
+      instance_double(VCAP::CloudController::Membership).tap do |membership|
+        allow(VCAP::CloudController::Membership).to receive(:new).with(user).and_return(membership)
       end
     end
   end

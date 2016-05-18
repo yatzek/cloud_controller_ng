@@ -29,7 +29,10 @@ class DropletsController < ApplicationController
                 end
     end
 
-    render status: :ok, json: PaginatedListPresenter.new(dataset, base_url(resource: 'droplets'), message)
+    audited_spaces = Membership.new(current_user).space_guids_for_roles(Membership::SPACE_AUDITOR)
+    presenter_factory = SpaceSecretPresenterFactory.new(audited_spaces)
+
+    render status: :ok, json: PaginatedListPresenter.new(dataset, base_url(resource: 'droplets'), message, presenter_factory: presenter_factory)
   end
 
   def show

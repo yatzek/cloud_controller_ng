@@ -23,38 +23,66 @@ describe AppsV3Controller, type: :controller do
       expect(response_guids).to match_array([app_model_1.guid])
     end
 
-    context 'admin' do
-      let!(:app_model_1) { VCAP::CloudController::AppModel.make }
-      let!(:app_model_2) { VCAP::CloudController::AppModel.make }
-      let!(:app_model_3) { VCAP::CloudController::AppModel.make }
+    context 'permissions' do
+      context 'when the user can read but not see secrets for some spaces' do
+        let(:space_2) { app_model_2.space }
 
-      before do
-        set_current_user_as_admin
-        disallow_user_read_access(user, space: space_1)
-        VCAP::CloudController::BuildpackLifecycleDataModel.make(app: app_model_1, buildpack: nil, stack: VCAP::CloudController::Stack.default.name)
-        VCAP::CloudController::BuildpackLifecycleDataModel.make(app: app_model_2, buildpack: nil, stack: VCAP::CloudController::Stack.default.name)
-        VCAP::CloudController::BuildpackLifecycleDataModel.make(app: app_model_3, buildpack: nil, stack: VCAP::CloudController::Stack.default.name)
+        before do
+          allow_user_read_access(user, space: space_1)
+          allow_user_read_access(user, space: space_2)
+          disallow_user_secret_access(user, space: space_1)
+          allow_user_secret_access(user, space: space_2)
+          allow(controller).to receive(:readable_space_guids).and_return([space_1.guid, space_2.guid])
+        end
+
+        it 'shows redacted env variables' do
+          get :index
+
+          expect(response.status).to eq 200
+
+          resources = {}
+          parsed_body['resources'].each do |r|
+            resources[r['guid']] = r['environment_variables']
+          end
+
+          expect(resources[app_model_1.guid]).to eq('[PRIVATE DATA HIDDEN]')
+          expect(resources[app_model_2.guid]).not_to eq('[PRIVATE DATA HIDDEN]')
+        end
       end
 
-      it 'fetches all the apps' do
-        get :index
+      context 'admin' do
+        let!(:app_model_1) { VCAP::CloudController::AppModel.make }
+        let!(:app_model_2) { VCAP::CloudController::AppModel.make }
+        let!(:app_model_3) { VCAP::CloudController::AppModel.make }
 
-        response_guids = parsed_body['resources'].map { |r| r['guid'] }
-        expect(response.status).to eq(200)
-        expect(response_guids).to match_array([app_model_1, app_model_2, app_model_3].map(&:guid))
+        before do
+          set_current_user_as_admin
+          disallow_user_read_access(user, space: space_1)
+          VCAP::CloudController::BuildpackLifecycleDataModel.make(app: app_model_1, buildpack: nil, stack: VCAP::CloudController::Stack.default.name)
+          VCAP::CloudController::BuildpackLifecycleDataModel.make(app: app_model_2, buildpack: nil, stack: VCAP::CloudController::Stack.default.name)
+          VCAP::CloudController::BuildpackLifecycleDataModel.make(app: app_model_3, buildpack: nil, stack: VCAP::CloudController::Stack.default.name)
+        end
+
+        it 'fetches all the apps' do
+          get :index
+
+          response_guids = parsed_body['resources'].map { |r| r['guid'] }
+          expect(response.status).to eq(200)
+          expect(response_guids).to match_array([app_model_1, app_model_2, app_model_3].map(&:guid))
+        end
       end
-    end
 
-    context 'when the user does not have read scope' do
-      before do
-        set_current_user(VCAP::CloudController::User.make, scopes: ['cloud_controller.write'])
-      end
+      context 'when the user does not have read scope' do
+        before do
+          set_current_user(VCAP::CloudController::User.make, scopes: ['cloud_controller.write'])
+        end
 
-      it 'raises an ApiError with a 403 code' do
-        get :index
+        it 'raises an ApiError with a 403 code' do
+          get :index
 
-        expect(response.status).to eq 403
-        expect(response.body).to include 'NotAuthorized'
+          expect(response.status).to eq 403
+          expect(response.body).to include 'NotAuthorized'
+        end
       end
     end
 
