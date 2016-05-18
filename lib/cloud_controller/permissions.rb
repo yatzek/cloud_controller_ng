@@ -38,6 +38,10 @@ class VCAP::CloudController::Permissions
     membership.space_guids_for_roles(ROLES_FOR_READING)
   end
 
+  def secretable_space_guids
+    membership.space_guids_for_roles(ROLES_FOR_SECRETS)
+  end
+
   private
 
   def membership

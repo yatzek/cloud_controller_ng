@@ -1,6 +1,27 @@
 require 'rails_helper'
 
 describe AppsV3Controller, type: :controller do
+
+  it 'playground' do
+    one = VCAP::CloudController::AppModel.make
+    two = VCAP::CloudController::AppModel.make
+
+    # VCAP::CloudController::AppModel.select_all.select_append{Sequel.lit("'asdf'").as(:guid)}.all.each do |a|
+    #   pp a
+    # end
+
+    VCAP::CloudController::AppModel.select_all.select_append(:guid).where(guid: one.guid).union(
+      VCAP::CloudController::AppModel.where(guid: two.guid).select_all.select_append{Sequel.lit("'asdf'").as(:full_access, read_only, audit_only)}
+    ).all.each do |a|
+      pp a
+    end
+
+
+
+
+
+  end
+
   describe '#index' do
     let(:app_model_1) { VCAP::CloudController::AppModel.make }
     let!(:app_model_2) { VCAP::CloudController::AppModel.make }

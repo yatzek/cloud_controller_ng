@@ -26,12 +26,12 @@ class AppsV3Controller < ApplicationController
     dataset = if roles.admin?
                 AppListFetcher.new.fetch_all(message)
               else
-                AppListFetcher.new.fetch(message, readable_space_guids)
+                AppListFetcher.new.fetch(message, readable_space_guids, secretable_space_guids)
               end
 
-    audited_spaces = Membership.new(current_user).space_guids_for_roles(Membership::SPACE_AUDITOR)
-    presenter_factory = SpaceSecretPresenterFactory.new(audited_spaces)
-    render status: :ok, json: PaginatedListPresenter.new(dataset, '/v3/apps', message, presenter_factory: presenter_factory)
+    # audited_spaces = Membership.new(current_user).space_guids_for_roles(Membership::SPACE_AUDITOR)
+    # presenter_factory = SpaceSecretPresenterFactory.new(audited_spaces)
+    render status: :ok, json: PaginatedListPresenter.new(dataset, '/v3/apps', message)
   end
 
   def show

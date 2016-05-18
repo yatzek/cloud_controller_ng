@@ -8,8 +8,11 @@ module VCAP::CloudController
       filter(message, dataset)
     end
 
-    def fetch(message, space_guids)
+    def fetch(message, space_guids, unredacted_guids)
       dataset = AppModel.where(space_guid: space_guids)
+
+
+
       filter(message, dataset)
     end
 
@@ -23,7 +26,7 @@ module VCAP::CloudController
         dataset = dataset.where(space_guid: message.space_guids)
       end
       if message.requested?(:organization_guids)
-        dataset = dataset.where(space_guid: Organization.where(guid: message.organization_guids).map(&:spaces).flatten.map(&:guid))
+        dataset = dataset.where(space_guid: Organization.where(guid: message.organization_guids).flat_map(&:spaces).map(&:guid))
       end
       if message.requested?(:guids)
         dataset = dataset.where(guid: message.guids)
