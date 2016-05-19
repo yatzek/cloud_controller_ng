@@ -72,7 +72,7 @@ module VCAP::CloudController
         end
 
         shared_examples 'a packaging failure' do
-          let(:expected_exception) { Errors::ApiError }
+          let(:expected_exception) { ::CloudController::Errors::ApiError }
 
           before do
             allow(App).to receive(:find).and_return(app)

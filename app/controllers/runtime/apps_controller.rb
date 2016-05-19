@@ -3,13 +3,7 @@ require 'presenters/system_env_presenter'
 module VCAP::CloudController
   class AppsController < RestController::ModelController
     def self.dependencies
-<<<<<<< 6c6159f07ea8bdd850fc08fbef609f0bb147ad26
-      [:app_event_repository, :droplet_blobstore]
-||||||| merged common ancestors
-      [:app_event_repository, :droplet_blobstore, :blob_sender]
-=======
       [:app_event_repository, :droplet_blobstore, :blob_sender, :use_bits_service, :bits_client]
->>>>>>> Use bits-service in apps_controller download droplet
     end
 
     define_attributes do
@@ -144,9 +138,9 @@ module VCAP::CloudController
 
       if @use_bits_service
         droplet = app.current_droplet
-        raise VCAP::Errors::ApiError.new_from_details('ResourceNotFound', "Droplet not found for app with guid #{app.guid}") unless droplet && droplet.droplet_hash
+        raise CloudController::Errors::BlobNotFound unless droplet && droplet.droplet_hash
         url = @bits_client.download_url(:droplets, droplet.droplet_hash)
-        raise VCAP::Errors::ApiError.new_from_details('ResourceNotFound', "Droplet not found for app with guid #{app.guid}") unless url
+        raise CloudController::Errors::BlobNotFound unless url
         return [200, { 'X-Accel-Redirect' => "/bits_redirect/#{url}" }, nil] if @config[:nginx][:use_nginx]
         redirect url
       end

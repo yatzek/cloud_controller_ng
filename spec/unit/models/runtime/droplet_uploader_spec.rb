@@ -87,7 +87,7 @@ describe CloudController::DropletUploader do
 
           expect {
             subject.upload(temp_file_path)
-          }.to raise_error VCAP::Errors::ApiError
+          }.to raise_error CloudController::Errors::ApiError
         end
       end
     end

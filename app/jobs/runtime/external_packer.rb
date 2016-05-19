@@ -39,7 +39,7 @@ module VCAP::CloudController
           app.save
         rescue => e
           app.mark_as_failed_to_stage
-          raise Errors::ApiError.new_from_details('BitsServiceError', e.message) if e.is_a?(BitsClient::Errors::Error)
+          raise CloudController::Errors::ApiError.new_from_details('BitsServiceError', e.message) if e.is_a?(BitsClient::Errors::Error)
           raise
         end
 
@@ -60,7 +60,7 @@ module VCAP::CloudController
         def upload_package(bits_client, file_path)
           bits_client.upload_package(file_path)
         rescue BitsClient::Errors::Error => e
-          raise VCAP::Errors::ApiError.new_from_details('BitsServiceError', e.message)
+          raise CloudController::Errors::ApiError.new_from_details('BitsServiceError', e.message)
         end
       end
     end

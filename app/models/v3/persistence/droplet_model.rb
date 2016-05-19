@@ -72,6 +72,8 @@ module VCAP::CloudController
 
     def blobstore_key(hash=nil)
       hash ||= droplet_hash
+
+      return hash if use_bits_service?
       File.join(guid, hash) if hash
     end
 
@@ -81,10 +83,6 @@ module VCAP::CloudController
 
     def docker?
       lifecycle_type == DockerLifecycleDataModel::LIFECYCLE_TYPE
-    end
-
-    def blobstore_key
-      File.join(guid, droplet_hash) if droplet_hash
     end
 
     def staged?

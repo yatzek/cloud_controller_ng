@@ -187,7 +187,7 @@ module VCAP::CloudController
 
             expect {
               upload_buildpack.upload_buildpack(buildpack, valid_zip, filename)
-            }.to raise_error Errors::ApiError
+            }.to raise_error CloudController::Errors::ApiError
           end
         end
       end

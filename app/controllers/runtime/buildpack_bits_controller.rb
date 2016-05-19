@@ -42,11 +42,8 @@ module VCAP::CloudController
     def download(guid)
       obj = Buildpack.find(guid: guid)
 
-      blob = buildpack_blobstore.blob(obj.key) if obj && obj.key
-      raise Errors::ApiError.new_from_details('NotFound', guid) unless blob
-
       if use_bits_service
-        raise Errors::ApiError.new_from_details('NotFound', guid) unless obj && obj.key
+        raise CloudController::Errors::ApiError.new_from_details('NotFound', guid) unless obj && obj.key
         url = bits_client.download_url(:buildpacks, obj.key)
         return [200, { 'X-Accel-Redirect' => "/bits_redirect/#{url}" }, nil] if @config[:nginx][:use_nginx]
         return [HTTP::FOUND, { 'Location' => url }, nil]
