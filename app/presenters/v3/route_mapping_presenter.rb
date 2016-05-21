@@ -1,12 +1,7 @@
 require 'presenters/v3/pagination_presenter'
 
 module VCAP::CloudController
-  class RouteMappingPresenter
-    attr_reader :route_mapping
-
-    def initialize(route_mapping, show_secrets: true)
-      @route_mapping = route_mapping
-    end
+  class RouteMappingPresenter < BasePresenter
 
     def to_hash
       {
@@ -18,6 +13,10 @@ module VCAP::CloudController
     end
 
     private
+
+    def route_mapping
+      @resource
+    end
 
     def build_links
       process_link = nil

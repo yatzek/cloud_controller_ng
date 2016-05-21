@@ -1,10 +1,5 @@
 module VCAP::CloudController
-  class PackagePresenter
-    attr_reader :package
-
-    def initialize(package, show_secrets: true)
-      @package = package
-    end
+  class PackagePresenter < BasePresenter
 
     def to_hash
       {
@@ -19,6 +14,10 @@ module VCAP::CloudController
     end
 
     private
+
+    def package
+      @resource
+    end
 
     DEFAULT_HASHING_ALGORITHM = 'sha1'.freeze
 
