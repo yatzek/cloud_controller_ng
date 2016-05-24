@@ -40,7 +40,7 @@ module VCAP::CloudController
     private
 
     def delete_subresources(app)
-      PackageDelete.new(user_guid, user_email).delete(packages_to_delete(app))
+      PackageDelete.new(user_guid, user_email, use_bits_service?).delete(packages_to_delete(app))
       TaskDelete.new(user_guid, user_email).delete(tasks_to_delete(app))
       DropletDelete.new(user_guid, user_email).delete(droplets_to_delete(app))
       ProcessDelete.new(user_guid, user_email).delete(processes_to_delete(app))
@@ -89,6 +89,10 @@ module VCAP::CloudController
       unless app.service_bindings_dataset.empty?
         raise InvalidDelete.new('Please delete the service_bindings associations for your apps.')
       end
+    end
+
+    def use_bits_service?
+      CloudController::DependencyLocator.instance.use_bits_service
     end
   end
 end
