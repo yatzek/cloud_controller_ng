@@ -15,7 +15,7 @@ describe BitsClient do
     let(:file_name) { 'my-buildpack.zip' }
 
     it 'includes the header with a POST request' do
-      expect(VCAP::Request).to receive(:current_id).and_return('0815')
+      expect(VCAP::Request).to receive(:current_id).at_least(:twice).and_return('0815')
 
       request = stub_request(:post, 'http://bits-service.com/buildpacks').
                 with(body: /.*buildpack".*/, headers: { 'X-Vcap-Request_Id' => '0815' }).
@@ -23,6 +23,56 @@ describe BitsClient do
 
       subject.upload_buildpack(file_path, file_name)
       expect(request).to have_been_requested
+    end
+  end
+
+  context 'Logging' do
+    let!(:request) { stub_request(:delete, 'http://bits-service.com/buildpacks/1').to_return(status: 204) }
+    let(:vcap_id) { 'VCAP-ID-1' }
+
+    before do
+      allow(VCAP::Request).to receive(:current_id).and_return(vcap_id)
+    end
+
+    it 'logs the request being made' do
+      allow_any_instance_of(Steno::Logger).to receive(:info).with('Response', anything)
+
+      expect_any_instance_of(Steno::Logger).to receive(:info).with('Request', {
+        method: 'DELETE',
+        path: '/buildpacks/1',
+        address: 'bits-service.com',
+        port: 80,
+        vcap_id: vcap_id,
+        request_id: anything
+      })
+
+      subject.delete_buildpack(1)
+    end
+
+    it 'logs the response being received' do
+      allow_any_instance_of(Steno::Logger).to receive(:info).with('Request', anything)
+
+      expect_any_instance_of(Steno::Logger).to receive(:info).with('Response', {
+        code: '204',
+        vcap_id: vcap_id,
+        request_id: anything
+      })
+
+      subject.delete_buildpack(1)
+    end
+
+    it 'matches the request_id from the request in the reponse' do
+      request_id = nil
+
+      expect_any_instance_of(Steno::Logger).to receive(:info).with('Request', anything) do |_, _, data|
+        request_id = data[:request_id]
+      end
+
+      expect_any_instance_of(Steno::Logger).to receive(:info).with('Response', anything) do |_, _, data|
+        expect(data[:request_id]).to eq(request_id)
+      end
+
+      subject.delete_buildpack(1)
     end
   end
 
