@@ -170,7 +170,14 @@ class BitsClient
 
   def do_request(request)
     request_id = SecureRandom.uuid
-    @logger.info('Request', { method: request.method, path: request.path, address: http_client.address, port: http_client.port, vcap_id: VCAP::Request.current_id, request_id: request_id })
+    @logger.info('Request', {
+      method: request.method,
+      path: request.path,
+      address: http_client.address,
+      port: http_client.port,
+      vcap_id: VCAP::Request.current_id,
+      request_id: request_id
+    })
 
     request.add_field(VCAP::Request::HEADER_NAME, VCAP::Request.current_id)
     http_client.request(request).tap do |response|
