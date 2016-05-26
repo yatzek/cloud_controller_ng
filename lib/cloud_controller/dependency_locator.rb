@@ -243,7 +243,7 @@ module CloudController
 
     def bits_client
       return nil unless use_bits_service
-      BitsClient.new(endpoint: @config[:bits_service][:endpoint])
+      BitsClient.new(public_endpoint: @config[:bits_service][:public_endpoint], private_endpoint: @config[:bits_service][:private_endpoint])
     end
 
     def use_bits_service

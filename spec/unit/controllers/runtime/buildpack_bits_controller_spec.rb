@@ -171,7 +171,8 @@ module VCAP::CloudController
             {
               bits_service: {
                 enabled: true,
-                endpoint: 'https://bits-service.example.com'
+                public_endpoint: 'https://bits-service.example.com',
+                private_endpoint: 'https://bits-service.service.cf.internal'
               }
             }
           end
@@ -280,7 +281,8 @@ module VCAP::CloudController
               nginx: { use_nginx: use_nginx },
               bits_service: {
                 enabled: true,
-                endpoint: 'https://bits-service.example.com'
+                public_endpoint: 'https://bits-service.example.com',
+                private_endpoint: 'https://bits-service.service.cf.internal'
               },
               staging: {
                 timeout_in_seconds: 240,

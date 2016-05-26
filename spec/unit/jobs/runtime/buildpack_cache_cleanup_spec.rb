@@ -89,7 +89,8 @@ module VCAP::CloudController
           {
             bits_service: {
               enabled: true,
-              endpoint: 'https://bits-service.example.com'
+              public_endpoint: 'https://bits-service.example.com',
+              private_endpoint: 'https://bits-service.service.cf.internal'
             }
           }
         end

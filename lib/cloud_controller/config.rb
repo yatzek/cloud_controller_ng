@@ -259,7 +259,8 @@ module VCAP::CloudController
 
         optional(:bits_service) => {
           enabled: bool,
-          optional(:endpoint) => String,
+          optional(:public_endpoint) => String,
+          optional(:private_endpoint) => String,
         }
       }
     end

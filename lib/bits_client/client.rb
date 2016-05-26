@@ -3,8 +3,9 @@ require 'net/http/post/multipart'
 class BitsClient
   require_relative 'errors'
 
-  def initialize(endpoint:)
-    @endpoint = URI.parse(endpoint)
+  def initialize(public_endpoint:, private_endpoint:)
+    @public_endpoint = URI.parse(public_endpoint)
+    @private_endpoint = URI.parse(private_endpoint)
     @logger = Steno.logger('cc.bits_client')
   end
 
@@ -84,7 +85,7 @@ class BitsClient
   def download_url(resource_type, guid)
     resource_type = 'buildpack_cache/entries' if resource_type.to_sym == :buildpack_cache
 
-    File.join(endpoint.to_s, resource_type.to_s, guid.to_s)
+    File.join(public_endpoint.to_s, resource_type.to_s, guid.to_s)
   end
 
   def matches(resources_json)
@@ -108,7 +109,7 @@ class BitsClient
 
   private
 
-  attr_reader :endpoint
+  attr_reader :public_endpoint, :private_endpoint
 
   def validate_response_code!(expected, response)
     return if expected.to_i == response.code.to_i
@@ -170,6 +171,8 @@ class BitsClient
 
   def do_request(request)
     request_id = SecureRandom.uuid
+    http_client = request.method == 'GET' ? public_http_client : private_http_client
+
     @logger.info('Request', {
       method: request.method,
       path: request.path,
@@ -178,14 +181,17 @@ class BitsClient
       vcap_id: VCAP::Request.current_id,
       request_id: request_id
     })
-
     request.add_field(VCAP::Request::HEADER_NAME, VCAP::Request.current_id)
     http_client.request(request).tap do |response|
       @logger.info('Response', { code: response.code, vcap_id: VCAP::Request.current_id, request_id: request_id })
     end
   end
 
-  def http_client
-    @http_client ||= Net::HTTP.new(endpoint.host, endpoint.port)
+  def private_http_client
+    @private_http_client ||= Net::HTTP.new(private_endpoint.host, private_endpoint.port)
+  end
+
+  def public_http_client
+    @public_http_client ||= Net::HTTP.new(public_endpoint.host, public_endpoint.port)
   end
 end

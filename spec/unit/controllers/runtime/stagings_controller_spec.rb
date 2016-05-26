@@ -701,7 +701,8 @@ module VCAP::CloudController
               original_staging_config.merge({
                 bits_service: {
                   enabled: true,
-                  endpoint: 'http://bits-service.com'
+                  public_endpoint: 'http://bits-service.com',
+                  private_endpoint: 'http://bits-service.service.cf.internal'
                 }
               })
             end
@@ -738,7 +739,8 @@ module VCAP::CloudController
                 },
                 bits_service: {
                   enabled: true,
-                  endpoint: 'http://bits-service.com'
+                  public_endpoint: 'https://bits-service.com',
+                  private_endpoint: 'https://bits-service.service.cf.internal'
                 }
               })
             end
@@ -746,7 +748,7 @@ module VCAP::CloudController
             it 'redirects to bits service' do
               make_request
               expect(last_response.status).to eq(302)
-              expect(last_response.headers['Location']).to match("http://bits-service.com/buildpack_cache/entries/#{app_obj.guid}/#{app_obj.stack.name}")
+              expect(last_response.headers['Location']).to match("https://bits-service.com/buildpack_cache/entries/#{app_obj.guid}/#{app_obj.stack.name}")
             end
           end
         end

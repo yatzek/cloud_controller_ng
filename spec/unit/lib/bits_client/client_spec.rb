@@ -4,11 +4,12 @@ require 'bits_client/client'
 require 'securerandom'
 
 describe BitsClient do
-  let(:endpoint) { 'http://bits-service.com/' }
+  let(:public_endpoint) { 'http://bits-service.com/' }
+  let(:private_endpoint) { 'http://bits-service.service.cf.internal/' }
 
   let(:guid) { SecureRandom.uuid }
 
-  subject { BitsClient.new(endpoint: endpoint) }
+  subject { BitsClient.new(public_endpoint: public_endpoint, private_endpoint: private_endpoint) }
 
   describe 'forwards vcap-request-id' do
     let(:file_path) { Tempfile.new('buildpack').path }
@@ -17,7 +18,7 @@ describe BitsClient do
     it 'includes the header with a POST request' do
       expect(VCAP::Request).to receive(:current_id).at_least(:twice).and_return('0815')
 
-      request = stub_request(:post, 'http://bits-service.com/buildpacks').
+      request = stub_request(:post, File.join(private_endpoint, 'buildpacks')).
                 with(body: /.*buildpack".*/, headers: { 'X-Vcap-Request_Id' => '0815' }).
                 to_return(status: 201)
 
@@ -27,7 +28,7 @@ describe BitsClient do
   end
 
   context 'Logging' do
-    let!(:request) { stub_request(:delete, 'http://bits-service.com/buildpacks/1').to_return(status: 204) }
+    let!(:request) { stub_request(:delete, File.join(private_endpoint, 'buildpacks/1')).to_return(status: 204) }
     let(:vcap_id) { 'VCAP-ID-1' }
 
     before do
@@ -40,7 +41,7 @@ describe BitsClient do
       expect_any_instance_of(Steno::Logger).to receive(:info).with('Request', {
         method: 'DELETE',
         path: '/buildpacks/1',
-        address: 'bits-service.com',
+        address: 'bits-service.service.cf.internal',
         port: 80,
         vcap_id: vcap_id,
         request_id: anything
@@ -82,7 +83,7 @@ describe BitsClient do
       let(:key) { '1234/567' }
 
       it 'makes the correct request to the bits endpoint' do
-        request = stub_request(:put, 'http://bits-service.com/buildpack_cache/entries/1234/567').
+        request = stub_request(:put, File.join(private_endpoint, 'buildpack_cache/entries/1234/567')).
                   to_return(status: 201)
 
         subject.upload_buildpack_cache(key, file_path)
@@ -93,7 +94,7 @@ describe BitsClient do
     describe '#delete_buildpack_cache' do
       let(:key) { '1234/567' }
       it 'makes the correct request to the bits endpoint' do
-        request = stub_request(:delete, 'http://bits-service.com/buildpack_cache/entries/1234/567').
+        request = stub_request(:delete, File.join(private_endpoint, 'buildpack_cache/entries/1234/567')).
                   to_return(status: 204)
         subject.delete_buildpack_cache(key)
         expect(request).to have_been_requested
@@ -102,7 +103,7 @@ describe BitsClient do
 
     describe '#delete_all_buildpack_caches' do
       it 'makes the correct request to the bits endpoint' do
-        request = stub_request(:delete, 'http://bits-service.com/buildpack_cache/entries').
+        request = stub_request(:delete, File.join(private_endpoint, 'buildpack_cache/entries')).
                   to_return(status: 204)
         subject.delete_all_buildpack_caches
         expect(request).to have_been_requested
@@ -112,7 +113,7 @@ describe BitsClient do
     describe '#download_url' do
       it 'returns the bits-service download endpoint for the key' do
         url = subject.download_url(:buildpack_cache, '1234/567')
-        expect(url).to eq('http://bits-service.com/buildpack_cache/entries/1234/567')
+        expect(url).to eq(File.join(public_endpoint, 'buildpack_cache/entries/1234/567'))
       end
     end
   end
@@ -123,7 +124,7 @@ describe BitsClient do
       let(:file_name) { 'my-buildpack.zip' }
 
       it 'makes the correct request to the bits endpoint' do
-        request = stub_request(:post, 'http://bits-service.com/buildpacks').
+        request = stub_request(:post, File.join(private_endpoint, 'buildpacks')).
                   with(body: /.*buildpack".*/).
                   to_return(status: 201)
 
@@ -132,7 +133,7 @@ describe BitsClient do
       end
 
       it 'returns the request response' do
-        stub_request(:post, 'http://bits-service.com/buildpacks').
+        stub_request(:post, File.join(private_endpoint, 'buildpacks')).
           to_return(status: 201)
 
         response = subject.upload_buildpack(file_path, file_name)
@@ -140,7 +141,7 @@ describe BitsClient do
       end
 
       it 'raises an error when the response is not 201' do
-        stub_request(:post, 'http://bits-service.com/buildpacks').
+        stub_request(:post, File.join(private_endpoint, 'buildpacks')).
           to_return(status: 400, body: '{"description":"bits-failure"}')
 
         expect {
@@ -160,13 +161,13 @@ describe BitsClient do
     describe '#download_url' do
       it 'returns the bits-service download endpoint for the guid' do
         url = subject.download_url(:buildpacks, '1234')
-        expect(url).to eq('http://bits-service.com/buildpacks/1234')
+        expect(url).to eq(File.join(public_endpoint, 'buildpacks/1234'))
       end
     end
 
     describe '#delete_buildpack' do
       it 'makes the correct request to the bits endpoint' do
-        request = stub_request(:delete, "http://bits-service.com/buildpacks/#{guid}").
+        request = stub_request(:delete, File.join(private_endpoint, "buildpacks/#{guid}")).
                   to_return(status: 204)
 
         subject.delete_buildpack(guid)
@@ -174,7 +175,7 @@ describe BitsClient do
       end
 
       it 'returns the request response' do
-        stub_request(:delete, "http://bits-service.com/buildpacks/#{guid}").
+        stub_request(:delete, File.join(private_endpoint, "buildpacks/#{guid}")).
           to_return(status: 204)
 
         response = subject.delete_buildpack(guid)
@@ -182,7 +183,7 @@ describe BitsClient do
       end
 
       it 'raises an error when the response is not 204' do
-        stub_request(:delete, "http://bits-service.com/buildpacks/#{guid}").
+        stub_request(:delete, File.join(private_endpoint, "buildpacks/#{guid}")).
           to_return(status: 400, body: '{"description":"bits-failure"}')
 
         expect {
@@ -197,7 +198,7 @@ describe BitsClient do
       let(:file_path) { Tempfile.new('droplet').path }
 
       it 'makes the correct request to the bits endpoint' do
-        request = stub_request(:post, 'http://bits-service.com/droplets').
+        request = stub_request(:post, File.join(private_endpoint, 'droplets')).
                   with(body: /.*droplet".*/).
                   to_return(status: 201)
 
@@ -206,7 +207,7 @@ describe BitsClient do
       end
 
       it 'returns the request response' do
-        stub_request(:post, 'http://bits-service.com/droplets').
+        stub_request(:post, File.join(private_endpoint, 'droplets')).
           to_return(status: 201)
 
         response = subject.upload_droplet(file_path)
@@ -214,7 +215,7 @@ describe BitsClient do
       end
 
       it 'raises an error when the response is not 201' do
-        stub_request(:post, 'http://bits-service.com/droplets').
+        stub_request(:post, File.join(private_endpoint, 'droplets')).
           to_return(status: 400, body: '{"description":"bits-failure"}')
 
         expect {
@@ -233,7 +234,7 @@ describe BitsClient do
 
     describe '#delete_droplet' do
       it 'makes the correct request to the bits endpoint' do
-        request = stub_request(:delete, "http://bits-service.com/droplets/#{guid}").
+        request = stub_request(:delete, File.join(private_endpoint, "droplets/#{guid}")).
                   to_return(status: 204)
 
         subject.delete_droplet(guid)
@@ -241,7 +242,7 @@ describe BitsClient do
       end
 
       it 'returns the request response' do
-        stub_request(:delete, "http://bits-service.com/droplets/#{guid}").
+        stub_request(:delete, File.join(private_endpoint, "droplets/#{guid}")).
           to_return(status: 204)
 
         response = subject.delete_droplet(guid)
@@ -249,7 +250,7 @@ describe BitsClient do
       end
 
       it 'raises an error when the response is not 204' do
-        stub_request(:delete, "http://bits-service.com/droplets/#{guid}").
+        stub_request(:delete, File.join(private_endpoint, "droplets/#{guid}")).
           to_return(status: 400, body: '{"description":"bits-failure"}')
 
         expect {
@@ -261,7 +262,7 @@ describe BitsClient do
     describe '#download_url' do
       it 'returns the bits-service download endpoint for the guid' do
         url = subject.download_url(:droplets, '1234')
-        expect(url).to eq('http://bits-service.com/droplets/1234')
+        expect(url).to eq(File.join(public_endpoint, 'droplets/1234'))
       end
     end
   end
@@ -272,7 +273,7 @@ describe BitsClient do
       let(:guid) { 'some-guid' }
 
       it 'makes the correct request to the bits endpoint' do
-        request = stub_request(:post, 'http://bits-service.com/packages').
+        request = stub_request(:post, File.join(private_endpoint, 'packages')).
                   with(body: /.*package".*/).
                   to_return(status: 201, body: "{\"guid\":\"#{guid}\"}")
 
@@ -281,7 +282,7 @@ describe BitsClient do
       end
 
       it 'returns the request response' do
-        stub_request(:post, 'http://bits-service.com/packages').
+        stub_request(:post, File.join(private_endpoint, 'packages')).
           to_return(status: 201, body: "{\"guid\":\"#{guid}\"}")
 
         response_guid = subject.upload_package(file_path)
@@ -289,7 +290,7 @@ describe BitsClient do
       end
 
       it 'raises an error when the response is not 201' do
-        stub_request(:post, 'http://bits-service.com/packages').
+        stub_request(:post, File.join(private_endpoint, 'packages')).
           to_return(status: 400, body: '{"description":"bits-failure"}')
 
         expect {
@@ -308,7 +309,7 @@ describe BitsClient do
 
     describe '#delete_package' do
       it 'makes the correct request to the bits endpoint' do
-        request = stub_request(:delete, "http://bits-service.com/packages/#{guid}").
+        request = stub_request(:delete, File.join(private_endpoint, "packages/#{guid}")).
                   to_return(status: 204)
 
         subject.delete_package(guid)
@@ -316,7 +317,7 @@ describe BitsClient do
       end
 
       it 'returns the request response' do
-        stub_request(:delete, "http://bits-service.com/packages/#{guid}").
+        stub_request(:delete, File.join(private_endpoint, "packages/#{guid}")).
           to_return(status: 204)
 
         response = subject.delete_package(guid)
@@ -324,7 +325,7 @@ describe BitsClient do
       end
 
       it 'raises an error when the response is not 204' do
-        stub_request(:delete, "http://bits-service.com/packages/#{guid}").
+        stub_request(:delete, File.join(private_endpoint, "packages/#{guid}")).
           to_return(status: 400, body: '{"description":"bits-failure"}')
 
         expect {
@@ -335,7 +336,7 @@ describe BitsClient do
 
     describe '#download_package' do
       it 'makes the correct request to the bits endpoint' do
-        request = stub_request(:get, "http://bits-service.com/packages/#{guid}").
+        request = stub_request(:get, File.join(public_endpoint, "packages/#{guid}")).
                   to_return(status: 200)
 
         subject.download_package(guid)
@@ -343,7 +344,7 @@ describe BitsClient do
       end
 
       it 'returns the request response' do
-        stub_request(:get, "http://bits-service.com/packages/#{guid}").
+        stub_request(:get, File.join(public_endpoint, "packages/#{guid}")).
           to_return(status: 200)
 
         response = subject.download_package(guid)
@@ -351,7 +352,7 @@ describe BitsClient do
       end
 
       it 'raises an error when the response is not 20X' do
-        stub_request(:get, "http://bits-service.com/packages/#{guid}").
+        stub_request(:get, File.join(public_endpoint, "packages/#{guid}")).
           to_return(status: 400, body: '{"description":"bits-failure"}')
 
         expect {
@@ -363,7 +364,7 @@ describe BitsClient do
     describe '#duplicate_package' do
       let(:bsguid) { 'some-guid' }
       it 'makes the correct request to the bits endpoint' do
-        request = stub_request(:post, 'http://bits-service.com/packages').
+        request = stub_request(:post, File.join(private_endpoint, 'packages')).
                   with(body: JSON.generate('source_guid' => guid)).
                   to_return(status: 201, body: "{\"guid\":\"#{bsguid}\"}")
 
@@ -372,14 +373,14 @@ describe BitsClient do
       end
 
       it 'returns the request response' do
-        stub_request(:post, 'http://bits-service.com/packages').to_return(status: 201, body: "{\"guid\":\"#{bsguid}\"}")
+        stub_request(:post, File.join(private_endpoint, 'packages')).to_return(status: 201, body: "{\"guid\":\"#{bsguid}\"}")
 
         response_guid = subject.duplicate_package(guid)
         expect(response_guid).to eq(bsguid)
       end
 
       it 'raises an error when the response is not 201' do
-        stub_request(:post, 'http://bits-service.com/packages').
+        stub_request(:post, File.join(private_endpoint, 'packages')).
           to_return(status: 400, body: '{"description":"bits-failure"}')
 
         expect {
@@ -391,7 +392,7 @@ describe BitsClient do
     describe '#download_url' do
       it 'returns the bits-service download endpoint for the guid' do
         url = subject.download_url(:packages, '1234')
-        expect(url).to eq('http://bits-service.com/packages/1234')
+        expect(url).to eq(File.join(public_endpoint, 'packages/1234'))
       end
     end
   end
@@ -403,7 +404,7 @@ describe BitsClient do
       end
 
       it 'makes the correct request to the bits endpoint' do
-        request = stub_request(:post, 'http://bits-service.com/app_stash/matches').
+        request = stub_request(:post, File.join(private_endpoint, 'app_stash/matches')).
                   with(body: resources.to_json).
                   to_return(status: 200, body: [].to_json)
 
@@ -412,7 +413,7 @@ describe BitsClient do
       end
 
       it 'returns the request response' do
-        stub_request(:post, 'http://bits-service.com/app_stash/matches').
+        stub_request(:post, File.join(private_endpoint, 'app_stash/matches')).
           with(body: resources.to_json).
           to_return(status: 200, body: [].to_json)
 
@@ -421,7 +422,7 @@ describe BitsClient do
       end
 
       it 'raises an error when the response is not 200' do
-        stub_request(:post, 'http://bits-service.com/app_stash/matches').
+        stub_request(:post, File.join(private_endpoint, 'app_stash/matches')).
           to_return(status: 400, body: '{"description":"bits-failure"}')
 
         expect {
@@ -434,7 +435,7 @@ describe BitsClient do
       let(:zip) { Tempfile.new('entry.zip') }
 
       it 'posts a zip file with new bits' do
-        request = stub_request(:post, 'http://bits-service.com/app_stash/entries').
+        request = stub_request(:post, File.join(private_endpoint, 'app_stash/entries')).
                   with(body: /.*application".*/).
                   to_return(status: 201)
 
@@ -443,7 +444,7 @@ describe BitsClient do
       end
 
       it 'returns the request response' do
-        stub_request(:post, 'http://bits-service.com/app_stash/entries').
+        stub_request(:post, File.join(private_endpoint, 'app_stash/entries')).
           with(body: /.*application".*/).
           to_return(status: 201)
 
@@ -452,7 +453,7 @@ describe BitsClient do
       end
 
       it 'raises an error when the response is not 201' do
-        stub_request(:post, 'http://bits-service.com/app_stash/entries').
+        stub_request(:post, File.join(private_endpoint, 'app_stash/entries')).
           to_return(status: 400, body: '{"description":"bits-failure"}')
 
         expect {
@@ -469,7 +470,7 @@ describe BitsClient do
       let(:content_bits) { 'tons of bits as ordered' }
 
       it 'makes the correct request to the bits service' do
-        request = stub_request(:post, 'http://bits-service.com/app_stash/bundles').
+        request = stub_request(:post, File.join(private_endpoint, 'app_stash/bundles')).
                   with(body: order.to_json).
                   to_return(status: 200, body: content_bits)
 
@@ -478,7 +479,7 @@ describe BitsClient do
       end
 
       it 'returns the request response' do
-        stub_request(:post, 'http://bits-service.com/app_stash/bundles').
+        stub_request(:post, File.join(private_endpoint, 'app_stash/bundles')).
           with(body: order.to_json).
           to_return(status: 200, body: content_bits)
 
@@ -487,7 +488,7 @@ describe BitsClient do
       end
 
       it 'raises an error when the response is not 200' do
-        stub_request(:post, 'http://bits-service.com/app_stash/bundles').
+        stub_request(:post, File.join(private_endpoint, 'app_stash/bundles')).
           to_return(status: 400, body: '{"description":"bits-failure"}')
 
         expect {

@@ -59,7 +59,8 @@ describe CloudController::DependencyLocator do
           },
           bits_service: {
             enabled: true,
-            endpoint: 'https://bits-service.com'
+            public_endpoint: 'https://bits-service.com',
+            private_endpoint: 'http://bits-service.service.cf.internal'
           }
         }
       end
@@ -95,7 +96,8 @@ describe CloudController::DependencyLocator do
           },
           bits_service: {
             enabled: true,
-            endpoint: 'https://bits-service.com'
+            public_endpoint: 'https://bits-service.com',
+            private_endpoint: 'http://bits-service.service.cf.internal'
           }
         }
       end
@@ -169,7 +171,8 @@ describe CloudController::DependencyLocator do
           external_host: 'external.host',
           bits_service: {
             enabled: true,
-            endpoint: 'https://bits-service.com'
+            public_endpoint: 'https://bits-service.com',
+            private_endpoint: 'http://bits-service.service.cf.internal'
           },
           external_port: 8282,
           staging: {
