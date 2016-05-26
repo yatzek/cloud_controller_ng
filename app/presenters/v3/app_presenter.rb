@@ -1,13 +1,7 @@
-require 'presenters/v3/pagination_presenter'
+require 'presenters/v3/base_presenter'
 
 module VCAP::CloudController
-  class AppPresenter
-    attr_reader :app
-
-    def initialize(app)
-      @app = app
-    end
-
+  class AppPresenter < BasePresenter
     def to_hash
       {
         guid:                    app.guid,
@@ -20,12 +14,16 @@ module VCAP::CloudController
           type: app.lifecycle_type,
           data: app.lifecycle_data.to_hash
         },
-        environment_variables:   app.environment_variables || {},
+        environment_variables:   redact_hash(app.environment_variables || {}),
         links:                   build_links
       }
     end
 
     private
+
+    def app
+      @resource
+    end
 
     def build_links
       links = {

@@ -3,10 +3,10 @@ require 'cloud_controller/diego/stager'
 require 'cloud_controller/diego/protocol'
 require 'cloud_controller/diego/buildpack/staging_completion_handler'
 require 'cloud_controller/diego/buildpack/lifecycle_protocol'
-require 'cloud_controller/diego/buildpack/v3/lifecycle_protocol'
-require 'cloud_controller/diego/buildpack/v3/staging_completion_handler'
-require 'cloud_controller/diego/docker/v3/lifecycle_protocol'
-require 'cloud_controller/diego/docker/v3/staging_completion_handler'
+require 'cloud_controller/diego/v3/buildpack/lifecycle_protocol'
+require 'cloud_controller/diego/v3/buildpack/staging_completion_handler'
+require 'cloud_controller/diego/v3/docker/lifecycle_protocol'
+require 'cloud_controller/diego/v3/docker/staging_completion_handler'
 require 'cloud_controller/diego/docker/lifecycle_protocol'
 require 'cloud_controller/diego/docker/staging_completion_handler'
 require 'cloud_controller/diego/egress_rules'
@@ -41,8 +41,7 @@ module VCAP::CloudController
     end
 
     def stager_for_package(package, lifecycle_type)
-      completion_handler = diego_package_completion_handler(lifecycle_type)
-      Diego::V3::Stager.new(package, lifecycle_type, completion_handler, @config)
+      Diego::V3::Stager.new(package, lifecycle_type, @config)
     end
 
     def stager_for_app(app)
@@ -56,28 +55,11 @@ module VCAP::CloudController
     end
 
     def diego_stager(app)
-      completion_handler = diego_completion_handler(app)
-      Diego::Stager.new(app, completion_handler, @config)
+      Diego::Stager.new(app, @config)
     end
 
     def dependency_locator
       CloudController::DependencyLocator.instance
-    end
-
-    def diego_completion_handler(app)
-      if app.docker?
-        Diego::Docker::StagingCompletionHandler.new
-      else
-        Diego::Buildpack::StagingCompletionHandler.new
-      end
-    end
-
-    def diego_package_completion_handler(lifecycle_type)
-      if lifecycle_type == Lifecycles::BUILDPACK
-        Diego::Buildpack::V3::StagingCompletionHandler.new
-      elsif lifecycle_type == Lifecycles::DOCKER
-        Diego::Docker::V3::StagingCompletionHandler.new
-      end
     end
   end
 end

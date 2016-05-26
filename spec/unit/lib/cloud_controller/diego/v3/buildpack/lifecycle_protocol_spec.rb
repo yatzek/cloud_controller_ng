@@ -1,13 +1,13 @@
 require 'spec_helper'
 require 'cloud_controller/blobstore/url_generator'
-require 'cloud_controller/diego/buildpack/v3/lifecycle_protocol'
+require 'cloud_controller/diego/v3/buildpack/lifecycle_protocol'
 require_relative '../../lifecycle_protocol_shared'
 
 module VCAP
   module CloudController
     module Diego
-      module Buildpack
-        module V3
+      module V3
+        module Buildpack
           describe LifecycleProtocol do
             let(:app) { AppModel.make }
             let(:package) { PackageModel.make(app_guid: app.guid) }
@@ -44,9 +44,9 @@ module VCAP
               Diego::V3::StagingDetails.new.tap do |details|
                 details.droplet               = droplet
                 details.environment_variables = { 'nightshade_fruit' => 'potato' }
-                details.memory_limit          = 42
-                details.disk_limit            = 51
-                details.lifecycle             = instance_double(BuildpackLifecycle, staging_stack: 'potato-stack', buildpack_info: buildpack_info)
+                details.staging_memory_in_mb  = 42
+                details.staging_disk_in_mb = 51
+                details.lifecycle = instance_double(BuildpackLifecycle, staging_stack: 'potato-stack', buildpack_info: buildpack_info)
               end
             end
 

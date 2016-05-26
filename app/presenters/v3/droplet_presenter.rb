@@ -1,11 +1,7 @@
+require 'presenters/v3/base_presenter'
+
 module VCAP::CloudController
-  class DropletPresenter
-    attr_reader :droplet
-
-    def initialize(droplet)
-      @droplet = droplet
-    end
-
+  class DropletPresenter < BasePresenter
     def to_hash
       {
         guid:                  droplet.guid,
@@ -15,10 +11,10 @@ module VCAP::CloudController
           type: droplet.lifecycle_type,
           data: droplet.lifecycle_data.as_json
         },
-        memory_limit:          droplet.memory_limit,
-        disk_limit:            droplet.disk_limit,
+        staging_memory_in_mb:  droplet.staging_memory_in_mb,
+        staging_disk_in_mb:    droplet.staging_disk_in_mb,
         result:                result_for_lifecycle,
-        environment_variables: droplet.environment_variables || {},
+        environment_variables: redact_hash(droplet.environment_variables || {}),
         created_at:            droplet.created_at,
         updated_at:            droplet.updated_at,
         links:                 build_links,
@@ -26,6 +22,10 @@ module VCAP::CloudController
     end
 
     private
+
+    def droplet
+      @resource
+    end
 
     DEFAULT_HASHING_ALGORITHM = 'sha1'.freeze
 
@@ -61,8 +61,8 @@ module VCAP::CloudController
                          end
 
       {
-        execution_metadata: droplet.execution_metadata,
-        process_types:      droplet.process_types
+        execution_metadata: redact(droplet.execution_metadata),
+        process_types:      redact_hash(droplet.process_types)
       }.merge(lifecycle_result)
     end
 

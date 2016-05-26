@@ -5,10 +5,10 @@ require 'messages/service_binding_create_message'
 require 'messages/service_bindings_list_message'
 require 'actions/service_binding_create'
 require 'actions/service_binding_delete'
-require 'controllers/v3/mixins/app_subresource'
+require 'controllers/v3/mixins/sub_resource'
 
 class ServiceBindingsController < ApplicationController
-  include AppSubresource
+  include SubResource
 
   def create
     message = ServiceBindingCreateMessage.create_from_http_request(params[:body])
@@ -38,7 +38,7 @@ class ServiceBindingsController < ApplicationController
     service_binding = VCAP::CloudController::ServiceBindingModel.find(guid: params[:guid])
 
     service_binding_not_found! unless service_binding && can_read?(service_binding.space.guid, service_binding.space.organization.guid)
-    render status: :ok, json: ServiceBindingModelPresenter.new(service_binding)
+    render status: :ok, json: ServiceBindingModelPresenter.new(service_binding, show_secrets: can_see_secrets?(service_binding.space))
   end
 
   def index

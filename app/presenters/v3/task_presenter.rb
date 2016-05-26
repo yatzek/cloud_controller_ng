@@ -1,28 +1,28 @@
+require 'presenters/v3/base_presenter'
+
 module VCAP::CloudController
-  class TaskPresenter
-    attr_reader :task
-
-    def initialize(task)
-      @task = task
-    end
-
+  class TaskPresenter < BasePresenter
     def to_hash
       {
-        guid:    task.guid,
-        name:    task.name,
-        command: task.command,
-        state:   task.state,
-        memory_in_mb: task.memory_in_mb,
-        environment_variables: task.environment_variables || {},
-        result: { failure_reason: task.failure_reason },
-        created_at: task.created_at,
-        updated_at: task.updated_at,
-        droplet_guid: task.droplet.guid,
-        links: build_links
+        guid:                  task.guid,
+        name:                  task.name,
+        command:               redact(task.command),
+        state:                 task.state,
+        memory_in_mb:          task.memory_in_mb,
+        environment_variables: redact_hash(task.environment_variables || {}),
+        result:                { failure_reason: task.failure_reason },
+        created_at:            task.created_at,
+        updated_at:            task.updated_at,
+        droplet_guid:          task.droplet.guid,
+        links:                 build_links
       }
     end
 
     private
+
+    def task
+      @resource
+    end
 
     def build_links
       {

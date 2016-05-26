@@ -1,21 +1,13 @@
-require 'presenters/v3/pagination_presenter'
-require 'presenters/v3/process_stats_presenter'
 require 'cloud_controller/diego/protocol/open_process_ports'
+require 'presenters/v3/base_presenter'
 
 module VCAP::CloudController
-  class ProcessPresenter
-    attr_reader :process, :base_url
-
-    def initialize(process, base_url=nil)
-      @process = process
-      @base_url = base_url || "/v3/processes/#{process.guid}"
-    end
-
+  class ProcessPresenter < BasePresenter
     def to_hash
       {
         guid:         process.guid,
         type:         process.type,
-        command:      process.command,
+        command:      redact(process.command),
         instances:    process.instances,
         memory_in_mb: process.memory,
         disk_in_mb:   process.disk_quota,
@@ -34,13 +26,17 @@ module VCAP::CloudController
 
     private
 
+    def process
+      @resource
+    end
+
     def build_links
       {
         self:  { href: "/v3/processes/#{process.guid}" },
         scale: { href: "/v3/processes/#{process.guid}/scale", method: 'PUT', },
         app:   { href: "/v3/apps/#{process.app_guid}" },
         space: { href: "/v2/spaces/#{process.space_guid}" },
-        stats: { href: "#{base_url}/stats" }
+        stats: { href: "/v3/processes/#{process.guid}/stats" }
       }
     end
   end

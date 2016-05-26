@@ -1,5 +1,6 @@
 require 'presenters/v3/paginated_list_presenter'
 require 'presenters/v3/process_presenter'
+require 'presenters/v3/process_stats_presenter'
 require 'cloud_controller/paging/pagination_options'
 require 'actions/process_delete'
 require 'queries/process_list_fetcher'
@@ -10,13 +11,13 @@ require 'actions/process_terminate'
 require 'actions/process_update'
 require 'messages/process_update_message'
 require 'messages/processes_list_message'
-require 'controllers/v3/mixins/app_subresource'
+require 'controllers/v3/mixins/sub_resource'
 
 class ProcessesController < ApplicationController
-  include AppSubresource
+  include SubResource
 
   def index
-    message = ProcessesListMessage.from_params(app_subresource_query_params)
+    message = ProcessesListMessage.from_params(subresource_query_params)
     invalid_param!(message.errors.full_messages) unless message.valid?
 
     if app_nested?
@@ -43,7 +44,7 @@ class ProcessesController < ApplicationController
       process_not_found! unless process && can_read?(space.guid, org.guid)
     end
 
-    render status: :ok, json: ProcessPresenter.new(process, base_process_url)
+    render status: :ok, json: ProcessPresenter.new(process, show_secrets: can_see_secrets?(space))
   end
 
   def update
@@ -57,7 +58,7 @@ class ProcessesController < ApplicationController
 
     ProcessUpdate.new(current_user.guid, current_user_email).update(process, message)
 
-    render status: :ok, json: ProcessPresenter.new(process, base_process_url)
+    render status: :ok, json: ProcessPresenter.new(process)
   rescue ProcessUpdate::InvalidProcess => e
     unprocessable!(e.message)
   end
@@ -100,7 +101,7 @@ class ProcessesController < ApplicationController
 
     ProcessScale.new(current_user, current_user_email, process, message).scale
 
-    render status: :accepted, json: ProcessPresenter.new(process, base_process_url)
+    render status: :accepted, json: ProcessPresenter.new(process)
   rescue ProcessScale::InvalidProcess => e
     unprocessable!(e.message)
   end
@@ -121,10 +122,6 @@ class ProcessesController < ApplicationController
   end
 
   private
-
-  def base_process_url
-    app_nested? ? "/v3/apps/#{params[:app_guid]}/processes/#{params[:type]}" : "/v3/processes/#{params[:process_guid]}"
-  end
 
   def process_not_found!
     resource_not_found!(:process)

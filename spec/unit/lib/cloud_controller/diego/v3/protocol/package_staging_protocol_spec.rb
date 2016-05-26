@@ -40,8 +40,8 @@ module VCAP::CloudController
               Diego::V3::StagingDetails.new.tap do |details|
                 details.droplet               = droplet
                 details.environment_variables = { 'nightshade_fruit' => 'potato' }
-                details.memory_limit          = 42
-                details.disk_limit            = 51
+                details.staging_memory_in_mb  = 42
+                details.staging_disk_in_mb    = 51
               end
             end
             let(:config) do
@@ -70,8 +70,8 @@ module VCAP::CloudController
               expect(result).to eq({
                 app_id:              staging_details.droplet.guid,
                 log_guid:            app.guid,
-                memory_mb:           staging_details.memory_limit,
-                disk_mb:             staging_details.disk_limit,
+                memory_mb:           staging_details.staging_memory_in_mb,
+                disk_mb:             staging_details.staging_disk_in_mb,
                 file_descriptors:    30,
                 environment:         VCAP::CloudController::Diego::NormalEnvHashToDiegoEnvArrayPhilosopher.muse(staging_details.environment_variables),
                 egress_rules:        ['staging_egress_rule'],

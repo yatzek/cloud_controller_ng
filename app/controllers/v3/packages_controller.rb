@@ -8,15 +8,15 @@ require 'actions/package_copy'
 require 'messages/package_create_message'
 require 'messages/package_upload_message'
 require 'messages/packages_list_message'
-require 'controllers/v3/mixins/app_subresource'
+require 'controllers/v3/mixins/sub_resource'
 
 class PackagesController < ApplicationController
-  include AppSubresource
+  include SubResource
 
   before_action :check_read_permissions!, only: [:index, :show, :download]
 
   def index
-    message = PackagesListMessage.from_params(app_subresource_query_params)
+    message = PackagesListMessage.from_params(subresource_query_params)
     invalid_param!(message.errors.full_messages) unless message.valid?
 
     if app_nested?
@@ -58,6 +58,7 @@ class PackagesController < ApplicationController
   def download
     package = PackageModel.where(guid: params[:guid]).eager(:space, space: :organization).eager(:docker_data).all.first
     package_not_found! unless package && can_read?(package.space.guid, package.space.organization.guid)
+    unauthorized! unless can_see_secrets?(package.space)
 
     unprocessable!('Package type must be bits.') unless package.type == 'bits'
     unprocessable!('Package has no bits to download.') unless package.state == 'READY'

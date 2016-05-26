@@ -191,8 +191,10 @@ describe 'Apps' do
             },
             'created_at'              => iso8601,
             'updated_at'              => iso8601,
-            'environment_variables'   => {},
-            'links'                   => {
+            'environment_variables'   => {
+              'redacted_message' => '[PRIVATE DATA HIDDEN IN LISTS]'
+            },
+            'links' => {
               'self'                   => { 'href' => "/v3/apps/#{app_model1.guid}" },
               'processes'              => { 'href' => "/v3/apps/#{app_model1.guid}/processes" },
               'packages'               => { 'href' => "/v3/apps/#{app_model1.guid}/packages" },
@@ -216,8 +218,10 @@ describe 'Apps' do
             },
             'created_at'              => iso8601,
             'updated_at'              => nil,
-            'environment_variables'   => {},
-            'links'                   => {
+            'environment_variables'   => {
+              'redacted_message' => '[PRIVATE DATA HIDDEN IN LISTS]'
+            },
+            'links' => {
               'self'                   => { 'href' => "/v3/apps/#{app_model2.guid}" },
               'processes'              => { 'href' => "/v3/apps/#{app_model2.guid}/processes" },
               'packages'               => { 'href' => "/v3/apps/#{app_model2.guid}/packages" },
@@ -388,6 +392,27 @@ describe 'Apps' do
       parsed_response = MultiJson.load(last_response.body)
       expect(last_response.status).to eq(200)
       expect(parsed_response).to be_a_response_like(expected_response)
+    end
+
+    describe 'redacting' do
+      it 'redacts fields for auditors' do
+        app_model = VCAP::CloudController::AppModel.make(
+          :buildpack,
+          name:                  'my_app',
+          space:                 space,
+          environment_variables: { 'unicorn' => 'horn' },
+        )
+
+        auditor = VCAP::CloudController::User.make
+        space.organization.add_user(auditor)
+        space.add_auditor(auditor)
+
+        get "/v3/apps/#{app_model.guid}", nil, headers_for(auditor)
+
+        parsed_response = MultiJson.load(last_response.body)
+        expect(last_response.status).to eq(200)
+        expect(parsed_response['environment_variables']).to eq({ 'redacted_message' => '[PRIVATE DATA HIDDEN]' })
+      end
     end
   end
 
@@ -730,8 +755,8 @@ describe 'Apps' do
         execution_metadata: 'some-data',
         droplet_hash: 'shalalala',
         process_types: { 'web' => 'start-command' },
-        memory_limit: 100,
-        disk_limit: 200,
+        staging_memory_in_mb: 100,
+        staging_disk_in_mb: 200,
       )
     end
     let(:app_guid) { droplet_model.app_guid }
@@ -759,9 +784,9 @@ describe 'Apps' do
             'stack'     => 'stack-name'
           }
         },
-        'memory_limit'          => 100,
-        'disk_limit'            => 200,
-        'result'                => {
+        'staging_memory_in_mb' => 100,
+        'staging_disk_in_mb' => 200,
+        'result' => {
           'hash'                   => { 'type' => 'sha1', 'value' => 'shalalala' },
           'buildpack'              => 'http://buildpack.git.url.com',
           'stack'                  => 'stack-name',
@@ -818,9 +843,9 @@ describe 'Apps' do
           'type' => 'docker',
           'data' => {}
         },
-        'memory_limit'          => 123,
-        'disk_limit'            => nil,
-        'result'                => {
+        'staging_memory_in_mb' => 123,
+        'staging_disk_in_mb'   => nil,
+        'result' => {
           'image'                  => nil,
           'execution_metadata'     => nil,
           'process_types'          => { 'web' => 'rackup' }
