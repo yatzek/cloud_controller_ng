@@ -9,6 +9,7 @@ module VCAP::CloudController
     end
 
     def stop(app)
+      #TODO: update the v3 app model state instead
       app.db.transaction do
         app.update(desired_state: 'STOPPED')
 

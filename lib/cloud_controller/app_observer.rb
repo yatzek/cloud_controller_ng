@@ -25,6 +25,7 @@ module VCAP::CloudController
       end
 
       def updated(app)
+        #TODO: look for changes in v3 app instead of v2 app
         changes = app.previous_changes
         return unless changes
 
