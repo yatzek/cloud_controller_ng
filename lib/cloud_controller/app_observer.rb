@@ -26,7 +26,7 @@ module VCAP::CloudController
 
       def updated(app)
         process_changes = app.previous_changes
-        app_model_changes = app.app.previous_changes
+        app_model_changes = app.app.previous_changes if app.app
         return unless app_model_changes
 
         with_diego_communication_handling do

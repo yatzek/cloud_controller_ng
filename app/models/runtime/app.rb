@@ -282,7 +282,7 @@ module VCAP::CloudController
 
     def before_destroy
       lock!
-      self.app.desired_state = 'STOPPED'
+      self.app.desired_state = 'STOPPED' if app
 
       destroy_service_bindings
 
@@ -458,7 +458,7 @@ module VCAP::CloudController
     end
 
     def started?
-      app.desired_state == 'STARTED'
+      self.state == 'STARTED'
     end
 
     def active?
@@ -469,7 +469,7 @@ module VCAP::CloudController
     end
 
     def stopped?
-      app.desired_state == 'STOPPED'
+      self.state == 'STOPPED'
     end
 
     def uris
@@ -675,31 +675,31 @@ module VCAP::CloudController
     # end
 
     def guid
-      app.guid
+      app && app.guid == self[:guid] ? app.guid : self[:guid]
     end
 
     def name
-      app.name
+      app ? app.name : self[:name]
     end
 
     def state
-      app.desired_state
+      app ? app.desired_state : self[:state]
     end
 
     def salt
-      app.salt
+      app ? app.salt : self[:salt]
     end
 
     def updated_at
-      app.updated_at
+      app ? app.updated_at : self[:updated_at]
     end
 
     def created_at
-      app.created_at
+      app ? app.created_at : self[:created_at]
     end
 
     def encrypted_environment_json
-      app.encrypted_environment_variables
+      app ? app.encrypted_environment_variables : self[:encrypted_environment_json]
     end
 
     private

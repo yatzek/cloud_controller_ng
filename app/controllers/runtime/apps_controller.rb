@@ -148,8 +148,18 @@ module VCAP::CloudController
       verify_enable_ssh(space)
     end
 
+    def after_create(app)
+      # v3 app creation 
+      record_app_create_value = @app_event_repository.record_app_create(
+        app,
+        app.space,
+        SecurityContext.current_user.guid,
+        SecurityContext.current_user_email,
+        request_attrs)
+      record_app_create_value if request_attrs
+    end
+
     def before_update(app)
-      require 'pry'; binding.pry
       verify_enable_ssh(app.space)
       updated_diego_flag = request_attrs['diego']
       ports = request_attrs['ports']
@@ -176,6 +186,19 @@ module VCAP::CloudController
 
     end
 
+    def after_update(app)
+      stager_response = app.last_stager_response
+      if stager_response.respond_to?(:streaming_log_url) && stager_response.streaming_log_url
+        set_header('X-App-Staging-Log', stager_response.streaming_log_url)
+      end
+
+      if app.dea_update_pending?
+        Dea::Client.update_uris(app)
+      end
+
+      @app_event_repository.record_app_update(app, app.space, SecurityContext.current_user.guid, SecurityContext.current_user_email, request_attrs)
+    end
+
     def ignore_empty_ports!
       @request_attrs = @request_attrs.deep_dup
       @request_attrs.delete 'ports'
@@ -197,29 +220,6 @@ module VCAP::CloudController
           'enable_ssh must be false due to global allow_ssh setting',
           )
       end
-    end
-
-    def after_create(app)
-      record_app_create_value = @app_event_repository.record_app_create(
-        app,
-        app.space,
-        SecurityContext.current_user.guid,
-        SecurityContext.current_user_email,
-        request_attrs)
-      record_app_create_value if request_attrs
-    end
-
-    def after_update(app)
-      stager_response = app.last_stager_response
-      if stager_response.respond_to?(:streaming_log_url) && stager_response.streaming_log_url
-        set_header('X-App-Staging-Log', stager_response.streaming_log_url)
-      end
-
-      if app.dea_update_pending?
-        Dea::Client.update_uris(app)
-      end
-
-      @app_event_repository.record_app_update(app, app.space, SecurityContext.current_user.guid, SecurityContext.current_user_email, request_attrs)
     end
 
     define_messages
