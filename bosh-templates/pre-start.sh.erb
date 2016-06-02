@@ -9,4 +9,22 @@ app_domains="<%= p('app_domains').join(',') %>"
 system_domain="<%= p('system_domain') %>"
 
 ruby "${SCRIPT_DIR}/check_for_domain_overlap.rb" "${system_domain}" "${app_domains[@]}"
-exit $?
+
+<% if spec.index.to_i == 0 %>
+pushd /var/vcap/packages/cloud_controller_ng/cloud_controller_ng >/dev/null
+  echo "[$(date +"%Y/%m/%d %H:%M:%S %z")] Running database migrations"
+
+  CC_JOB_DIR=/var/vcap/jobs/cloud_controller_ng
+  CC_PACKAGE_DIR=/var/vcap/packages/cloud_controller_ng
+  CONFIG_DIR=$CC_JOB_DIR/config
+  export CLOUD_CONTROLLER_NG_CONFIG=$CONFIG_DIR/cloud_controller_ng.yml
+  export BUNDLE_GEMFILE=$CC_PACKAGE_DIR/cloud_controller_ng/Gemfile
+  export HOME=/home/vcap # rake needs it to be set to run tasks
+
+  export C_INCLUDE_PATH=/var/vcap/packages/libpq/include:$C_INCLUDE_PATH
+  export LIBRARY_PATH=/var/vcap/packages/libpq/lib:$LIBRARY_PATH
+  export LANG=en_US.UTF-8
+
+  chpst -u vcap:vcap bundle exec rake db:migrate
+popd >/dev/ull
+<% end %>
