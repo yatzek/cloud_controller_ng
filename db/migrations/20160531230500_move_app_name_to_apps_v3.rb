@@ -6,5 +6,7 @@ Sequel.migration do
       FROM apps
       WHERE app_guid IS null
     SQL
+
+    # we should update the v2 app with app_guid
   end
 end

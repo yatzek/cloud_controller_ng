@@ -25,14 +25,14 @@ module VCAP::CloudController
       end
 
       def updated(app)
-        #TODO: look for changes in v3 app instead of v2 app
-        changes = app.previous_changes
-        return unless changes
+        process_changes = app.previous_changes
+        app_model_changes = app.app.previous_changes
+        return unless app_model_changes
 
         with_diego_communication_handling do
-          if changes.key?(:state) || changes.key?(:diego) || changes.key?(:enable_ssh) || changes.key?(:ports)
+          if app_model_changes.key?(:desired_state) || process_changes.key?(:diego) || process_changes.key?(:enable_ssh) || process_changes.key?(:ports)
             react_to_state_change(app)
-          elsif changes.key?(:instances)
+          elsif process_changes.key?(:instances)
             react_to_instances_change(app)
           end
         end

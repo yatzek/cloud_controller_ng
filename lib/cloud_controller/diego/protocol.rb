@@ -23,8 +23,8 @@ module VCAP::CloudController
         lifecycle_type, lifecycle_data = lifecycle_protocol.lifecycle_data(process)
 
         staging_request                     = StagingRequest.new
-        staging_request.app_id              = process.guid
-        staging_request.log_guid            = process.guid
+        staging_request.app_id              = process.app.guid
+        staging_request.log_guid            = process.app.guid
         staging_request.environment         = env
         staging_request.memory_mb           = [process.memory, config[:staging][:minimum_staging_memory_mb]].max
         staging_request.disk_mb             = [process.disk_quota, config[:staging][:minimum_staging_disk_mb]].max
@@ -45,7 +45,9 @@ module VCAP::CloudController
       def desire_app_message(default_health_check_timeout)
         env = Environment.new(process, EnvironmentVariableGroup.running.environment_json).as_json
         logger.debug2("running environment: #{env.map { |e| e['name'] }}")
-        log_guid = process.is_v3? ? process.app.guid : process.guid
+        log_guid = process.app.guid
+        # TODO: is_v3? checks to see if app_guid on v2 app is not nil. after the migration,
+        # this will always return true.
         log_source = process.is_v3? ? "APP/PROC/#{process.type.upcase}" : 'APP'
 
         {
@@ -55,7 +57,7 @@ module VCAP::CloudController
           'file_descriptors'                => process.file_descriptors,
           'stack'                           => process.stack.name,
           'execution_metadata'              => process.execution_metadata,
-          'environment'                     => env,
+          'environment'                     => process.app.environment_variables,
           'num_instances'                   => process.desired_instances,
           'routes'                          => process.uris,
           'routing_info'                    => RoutingInfo.new(process).routing_info,

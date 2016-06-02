@@ -149,6 +149,7 @@ module VCAP::CloudController
     end
 
     def before_update(app)
+      require 'pry'; binding.pry
       verify_enable_ssh(app.space)
       updated_diego_flag = request_attrs['diego']
       ports = request_attrs['ports']
@@ -165,6 +166,14 @@ module VCAP::CloudController
       rescue RouteMappingValidator::TcpRoutingDisabledError
         raise CloudController::Errors::ApiError.new_from_details('TcpRoutingDisabled')
       end
+
+      # if request_attrs.include? :name || request_attrs.include? :state
+      # %w(name state).each do
+      #   app_model = AppModel.where(guid: app.guid).update(name: request_attrs[:name], state
+      # end
+
+      # request_attrs.delete(:name, :state, 
+
     end
 
     def ignore_empty_ports!

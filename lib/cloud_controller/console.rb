@@ -21,6 +21,11 @@ unless File.exist?(@config_file)
   exit 1
 end
 @config = VCAP::CloudController::Config.from_file(@config_file)
+class Logger
+  def debug2(opts)
+    #noop
+  end
+end
 logger = Logger.new(STDOUT)
 db_config = @config.fetch(:db).merge(log_level: :debug)
 db_config[:database] ||= DbConfig.new.connection_string

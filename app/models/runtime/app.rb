@@ -282,7 +282,7 @@ module VCAP::CloudController
 
     def before_destroy
       lock!
-      self.state = 'STOPPED'
+      self.app.desired_state = 'STOPPED'
 
       destroy_service_bindings
 
@@ -458,7 +458,7 @@ module VCAP::CloudController
     end
 
     def started?
-      state == 'STARTED'
+      app.desired_state == 'STARTED'
     end
 
     def active?
@@ -469,7 +469,7 @@ module VCAP::CloudController
     end
 
     def stopped?
-      state == 'STOPPED'
+      app.desired_state == 'STOPPED'
     end
 
     def uris
@@ -491,7 +491,7 @@ module VCAP::CloudController
       self.staging_failed_reason = reason
       self.staging_failed_description = CloudController::Errors::ApiError.new_from_details(reason, 'staging failed').message
       self.package_pending_since = nil
-      self.state = 'STOPPED' if diego?
+      self.app.desired_state = 'STOPPED' if diego?
       save
     end
 
@@ -567,12 +567,12 @@ module VCAP::CloudController
     end
 
     def start!
-      self.state = 'STARTED'
+      self.app.desired_state = 'STARTED'
       save
     end
 
     def stop!
-      self.state = 'STOPPED'
+      self.app.desired_state = 'STOPPED'
       save
     end
 
@@ -668,6 +668,38 @@ module VCAP::CloudController
 
     def ports_with_defaults
       VCAP::CloudController::Diego::Protocol::OpenProcessPorts.new(self).to_a
+    end
+
+    # def app_guid
+    #   return self[:guid] if AppModel.where(guid: self[:guid]).first
+    # end
+
+    def guid
+      app.guid
+    end
+
+    def name
+      app.name
+    end
+
+    def state
+      app.desired_state
+    end
+
+    def salt
+      app.salt
+    end
+
+    def updated_at
+      app.updated_at
+    end
+
+    def created_at
+      app.created_at
+    end
+
+    def encrypted_environment_json
+      app.encrypted_environment_variables
     end
 
     private
