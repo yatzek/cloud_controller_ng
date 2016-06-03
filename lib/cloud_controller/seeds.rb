@@ -56,7 +56,7 @@ module VCAP::CloudController
         domains = parsed_domains(config[:app_domains])
         system_domain = config[:system_domain]
 
-        domains.each do | domain |
+        domains.each do |domain|
           domain_name = domain['name']
           router_group_guid = nil
 
@@ -127,8 +127,8 @@ module VCAP::CloudController
       def parsed_domains(app_domains)
         if app_domains[0].is_a?(String)
           parsed = []
-          app_domains.each do | d |
-            parsed << {'name'=> d}
+          app_domains.each do |d|
+            parsed << { 'name' => d }
           end
           parsed
         else

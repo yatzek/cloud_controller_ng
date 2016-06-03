@@ -257,9 +257,9 @@ module VCAP::CloudController
 
         it 'raises and error' do
           expect {
-              Seeds.create_seed_domains(config, system_org)
-            }.to raise_error('Unknown router_group_name specified: not-there')
-       end
+            Seeds.create_seed_domains(config, system_org)
+          }.to raise_error('Unknown router_group_name specified: not-there')
+        end
       end
 
       context 'when routing api is disabled' do
@@ -463,17 +463,18 @@ module VCAP::CloudController
         let(:app_domains) { ['string1.com', 'string2.com'] }
 
         it 'returns an array of hashes' do
-          expected_result = [{'name'=> 'string1.com'},{'name'=> 'string2.com'}]
+          expected_result = [{ 'name' => 'string1.com' }, { 'name' => 'string2.com' }]
           expect(Seeds.parsed_domains(app_domains)).to eq(expected_result)
         end
       end
       context 'when app domains is an array of hashes' do
-        let(:app_domains) { [{'name' => 'string1.com',
-                              'router_group_name' => 'some-name'},
-                             {'name' => 'string2.com'}] }
+        let(:app_domains) { [{ 'name' => 'string1.com',
+                               'router_group_name' => 'some-name' },
+                             { 'name' => 'string2.com' }]
+        }
         it 'returns in the same format' do
-          expected_result = [{'name'=> 'string1.com', 'router_group_name' => 'some-name'},
-                             {'name'=> 'string2.com'}]
+          expected_result = [{ 'name' => 'string1.com', 'router_group_name' => 'some-name' },
+                             { 'name' => 'string2.com' }]
           expect(Seeds.parsed_domains(app_domains)).to eq(expected_result)
         end
       end
