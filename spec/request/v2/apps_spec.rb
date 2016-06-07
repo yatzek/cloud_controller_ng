@@ -251,16 +251,17 @@ describe 'Apps' do
 
   describe 'POST /v2/apps' do
     it 'creates an app' do
-      post_params = MultiJson.dump({
+      post_params = {
         name:       'maria',
         space_guid: space.guid,
         detected_start_command: 'argh',
         docker_credentials_json: { 'docker_user' => 'bob', 'docker_password' => 'password', 'docker_email' => 'blah@blah.com' }
-      })
+      }
 
       post '/v2/apps', post_params, headers_for(user)
 
       process = VCAP::CloudController::App.last
+      puts last_response.body
       expect(last_response.status).to eq(201)
       expect(MultiJson.load(last_response.body)).to be_a_response_like(
         {

@@ -30,9 +30,19 @@ module VCAP::CloudController
           use NewRelic::Rack::DeveloperMode
         end
 
-        map '/' do
-          run FrontController.new(config)
-        end
+        router = FooRouter.new(self)
+        router.map '/', FrontController, config
+        router.map '/v2/apps', FooController
+
+        # map '/' do
+        #   run FrontController.new(config)
+        # end
+        #
+        # map '/v2/apps' do
+        #   run FooController.new
+        # end
+
+        # FooRouter.map_routes(self, config)
 
         map '/v3' do
           run Rails.application.app
