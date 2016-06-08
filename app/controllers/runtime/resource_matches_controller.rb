@@ -6,12 +6,7 @@ module VCAP::CloudController
       FeatureFlag.raise_unless_enabled!('app_bits_upload') unless SecurityContext.admin?
 
       if use_bits_client?
-        begin
-          response = bits_client.matches(body.read)
-          return response.body
-        rescue BitsClient::Errors::Error => e
-          raise ::CloudController::Errors::ApiError.new_from_details('BitsServiceError', e.message)
-        end
+        return MultiJson.dump([])
       end
 
       begin
