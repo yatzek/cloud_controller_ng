@@ -20,6 +20,7 @@ module VCAP::CloudController
               total_routes: 10,
               total_services: 10,
               memory_limit: 1024,
+              total_reserved_route_ports: 10,
             },
 
             'default' => {
@@ -49,6 +50,7 @@ module VCAP::CloudController
           expect(small_quota.total_routes).to eq(10)
           expect(small_quota.total_services).to eq(10)
           expect(small_quota.memory_limit).to eq(1024)
+          expect(small_quota.total_reserved_route_ports).to eq(10)
 
           default_quota = QuotaDefinition[name: 'default']
           expect(default_quota.non_basic_services_allowed).to eq(true)
@@ -74,6 +76,7 @@ module VCAP::CloudController
             expect(small_quota.total_routes).to eq(10)
             expect(small_quota.total_services).to eq(10)
             expect(small_quota.memory_limit).to eq(1024)
+            expect(small_quota.total_reserved_route_ports).to eq(10)
 
             default_quota = QuotaDefinition[name: 'default']
             expect(default_quota.non_basic_services_allowed).to eq(true)
