@@ -15,14 +15,13 @@ require 'cloud_controller/blobstore/client_provider'
 module CloudController
   class DependencyLocator
     include Singleton
-    include VCAP::CloudController
 
     LARGE_COLLECTION_SIZE = 10_000
 
     attr_accessor :config
 
     def initialize
-      @config = VCAP::CloudController::Config.config
+      @config = Config.config
       @dependencies = {}
     end
 
@@ -161,10 +160,10 @@ module CloudController
     end
 
     def object_renderer
-      eager_loader = VCAP::CloudController::RestController::SecureEagerLoader.new
-      serializer   = VCAP::CloudController::RestController::PreloadedObjectSerializer.new
+      eager_loader = RestController::SecureEagerLoader.new
+      serializer   = RestController::PreloadedObjectSerializer.new
 
-      VCAP::CloudController::RestController::ObjectRenderer.new(eager_loader, serializer, {
+      RestController::ObjectRenderer.new(eager_loader, serializer, {
         max_inline_relations_depth: @config[:renderer][:max_inline_relations_depth],
       })
     end
@@ -225,14 +224,14 @@ module CloudController
     private
 
     def create_paginated_collection_renderer(opts={})
-      eager_loader               = opts[:eager_loader] || VCAP::CloudController::RestController::SecureEagerLoader.new
-      serializer                 = opts[:serializer] || VCAP::CloudController::RestController::PreloadedObjectSerializer.new
+      eager_loader               = opts[:eager_loader] || RestController::SecureEagerLoader.new
+      serializer                 = opts[:serializer] || RestController::PreloadedObjectSerializer.new
       max_results_per_page       = opts[:max_results_per_page] || @config[:renderer][:max_results_per_page]
       default_results_per_page   = opts[:default_results_per_page] || @config[:renderer][:default_results_per_page]
       max_inline_relations_depth = opts[:max_inline_relations_depth] || @config[:renderer][:max_inline_relations_depth]
       collection_transformer     = opts[:collection_transformer]
 
-      VCAP::CloudController::RestController::PaginatedCollectionRenderer.new(eager_loader, serializer, {
+      RestController::PaginatedCollectionRenderer.new(eager_loader, serializer, {
         max_results_per_page:       max_results_per_page,
         default_results_per_page:   default_results_per_page,
         max_inline_relations_depth: max_inline_relations_depth,

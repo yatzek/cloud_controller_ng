@@ -3,7 +3,7 @@ require 'spec_helper'
 describe 'Synchronous orphan mitigation' do
   let(:logger) { double }
   let(:client) { instance_double(VCAP::Services::ServiceBrokers::V2::Client) }
-  subject { VCAP::CloudController::SynchronousOrphanMitigate.new(logger) }
+  subject { SynchronousOrphanMitigate.new(logger) }
 
   before do
     allow(logger).to receive(:info)
@@ -11,7 +11,7 @@ describe 'Synchronous orphan mitigation' do
   end
 
   describe 'for service instances' do
-    let(:service_instance) { instance_double(VCAP::CloudController::ManagedServiceInstance) }
+    let(:service_instance) { instance_double(ManagedServiceInstance) }
     let(:service_instance_guid) { '5' }
 
     before do
@@ -52,7 +52,7 @@ describe 'Synchronous orphan mitigation' do
   end
 
   describe 'for unbinding' do
-    let(:service_binding) { instance_double(VCAP::CloudController::ServiceBinding) }
+    let(:service_binding) { instance_double(ServiceBinding) }
     let(:service_binding_guid) { '5' }
 
     before do
@@ -93,7 +93,7 @@ describe 'Synchronous orphan mitigation' do
   end
 
   describe 'for deleting service keys' do
-    let(:service_key) { instance_double(VCAP::CloudController::ServiceKey) }
+    let(:service_key) { instance_double(ServiceKey) }
     let(:service_key_guid) { '5' }
 
     before do

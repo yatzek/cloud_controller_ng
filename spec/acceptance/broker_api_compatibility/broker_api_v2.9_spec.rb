@@ -2,20 +2,20 @@ require 'spec_helper'
 
 describe 'Service Broker API integration' do
   describe 'v2.9' do
-    include VCAP::CloudController::BrokerApiHelper
+    include BrokerApiHelper
 
     let(:catalog) { default_catalog(plan_updateable: true) }
 
     before do
       setup_cc
       setup_broker(catalog)
-      @broker = VCAP::CloudController::ServiceBroker.find guid: @broker_guid
+      @broker = ServiceBroker.find guid: @broker_guid
     end
 
     describe 'Last Operation' do
       let(:broker_response_status) { 200 }
       let(:broker_response_body) { { state: 'succeeded' }.to_json }
-      let!(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space_guid: @space_guid, service_plan_guid: @plan_guid) }
+      let!(:service_instance) { ManagedServiceInstance.make(space_guid: @space_guid, service_plan_guid: @plan_guid) }
       let(:service_instance_guid) { service_instance.guid }
 
       let(:expected_request) {

@@ -2,7 +2,7 @@ require 'securerandom'
 require 'openssl/cipher'
 require 'base64'
 
-module VCAP::CloudController::Encryptor
+module Encryptor
   class << self
     ALGORITHM = 'AES-128-CBC'.freeze
 
@@ -50,7 +50,7 @@ module VCAP::CloudController::Encryptor
 
         define_method generate_salt_name do
           return unless send(salt_name).blank?
-          send "#{salt_name}=", VCAP::CloudController::Encryptor.generate_salt
+          send "#{salt_name}=", Encryptor.generate_salt
         end
 
         if storage_column
@@ -64,7 +64,7 @@ module VCAP::CloudController::Encryptor
         end
 
         define_method "#{field_name}_with_encryption" do
-          VCAP::CloudController::Encryptor.decrypt send("#{field_name}_without_encryption"), send(salt_name)
+          Encryptor.decrypt send("#{field_name}_without_encryption"), send(salt_name)
         end
         alias_method_chain field_name, 'encryption'
 
@@ -75,7 +75,7 @@ module VCAP::CloudController::Encryptor
             if value.blank?
               nil
             else
-              VCAP::CloudController::Encryptor.encrypt(value, send(salt_name))
+              Encryptor.encrypt(value, send(salt_name))
             end
 
           send "#{field_name}_without_encryption=", encrypted_value

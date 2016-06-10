@@ -19,7 +19,7 @@ class DbConfig
   end
 
   def connection
-    Thread.current[:db] ||= VCAP::CloudController::DB.connect(config, db_logger)
+    Thread.current[:db] ||= DB.connect(config, db_logger)
   end
 
   def db_logger

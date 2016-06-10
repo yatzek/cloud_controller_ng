@@ -1,4 +1,4 @@
-module VCAP::CloudController
+module CloudController
   class ResourceMatchesController < RestController::BaseController
     put '/v2/resource_match', :match
     def match

@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-module VCAP::CloudController::Jobs
+module Jobs
   describe RequestJob do
     let(:wrapped_job) { double('InnerJob', max_attempts: 2, reschedule_at: Time.now) }
     let(:request_id) { 'abc123' }

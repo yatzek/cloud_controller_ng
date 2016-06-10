@@ -1,13 +1,13 @@
 require 'spec_helper'
 
 describe 'Tasks' do
-  let(:space) { VCAP::CloudController::Space.make }
-  let(:user) { VCAP::CloudController::User.make }
-  let(:app_model) { VCAP::CloudController::AppModel.make(space_guid: space.guid) }
+  let(:space) { Space.make }
+  let(:user) { User.make }
+  let(:app_model) { AppModel.make(space_guid: space.guid) }
   let(:droplet) do
-    VCAP::CloudController::DropletModel.make(
+    DropletModel.make(
       app_guid:     app_model.guid,
-      state:        VCAP::CloudController::DropletModel::STAGED_STATE,
+      state:        DropletModel::STAGED_STATE,
       droplet_hash: 'droplet-hash'
     )
   end
@@ -19,7 +19,7 @@ describe 'Tasks' do
 
     stub_request(:post, 'http://nsync.service.cf.internal:8787/v1/tasks').to_return(status: 202)
 
-    VCAP::CloudController::FeatureFlag.make(name: 'task_creation', enabled: true, error_message: nil)
+    FeatureFlag.make(name: 'task_creation', enabled: true, error_message: nil)
 
     app_model.droplet = droplet
     app_model.save
@@ -27,7 +27,7 @@ describe 'Tasks' do
 
   describe 'GET /v3/tasks' do
     it 'returns a paginated list of tasks' do
-      task1 = VCAP::CloudController::TaskModel.make(
+      task1 = TaskModel.make(
         name:                  'task one',
         command:               'echo task',
         app_guid:              app_model.guid,
@@ -35,14 +35,14 @@ describe 'Tasks' do
         environment_variables: { unicorn: 'magic' },
         memory_in_mb:          5,
       )
-      task2 = VCAP::CloudController::TaskModel.make(
+      task2 = TaskModel.make(
         name:         'task two',
         command:      'echo task',
         app_guid:     app_model.guid,
         droplet:      app_model.droplet,
         memory_in_mb: 100,
       )
-      VCAP::CloudController::TaskModel.make(
+      TaskModel.make(
         app_guid: app_model.guid,
         droplet:  app_model.droplet,
       )
@@ -121,23 +121,23 @@ describe 'Tasks' do
 
     describe 'filtering' do
       it 'returns a paginated list of tasks' do
-        task1 = VCAP::CloudController::TaskModel.make(
+        task1 = TaskModel.make(
           name:                  'task one',
           command:               'echo task',
           app_guid:              app_model.guid,
           droplet:               app_model.droplet,
           environment_variables: { unicorn: 'magic' },
           memory_in_mb:          5,
-          state:                 VCAP::CloudController::TaskModel::SUCCEEDED_STATE,
+          state:                 TaskModel::SUCCEEDED_STATE,
         )
-        VCAP::CloudController::TaskModel.make(
+        TaskModel.make(
           name:         'task two',
           command:      'echo task',
           app_guid:     app_model.guid,
           droplet:      app_model.droplet,
           memory_in_mb: 100,
         )
-        VCAP::CloudController::TaskModel.make(
+        TaskModel.make(
           app_guid: app_model.guid,
           droplet:  app_model.droplet,
         )
@@ -175,7 +175,7 @@ describe 'Tasks' do
 
   describe 'GET /v3/tasks/:guid' do
     it 'returns a json representation of the task with the requested guid' do
-      task = VCAP::CloudController::TaskModel.make(
+      task = TaskModel.make(
         name:                  'task',
         command:               'echo task',
         app_guid:              app_model.guid,
@@ -220,7 +220,7 @@ describe 'Tasks' do
     end
 
     it 'redacts information for auditors' do
-      task = VCAP::CloudController::TaskModel.make(
+      task = TaskModel.make(
         name:                  'task',
         command:               'echo task',
         app_guid:              app_model.guid,
@@ -230,7 +230,7 @@ describe 'Tasks' do
       )
       task_guid = task.guid
 
-      auditor = VCAP::CloudController::User.make
+      auditor = User.make
       space.organization.add_user(auditor)
       space.add_auditor(auditor)
 
@@ -246,7 +246,7 @@ describe 'Tasks' do
 
   describe 'PUT /v3/tasks/:guid/cancel' do
     it 'returns a json representation of the task with the requested guid' do
-      task      = VCAP::CloudController::TaskModel.make name: 'task', command: 'echo task', environment_variables: { unicorn: 'magic' }, app_guid: app_model.guid
+      task      = TaskModel.make name: 'task', command: 'echo task', environment_variables: { unicorn: 'magic' }, app_guid: app_model.guid
       task_guid = task.guid
 
       stub_request(:delete, "http://nsync.service.cf.internal:8787/v1/tasks/#{task_guid}").to_return(status: 202)
@@ -266,7 +266,7 @@ describe 'Tasks' do
 
   describe 'GET /v3/apps/:guid/tasks' do
     it 'returns a paginated list of tasks' do
-      task1 = VCAP::CloudController::TaskModel.make(
+      task1 = TaskModel.make(
         name:                  'task one',
         command:               'echo task',
         app_guid:              app_model.guid,
@@ -274,14 +274,14 @@ describe 'Tasks' do
         environment_variables: { unicorn: 'magic' },
         memory_in_mb:          5,
       )
-      task2 = VCAP::CloudController::TaskModel.make(
+      task2 = TaskModel.make(
         name:         'task two',
         command:      'echo task',
         app_guid:     app_model.guid,
         droplet:      app_model.droplet,
         memory_in_mb: 100,
       )
-      VCAP::CloudController::TaskModel.make(
+      TaskModel.make(
         app_guid: app_model.guid,
         droplet:  app_model.droplet,
       )
@@ -360,23 +360,23 @@ describe 'Tasks' do
 
     describe 'filtering' do
       it 'returns a paginated list of tasks' do
-        task1 = VCAP::CloudController::TaskModel.make(
+        task1 = TaskModel.make(
           name:                  'task one',
           command:               'echo task',
           app_guid:              app_model.guid,
           droplet:               app_model.droplet,
           environment_variables: { unicorn: 'magic' },
           memory_in_mb:          5,
-          state:                 VCAP::CloudController::TaskModel::SUCCEEDED_STATE,
+          state:                 TaskModel::SUCCEEDED_STATE,
         )
-        VCAP::CloudController::TaskModel.make(
+        TaskModel.make(
           name:         'task two',
           command:      'echo task',
           app_guid:     app_model.guid,
           droplet:      app_model.droplet,
           memory_in_mb: 100,
         )
-        VCAP::CloudController::TaskModel.make(
+        TaskModel.make(
           app_guid: app_model.guid,
           droplet:  app_model.droplet,
         )
@@ -450,14 +450,14 @@ describe 'Tasks' do
 
       expect(last_response.status).to eq(202)
       expect(parsed_response).to be_a_response_like(expected_response)
-      expect(VCAP::CloudController::TaskModel.find(guid: guid)).to be_present
+      expect(TaskModel.find(guid: guid)).to be_present
     end
 
     context 'when requesting a specific droplet' do
       let(:non_assigned_droplet) do
-        VCAP::CloudController::DropletModel.make(
+        DropletModel.make(
           app_guid:     app_model.guid,
-          state:        VCAP::CloudController::DropletModel::STAGED_STATE,
+          state:        DropletModel::STAGED_STATE,
           droplet_hash: 'some-droplet-hash'
         )
       end
@@ -479,7 +479,7 @@ describe 'Tasks' do
         expect(last_response.status).to eq(202)
         expect(parsed_response['droplet_guid']).to eq(non_assigned_droplet.guid)
         expect(parsed_response['links']['droplet']['href']).to eq("/v3/droplets/#{non_assigned_droplet.guid}")
-        expect(VCAP::CloudController::TaskModel.find(guid: guid)).to be_present
+        expect(TaskModel.find(guid: guid)).to be_present
       end
     end
   end

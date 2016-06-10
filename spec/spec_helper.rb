@@ -28,7 +28,7 @@ require 'support/bootstrap/spec_bootstrap'
 require 'rspec/collection_matchers'
 require 'rspec/its'
 
-VCAP::CloudController::SpecBootstrap.init
+SpecBootstrap.init
 
 Dir[File.expand_path('support/**/*.rb', File.dirname(__FILE__))].each { |file| require file }
 
@@ -67,7 +67,7 @@ RSpec.configure do |rspec_config|
   Delayed::Worker.plugins << DeserializationRetry
 
   rspec_config.before :suite do
-    VCAP::CloudController::SpecBootstrap.seed
+    SpecBootstrap.seed
   end
 
   rspec_config.before :each do
@@ -78,7 +78,7 @@ RSpec.configure do |rspec_config|
 
     TestConfig.reset
 
-    VCAP::CloudController::SecurityContext.clear
+    SecurityContext.clear
   end
 
   rspec_config.around :each do |example|
@@ -104,7 +104,7 @@ RSpec.configure do |rspec_config|
   rspec_config.after(:each, type: :legacy_api) { add_deprecation_warning }
 
   RspecApiDocumentation.configure do |c|
-    c.app = VCAP::CloudController::RackAppBuilder.new.build(TestConfig.config, VCAP::CloudController::Metrics::RequestMetrics.new)
+    c.app = RackAppBuilder.new.build(TestConfig.config, Metrics::RequestMetrics.new)
     c.format = [:html, :json]
     c.api_name = 'Cloud Foundry API'
     c.template_path = 'spec/api/documentation/templates'

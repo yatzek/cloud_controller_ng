@@ -2,7 +2,7 @@ require 'spec_helper'
 
 describe 'Service Broker API integration' do
   describe 'v2.10' do
-    include VCAP::CloudController::BrokerApiHelper
+    include BrokerApiHelper
 
     before { setup_cc }
 
@@ -53,7 +53,7 @@ describe 'Service Broker API integration' do
 
           parsed_body = MultiJson.load(last_response.body)
 
-          expect(VCAP::CloudController::ServiceBinding.last.volume_mounts).to match_array(
+          expect(ServiceBinding.last.volume_mounts).to match_array(
             [
               {
                 'public_property' => 'public value',

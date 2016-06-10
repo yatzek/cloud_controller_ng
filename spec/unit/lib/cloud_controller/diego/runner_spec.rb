@@ -1,134 +1,132 @@
 require 'spec_helper'
 
-module VCAP::CloudController
-  module Diego
-    describe Runner do
-      let(:messenger) { instance_double(Messenger) }
-      let(:app) { AppFactory.make(state: 'STARTED') }
-      let(:protocol) { instance_double(Diego::Protocol, desire_app_message: {}) }
-      let(:default_health_check_timeout) { 9999 }
+module Diego
+  describe Runner do
+    let(:messenger) { instance_double(Messenger) }
+    let(:app) { AppFactory.make(state: 'STARTED') }
+    let(:protocol) { instance_double(::Diego::Protocol, desire_app_message: {}) }
+    let(:default_health_check_timeout) { 9999 }
 
-      subject(:runner) { Runner.new(app, default_health_check_timeout) }
+    subject(:runner) { Runner.new(app, default_health_check_timeout) }
+
+    before do
+      runner.messenger = messenger
+      allow(messenger).to receive(:send_desire_request)
+    end
+
+    describe '#scale' do
+      context 'when the app is started' do
+        it 'desires an app, relying on its state to convey the change' do
+          expect(messenger).to receive(:send_desire_request).with(default_health_check_timeout)
+          runner.scale
+        end
+      end
+
+      context 'when the app has not been started' do
+        let(:app) { AppFactory.make(state: 'STOPPED') }
+
+        it 'does not desire an app and raises an exception' do
+          expect(messenger).to_not receive(:send_desire_request)
+          expect { runner.scale }.to raise_error(CloudController::Errors::ApiError, /App not started/)
+        end
+      end
+    end
+
+    describe '#start' do
+      before do
+        runner.start
+      end
+
+      it 'desires an app, relying on its state to convey the change' do
+        expect(messenger).to have_received(:send_desire_request).with(default_health_check_timeout)
+      end
+    end
+
+    describe '#stop' do
+      before do
+        allow(messenger).to receive(:send_stop_app_request)
+      end
+
+      it 'sends a stop app request' do
+        runner.stop
+        expect(messenger).to have_received(:send_stop_app_request)
+      end
+    end
+
+    describe '#stop_index' do
+      let(:index) { 0 }
 
       before do
-        runner.messenger = messenger
-        allow(messenger).to receive(:send_desire_request)
+        allow(messenger).to receive(:send_stop_index_request)
+        runner.stop_index(index)
       end
 
-      describe '#scale' do
-        context 'when the app is started' do
-          it 'desires an app, relying on its state to convey the change' do
-            expect(messenger).to receive(:send_desire_request).with(default_health_check_timeout)
-            runner.scale
-          end
-        end
-
-        context 'when the app has not been started' do
-          let(:app) { AppFactory.make(state: 'STOPPED') }
-
-          it 'does not desire an app and raises an exception' do
-            expect(messenger).to_not receive(:send_desire_request)
-            expect { runner.scale }.to raise_error(CloudController::Errors::ApiError, /App not started/)
-          end
-        end
+      it 'stops the application instance with the specified index' do
+        expect(messenger).to have_received(:send_stop_index_request).with(index)
       end
+    end
 
-      describe '#start' do
-        before do
-          runner.start
-        end
-
+    describe '#update_routes' do
+      context 'when the app is started' do
         it 'desires an app, relying on its state to convey the change' do
-          expect(messenger).to have_received(:send_desire_request).with(default_health_check_timeout)
+          expect(messenger).to receive(:send_desire_request).with(default_health_check_timeout)
+          runner.update_routes
         end
       end
 
-      describe '#stop' do
-        before do
-          allow(messenger).to receive(:send_stop_app_request)
-        end
+      context 'when an app is in staging status' do
+        let(:app) { AppFactory.make(state: 'STARTED', package_state: 'PENDING', staging_task_id: 'some-id') }
 
-        it 'sends a stop app request' do
-          runner.stop
-          expect(messenger).to have_received(:send_stop_app_request)
-        end
-      end
+        it 'should not update routes' do
+          allow(messenger).to receive(:send_desire_request)
 
-      describe '#stop_index' do
-        let(:index) { 0 }
+          runner.update_routes
 
-        before do
-          allow(messenger).to receive(:send_stop_index_request)
-          runner.stop_index(index)
-        end
-
-        it 'stops the application instance with the specified index' do
-          expect(messenger).to have_received(:send_stop_index_request).with(index)
+          expect(messenger).to_not have_received(:send_desire_request)
         end
       end
 
-      describe '#update_routes' do
-        context 'when the app is started' do
-          it 'desires an app, relying on its state to convey the change' do
-            expect(messenger).to receive(:send_desire_request).with(default_health_check_timeout)
-            runner.update_routes
-          end
-        end
+      context 'when the app has not been started' do
+        let(:app) { AppFactory.make(state: 'STOPPED') }
 
-        context 'when an app is in staging status' do
-          let(:app) { AppFactory.make(state: 'STARTED', package_state: 'PENDING', staging_task_id: 'some-id') }
-
-          it 'should not update routes' do
-            allow(messenger).to receive(:send_desire_request)
-
-            runner.update_routes
-
-            expect(messenger).to_not have_received(:send_desire_request)
-          end
-        end
-
-        context 'when the app has not been started' do
-          let(:app) { AppFactory.make(state: 'STOPPED') }
-
-          it 'does not desire an app and raises an exception' do
-            expect(messenger).to_not receive(:send_desire_request)
-            expect { runner.update_routes }.to raise_error(CloudController::Errors::ApiError, /App not started/)
-          end
+        it 'does not desire an app and raises an exception' do
+          expect(messenger).to_not receive(:send_desire_request)
+          expect { runner.update_routes }.to raise_error(CloudController::Errors::ApiError, /App not started/)
         end
       end
+    end
 
-      describe '#desire_app_message' do
-        before do
-          expect(Protocol).to receive(:new).with(app).and_return(protocol)
-        end
-
-        it "gets the procotol's desire_app_message" do
-          expect(runner.desire_app_message).to eq({})
-          expect(protocol).to have_received(:desire_app_message).with(default_health_check_timeout)
-        end
+    describe '#desire_app_message' do
+      before do
+        expect(Protocol).to receive(:new).with(app).and_return(protocol)
       end
 
-      describe '#with_logging' do
-        it 'raises a reasonable error if diego is not on' do
-          expect do
-            runner.with_logging { raise StandardError.new('getaddrinfo: Name or service not known') }
-          end.to raise_error(Runner::CannotCommunicateWithDiegoError)
-        end
+      it "gets the procotol's desire_app_message" do
+        expect(runner.desire_app_message).to eq({})
+        expect(protocol).to have_received(:desire_app_message).with(default_health_check_timeout)
+      end
+    end
 
-        it 'raises a reasonable error if diego is not on' do
-          expect do
-            runner.with_logging { raise ArgumentError.new('Other Error') }
-          end.to raise_error(ArgumentError)
-        end
+    describe '#with_logging' do
+      it 'raises a reasonable error if diego is not on' do
+        expect do
+          runner.with_logging { raise StandardError.new('getaddrinfo: Name or service not known') }
+        end.to raise_error(Runner::CannotCommunicateWithDiegoError)
       end
 
-      describe '#messenger' do
-        it 'creates a Diego::Messenger if not set' do
-          runner.messenger = nil
-          expected_messenger = double
-          allow(Diego::Messenger).to receive(:new).with(app).and_return(expected_messenger)
-          expect(runner.messenger).to eq(expected_messenger)
-        end
+      it 'raises a reasonable error if diego is not on' do
+        expect do
+          runner.with_logging { raise ArgumentError.new('Other Error') }
+        end.to raise_error(ArgumentError)
+      end
+    end
+
+    describe '#messenger' do
+      it 'creates a Diego::Messenger if not set' do
+        runner.messenger   = nil
+        expected_messenger = double
+        allow(::Diego::Messenger).to receive(:new).with(app).and_return(expected_messenger)
+        expect(runner.messenger).to eq(expected_messenger)
       end
     end
   end

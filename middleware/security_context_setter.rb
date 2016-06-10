@@ -11,9 +11,9 @@ module CloudFoundry
 
         @security_context_configurer.configure(header_token)
 
-        if VCAP::CloudController::SecurityContext.valid_token?
-          env['cf.user_guid'] = VCAP::CloudController::SecurityContext.token['user_id']
-          env['cf.user_name'] = VCAP::CloudController::SecurityContext.token['user_name']
+        if SecurityContext.valid_token?
+          env['cf.user_guid'] = SecurityContext.token['user_id']
+          env['cf.user_name'] = SecurityContext.token['user_name']
         end
 
         @app.call(env)

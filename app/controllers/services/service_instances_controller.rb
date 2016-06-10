@@ -6,7 +6,7 @@ require 'controllers/services/lifecycle/service_instance_deprovisioner'
 require 'controllers/services/lifecycle/service_instance_purger'
 require 'queries/service_instance_fetcher'
 
-module VCAP::CloudController
+module CloudController
   class ServiceInstancesController < RestController::ModelController
     model_class_name :ManagedServiceInstance # Must do this to be backwards compatible with actions other than enumerate
     define_attributes do
@@ -196,7 +196,7 @@ module VCAP::CloudController
       object = ServiceInstance.where(guid: guid).first
 
       if object.class == UserProvidedServiceInstance
-        user_provided_path = VCAP::CloudController::UserProvidedServiceInstancesController.path
+        user_provided_path = UserProvidedServiceInstancesController.path
         return "#{user_provided_path}/#{guid}"
       else
         return "#{path}/#{guid}"
@@ -234,7 +234,7 @@ module VCAP::CloudController
 
       req_body = body.string.blank? ? '{}' : body
 
-      json_msg = VCAP::CloudController::RouteBindingMessage.decode(req_body)
+      json_msg = RouteBindingMessage.decode(req_body)
       @request_attrs = json_msg.extract(stringify_keys: true)
 
       bind_route(other_guid, guid)

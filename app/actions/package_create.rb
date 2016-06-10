@@ -1,56 +1,54 @@
 require 'repositories/package_event_repository'
 
-module VCAP::CloudController
-  class PackageCreate
-    class InvalidPackage < StandardError; end
+class PackageCreate
+  class InvalidPackage < StandardError; end
 
-    def initialize(user_guid, user_email)
-      @user_guid = user_guid
-      @user_email = user_email
+  def initialize(user_guid, user_email)
+    @user_guid = user_guid
+    @user_email = user_email
+  end
+
+  def create(message)
+    logger.info("creating package type #{message.type} for app #{message.app_guid}")
+
+    package          = PackageModel.new
+    package.app_guid = message.app_guid
+    package.type     = message.type
+    package.state    = get_package_state(message)
+
+    package.db.transaction do
+      package.save
+      make_docker_data(message, package)
+
+      Repositories::PackageEventRepository.record_app_package_create(
+        package,
+        @user_guid,
+        @user_email,
+        message.audit_hash)
     end
 
-    def create(message)
-      logger.info("creating package type #{message.type} for app #{message.app_guid}")
+    package
+  rescue Sequel::ValidationFailed => e
+    raise InvalidPackage.new(e.message)
+  end
 
-      package          = PackageModel.new
-      package.app_guid = message.app_guid
-      package.type     = message.type
-      package.state    = get_package_state(message)
+  private
 
-      package.db.transaction do
-        package.save
-        make_docker_data(message, package)
+  def get_package_state(message)
+    message.bits_type? ? PackageModel::CREATED_STATE : PackageModel::READY_STATE
+  end
 
-        Repositories::PackageEventRepository.record_app_package_create(
-          package,
-          @user_guid,
-          @user_email,
-          message.audit_hash)
-      end
+  def make_docker_data(message, package)
+    return nil unless message.docker_type?
 
-      package
-    rescue Sequel::ValidationFailed => e
-      raise InvalidPackage.new(e.message)
-    end
+    data = PackageDockerDataModel.new
+    data.package = package
+    data.image = message.docker_data.image
+    data.save
+    package.docker_data = data
+  end
 
-    private
-
-    def get_package_state(message)
-      message.bits_type? ? PackageModel::CREATED_STATE : PackageModel::READY_STATE
-    end
-
-    def make_docker_data(message, package)
-      return nil unless message.docker_type?
-
-      data = PackageDockerDataModel.new
-      data.package = package
-      data.image = message.docker_data.image
-      data.save
-      package.docker_data = data
-    end
-
-    def logger
-      @logger ||= Steno.logger('cc.action.package_create')
-    end
+  def logger
+    @logger ||= Steno.logger('cc.action.package_create')
   end
 end

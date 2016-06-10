@@ -1,7 +1,7 @@
 require 'httpclient'
 require 'uri'
 
-module VCAP::CloudController
+module CloudController
   class FilesController < RestController::ModelController
     path_base 'apps'
     model_class_name :App

@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module VCAP::Services::ServiceBrokers::V2
   describe Catalog do
-    let(:broker) { VCAP::CloudController::ServiceBroker.make }
+    let(:broker) { ServiceBroker.make }
 
     def service_entry(opts={})
       {

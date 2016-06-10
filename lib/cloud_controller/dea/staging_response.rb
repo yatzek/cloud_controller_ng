@@ -1,4 +1,4 @@
-module VCAP::CloudController::Dea
+module Dea
   class StagingResponse
     def initialize(response)
       @response = response

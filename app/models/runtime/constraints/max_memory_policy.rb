@@ -41,7 +41,7 @@ class AppMaxMemoryPolicy < BaseMaxMemoryPolicy
   end
 
   def requested_memory
-    calculator = VCAP::CloudController::AppMemoryCalculator.new(resource)
+    calculator = AppMemoryCalculator.new(resource)
     calculator.additional_memory_requested
   end
 end

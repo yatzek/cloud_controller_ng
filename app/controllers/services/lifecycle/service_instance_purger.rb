@@ -1,4 +1,4 @@
-module VCAP::CloudController
+module CloudController
   class ServiceInstancePurger
     def initialize(event_repository)
       @event_repository = event_repository

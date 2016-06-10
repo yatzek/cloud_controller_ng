@@ -3,7 +3,7 @@ require 'cloud_controller/dea/hm9000/client'
 
 module CCInitializers
   def self.new_relic_hm9000_client_instrumentation(_)
-    VCAP::CloudController::Dea::HM9000::Client.class_eval do
+    Dea::HM9000::Client.class_eval do
       include ::NewRelic::Agent::MethodTracer
 
       %w(

@@ -3,7 +3,7 @@ require 'cloud_controller/dea/client'
 
 module CCInitializers
   def self.new_relic_dea_client_instrumentation(_)
-    VCAP::CloudController::Dea::Client.class_eval do
+    Dea::Client.class_eval do
       include ::NewRelic::Agent::MethodTracer
 
       class << self
@@ -25,7 +25,7 @@ module CCInitializers
         ).each do |method_name|
           add_method_tracer(
             method_name,
-            "Custom/VCAP::CloudController::Dea::Client/#{method_name}",
+            "Custom/Dea::Client/#{method_name}",
             push_scope: true,
             metric: true,
           )

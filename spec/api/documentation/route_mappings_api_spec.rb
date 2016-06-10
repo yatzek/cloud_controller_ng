@@ -2,8 +2,8 @@ require 'spec_helper'
 require 'rspec_api_documentation/dsl'
 
 resource 'Routes Mapping', type: [:api, :legacy_api] do
-  let!(:app_obj) { VCAP::CloudController::AppFactory.make(diego: true, ports: [8888, 8889]) }
-  let!(:route) { VCAP::CloudController::Route.make(space: app_obj.space) }
+  let!(:app_obj) { AppFactory.make(diego: true, ports: [8888, 8889]) }
+  let!(:route) { Route.make(space: app_obj.space) }
 
   let(:admin_auth_header) { admin_headers['HTTP_AUTHORIZATION'] }
 
@@ -16,11 +16,11 @@ resource 'Routes Mapping', type: [:api, :legacy_api] do
     end
 
     context 'when a route mapping exists' do
-      let!(:route_mapping) { VCAP::CloudController::RouteMapping.make(route: route, app: app_obj) }
+      let!(:route_mapping) { RouteMapping.make(route: route, app: app_obj) }
       let(:guid) { route_mapping.guid }
 
       standard_model_get :route_mapping
-      standard_model_list :route_mapping, VCAP::CloudController::RouteMappingsController
+      standard_model_list :route_mapping, CloudController::RouteMappingsController
       standard_model_delete :route_mapping
     end
 
@@ -50,7 +50,7 @@ resource 'Routes Mapping', type: [:api, :legacy_api] do
     end
 
     context 'when updating a route mapping' do
-      let!(:route_mapping) { VCAP::CloudController::RouteMapping.make(route: route, app: app_obj) }
+      let!(:route_mapping) { RouteMapping.make(route: route, app: app_obj) }
       let!(:guid) { route_mapping.guid }
 
       put '/v2/route_mappings/:guid' do

@@ -1,6 +1,6 @@
 require 'cloud_controller/diego/process_guid'
 
-module VCAP::CloudController
+module CloudController
   class AppsSSHController < RestController::ModelController
     NON_EXISTENT_CURRENT_USER = 'unknown-user-guid'.freeze
     NON_EXISTENT_CURRENT_USER_EMAIL = 'unknown-user-email'.freeze
@@ -23,7 +23,7 @@ module VCAP::CloudController
     get '/internal/apps/:guid/ssh_access/:index', :ssh_access_with_index
     def ssh_access_with_index(guid, index)
       index = index.nil? ? 'unknown' : index
-      global_allow_ssh = VCAP::CloudController::Config.config[:allow_app_ssh_access]
+      global_allow_ssh = Config.config[:allow_app_ssh_access]
 
       check_authentication(:ssh_access_internal)
       app = find_guid_and_validate_access(:update, guid)
@@ -33,7 +33,7 @@ module VCAP::CloudController
 
       record_ssh_authorized_event(app, index)
 
-      response_body = { 'process_guid' => VCAP::CloudController::Diego::ProcessGuid.from_process(app) }
+      response_body = { 'process_guid' => Diego::ProcessGuid.from_process(app) }
       [HTTP::OK, MultiJson.dump(response_body)]
     rescue => e
       app = App.find(guid: guid)

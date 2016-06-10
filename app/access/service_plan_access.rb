@@ -1,4 +1,2 @@
-module VCAP::CloudController
-  class ServicePlanAccess < BaseAccess
-  end
+class ServicePlanAccess < BaseAccess
 end

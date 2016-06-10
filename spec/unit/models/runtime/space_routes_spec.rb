@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 describe SpaceRoutes do
-  let(:space) { VCAP::CloudController::Space.make }
+  let(:space) { Space.make }
 
   subject { SpaceRoutes.new(space) }
 
@@ -11,12 +11,12 @@ describe SpaceRoutes do
     end
 
     context 'when there are multiple routes' do
-      before { 2.times { VCAP::CloudController::Route.make(space: space) } }
+      before { 2.times { Route.make(space: space) } }
       its(:count) { should eq 2 }
     end
 
     context 'whyen there is a route belonging to different space' do
-      before { VCAP::CloudController::Route.make(space: VCAP::CloudController::Space.make) }
+      before { Route.make(space: Space.make) }
       its(:count) { should eq 0 }
     end
   end

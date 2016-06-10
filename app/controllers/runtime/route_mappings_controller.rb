@@ -1,4 +1,4 @@
-module VCAP::CloudController
+module CloudController
   class RouteMappingsController < RestController::ModelController
     define_attributes do
       to_one :app, exclude_in: [:update]

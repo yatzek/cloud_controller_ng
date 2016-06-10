@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-module VCAP::CloudController::RestController
+module RestController
   describe OrderApplicator do
     subject(:order_applicator) do
       OrderApplicator.new(opts)
@@ -13,7 +13,7 @@ module VCAP::CloudController::RestController
 
     describe '#apply' do
       let(:dataset) do
-        VCAP::CloudController::TestModel.db[:test_models]
+        TestModel.db[:test_models]
       end
 
       subject(:sql) do

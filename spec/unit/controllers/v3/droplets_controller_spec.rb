@@ -2,14 +2,14 @@ require 'rails_helper'
 
 describe DropletsController, type: :controller do
   describe '#create' do
-    let(:app_model) { VCAP::CloudController::AppModel.make }
-    let(:stagers) { instance_double(VCAP::CloudController::Stagers) }
+    let(:app_model) { AppModel.make }
+    let(:stagers) { instance_double(Stagers) }
     let(:package) do
-      VCAP::CloudController::PackageModel.make(app_guid: app_model.guid,
-                                               type: VCAP::CloudController::PackageModel::BITS_TYPE,
-                                               state: VCAP::CloudController::PackageModel::READY_STATE)
+      PackageModel.make(app_guid: app_model.guid,
+                        type: PackageModel::BITS_TYPE,
+                        state: PackageModel::READY_STATE)
     end
-    let(:user) { set_current_user(VCAP::CloudController::User.make) }
+    let(:user) { set_current_user(User.make) }
     let(:space) { app_model.space }
 
     before do
@@ -17,10 +17,10 @@ describe DropletsController, type: :controller do
       allow_user_write_access(user, space: space)
       allow(CloudController::DependencyLocator.instance).to receive(:stagers).and_return(stagers)
       allow(stagers).to receive(:stager_for_package).and_return(double(:stager, stage: nil))
-      VCAP::CloudController::BuildpackLifecycleDataModel.make(
+      BuildpackLifecycleDataModel.make(
         app:       app_model,
         buildpack: nil,
-        stack:     VCAP::CloudController::Stack.default.name
+        stack:     Stack.default.name
       )
     end
 
@@ -32,14 +32,14 @@ describe DropletsController, type: :controller do
     it 'creates a new droplet for the package' do
       expect {
         post :create, package_guid: package.guid
-      }.to change { VCAP::CloudController::DropletModel.count }.from(0).to(1)
+      }.to change { DropletModel.count }.from(0).to(1)
 
-      expect(VCAP::CloudController::DropletModel.last.package.guid).to eq(package.guid)
+      expect(DropletModel.last.package.guid).to eq(package.guid)
     end
 
     context 'if staging is in progress on any package on the app' do
       before do
-        allow_any_instance_of(VCAP::CloudController::AppModel).to receive(:staging_in_progress?).and_return true
+        allow_any_instance_of(AppModel).to receive(:staging_in_progress?).and_return true
       end
 
       it 'returns a 422 Unprocessable Entity and an informative error message' do
@@ -61,7 +61,7 @@ describe DropletsController, type: :controller do
     describe 'buildpack lifecycle' do
       describe 'buildpack request' do
         let(:req_body) { { lifecycle: { type: 'buildpack', data: { buildpack: buildpack_request } } } }
-        let(:buildpack) { VCAP::CloudController::Buildpack.make }
+        let(:buildpack) { Buildpack.make }
 
         context 'when a git url is requested' do
           let(:buildpack_request) { 'http://dan-and-zach-awesome-pack.com' }
@@ -70,7 +70,7 @@ describe DropletsController, type: :controller do
             post :create, { package_guid: package.guid, body: req_body }
 
             expect(response.status).to eq(201)
-            expect(VCAP::CloudController::DropletModel.last.lifecycle_data.buildpack).to eq('http://dan-and-zach-awesome-pack.com')
+            expect(DropletModel.last.lifecycle_data.buildpack).to eq('http://dan-and-zach-awesome-pack.com')
           end
 
           context 'when the url is invalid' do
@@ -92,7 +92,7 @@ describe DropletsController, type: :controller do
             post :create, { package_guid: package.guid, body: req_body }
 
             expect(response.status).to eq(201)
-            expect(VCAP::CloudController::DropletModel.last.buildpack_lifecycle_data.buildpack).to eq(buildpack.name)
+            expect(DropletModel.last.buildpack_lifecycle_data.buildpack).to eq(buildpack.name)
           end
 
           context 'when the buildpack does not exist' do
@@ -119,41 +119,41 @@ describe DropletsController, type: :controller do
             post :create, { package_guid: package.guid, body: req_body }
 
             expect(response.status).to eq(201)
-            expect(VCAP::CloudController::DropletModel.last.lifecycle_data.buildpack).to eq(app_model.lifecycle_data.buildpack)
+            expect(DropletModel.last.lifecycle_data.buildpack).to eq(app_model.lifecycle_data.buildpack)
           end
         end
       end
     end
 
     describe 'docker lifecycle' do
-      let(:docker_app_model) { VCAP::CloudController::AppModel.make(:docker, space: space) }
+      let(:docker_app_model) { AppModel.make(:docker, space: space) }
       let(:req_body) { { lifecycle: { type: 'docker', data: {} } } }
       let!(:package) do
-        VCAP::CloudController::PackageModel.make(:docker,
+        PackageModel.make(:docker,
           app_guid: docker_app_model.guid,
-          type:     VCAP::CloudController::PackageModel::DOCKER_TYPE,
-          state:    VCAP::CloudController::PackageModel::READY_STATE
+          type:     PackageModel::DOCKER_TYPE,
+          state:    PackageModel::READY_STATE
         )
       end
 
       before do
         expect(docker_app_model.lifecycle_type).to eq('docker')
-        VCAP::CloudController::BuildpackLifecycleDataModel.make(
+        BuildpackLifecycleDataModel.make(
           app:       docker_app_model,
           buildpack: nil,
-          stack:     VCAP::CloudController::Stack.default.name
+          stack:     Stack.default.name
         )
       end
 
       context 'when diego_docker is enabled' do
         before do
-          VCAP::CloudController::FeatureFlag.make(name: 'diego_docker', enabled: true, error_message: nil)
+          FeatureFlag.make(name: 'diego_docker', enabled: true, error_message: nil)
         end
 
         it 'returns a 201 Created response' do
           expect {
             post :create, package_guid: package.guid, body: req_body
-          }.to change { VCAP::CloudController::DropletModel.count }.from(0).to(1)
+          }.to change { DropletModel.count }.from(0).to(1)
           expect(response.status).to eq 201
         end
 
@@ -182,7 +182,7 @@ describe DropletsController, type: :controller do
 
       context 'when diego_docker is disabled' do
         before do
-          VCAP::CloudController::FeatureFlag.make(name: 'diego_docker', enabled: false, error_message: nil)
+          FeatureFlag.make(name: 'diego_docker', enabled: false, error_message: nil)
         end
 
         context 'non-admin user' do
@@ -203,7 +203,7 @@ describe DropletsController, type: :controller do
           it 'returns a 201 Created response and creates a droplet' do
             expect {
               post :create, package_guid: package.guid, body: req_body
-            }.to change { VCAP::CloudController::DropletModel.count }.from(0).to(1)
+            }.to change { DropletModel.count }.from(0).to(1)
             expect(response.status).to eq 201
           end
         end
@@ -225,7 +225,7 @@ describe DropletsController, type: :controller do
           post :create, package_guid: package.guid, body: req_body
 
           expect(response.status).to eq(201)
-          expect(VCAP::CloudController::DropletModel.last.environment_variables).to include(
+          expect(DropletModel.last.environment_variables).to include(
             {
               'application_version' => 'whatuuid',
               'application_name'    => 'name-815'
@@ -252,15 +252,15 @@ describe DropletsController, type: :controller do
           post :create, package_guid: package.guid, body: req_body
 
           expect(response.status).to eq(201)
-          expect(VCAP::CloudController::DropletModel.last.environment_variables).to include('key_from_package' => 'should_merge')
-          expect(VCAP::CloudController::DropletModel.last.environment_variables).to include('key_from_app' => 'should_merge')
+          expect(DropletModel.last.environment_variables).to include('key_from_package' => 'should_merge')
+          expect(DropletModel.last.environment_variables).to include('key_from_app' => 'should_merge')
         end
 
         it 'clobbers the existing value from the app' do
           post :create, package_guid: package.guid, body: req_body
 
           expect(response.status).to eq(201)
-          expect(VCAP::CloudController::DropletModel.last.environment_variables).to include('conflicting_key' => 'value_from_package')
+          expect(DropletModel.last.environment_variables).to include('conflicting_key' => 'value_from_package')
         end
       end
 
@@ -288,15 +288,15 @@ describe DropletsController, type: :controller do
     end
 
     describe 'handling action errors' do
-      let(:droplet_create) { instance_double(VCAP::CloudController::DropletCreate) }
+      let(:droplet_create) { instance_double(DropletCreate) }
 
       before do
-        allow(VCAP::CloudController::DropletCreate).to receive(:new).and_return(droplet_create)
+        allow(DropletCreate).to receive(:new).and_return(droplet_create)
       end
 
       context 'when the request package is invalid' do
         before do
-          allow(droplet_create).to receive(:create_and_stage).and_raise(VCAP::CloudController::DropletCreate::InvalidPackage)
+          allow(droplet_create).to receive(:create_and_stage).and_raise(DropletCreate::InvalidPackage)
         end
 
         it 'returns a 400 InvalidRequest error' do
@@ -309,7 +309,7 @@ describe DropletsController, type: :controller do
 
       context 'when the space quota is exceeded' do
         before do
-          allow(droplet_create).to receive(:create_and_stage).and_raise(VCAP::CloudController::DropletCreate::SpaceQuotaExceeded)
+          allow(droplet_create).to receive(:create_and_stage).and_raise(DropletCreate::SpaceQuotaExceeded)
         end
 
         it 'returns 400 UnableToPerform' do
@@ -324,7 +324,7 @@ describe DropletsController, type: :controller do
 
       context 'when the org quota is exceeded' do
         before do
-          allow(droplet_create).to receive(:create_and_stage).and_raise(VCAP::CloudController::DropletCreate::OrgQuotaExceeded)
+          allow(droplet_create).to receive(:create_and_stage).and_raise(DropletCreate::OrgQuotaExceeded)
         end
 
         it 'returns 400 UnableToPerform' do
@@ -339,7 +339,7 @@ describe DropletsController, type: :controller do
 
       context 'when the disk limit is exceeded' do
         before do
-          allow(droplet_create).to receive(:create_and_stage).and_raise(VCAP::CloudController::DropletCreate::DiskLimitExceeded)
+          allow(droplet_create).to receive(:create_and_stage).and_raise(DropletCreate::DiskLimitExceeded)
         end
 
         it 'returns 400 UnableToPerform' do
@@ -356,7 +356,7 @@ describe DropletsController, type: :controller do
     context 'permissions' do
       context 'when the user does not have the write scope' do
         before do
-          set_current_user(VCAP::CloudController::User.make, scopes: ['cloud_controller.read'])
+          set_current_user(User.make, scopes: ['cloud_controller.read'])
         end
 
         it 'returns an ApiError with a 403 code' do
@@ -398,13 +398,13 @@ describe DropletsController, type: :controller do
   end
 
   describe '#copy' do
-    let(:source_space) { VCAP::CloudController::Space.make }
-    let(:target_space) { VCAP::CloudController::Space.make }
-    let(:target_app) { VCAP::CloudController::AppModel.make(space_guid: target_space.guid) }
-    let(:source_app_guid) { VCAP::CloudController::AppModel.make(space_guid: source_space.guid).guid }
+    let(:source_space) { Space.make }
+    let(:target_space) { Space.make }
+    let(:target_app) { AppModel.make(space_guid: target_space.guid) }
+    let(:source_app_guid) { AppModel.make(space_guid: source_space.guid).guid }
     let(:target_app_guid) { target_app.guid }
     let(:state) { 'STAGED' }
-    let!(:source_droplet) { VCAP::CloudController::DropletModel.make(:buildpack, state: state, app_guid: source_app_guid) }
+    let!(:source_droplet) { DropletModel.make(:buildpack, state: state, app_guid: source_app_guid) }
     let(:source_droplet_guid) { source_droplet.guid }
     let(:req_body) do
       {
@@ -413,7 +413,7 @@ describe DropletsController, type: :controller do
         }
       }
     end
-    let(:user) { set_current_user(VCAP::CloudController::User.make) }
+    let(:user) { set_current_user(User.make) }
 
     before do
       allow_user_read_access(user, space: source_space)
@@ -521,8 +521,8 @@ describe DropletsController, type: :controller do
   end
 
   describe '#show' do
-    let(:droplet) { VCAP::CloudController::DropletModel.make }
-    let(:user) { set_current_user(VCAP::CloudController::User.make) }
+    let(:droplet) { DropletModel.make }
+    let(:user) { set_current_user(User.make) }
     let(:space) { droplet.space }
 
     before do
@@ -549,7 +549,7 @@ describe DropletsController, type: :controller do
     context 'permissions' do
       context 'when the user does not have the read scope' do
         before do
-          set_current_user(VCAP::CloudController::User.make, scopes: [])
+          set_current_user(User.make, scopes: [])
         end
 
         it 'returns a 403 NotAuthorized error' do
@@ -579,8 +579,8 @@ describe DropletsController, type: :controller do
   end
 
   describe '#destroy' do
-    let(:droplet) { VCAP::CloudController::DropletModel.make }
-    let(:user) { set_current_user(VCAP::CloudController::User.make) }
+    let(:droplet) { DropletModel.make }
+    let(:user) { set_current_user(User.make) }
     let(:space) { droplet.space }
 
     before do
@@ -608,7 +608,7 @@ describe DropletsController, type: :controller do
     context 'permissions' do
       context 'when the user does not have write scope' do
         before do
-          set_current_user(VCAP::CloudController::User.make, scopes: ['cloud_controller.read'])
+          set_current_user(User.make, scopes: ['cloud_controller.read'])
         end
 
         it 'returns 403' do
@@ -649,12 +649,12 @@ describe DropletsController, type: :controller do
   end
 
   describe '#index' do
-    let(:user) { set_current_user(VCAP::CloudController::User.make) }
-    let(:app) { VCAP::CloudController::AppModel.make }
+    let(:user) { set_current_user(User.make) }
+    let(:app) { AppModel.make }
     let!(:space) { app.space }
-    let!(:user_droplet_1) { VCAP::CloudController::DropletModel.make(app_guid: app.guid) }
-    let!(:user_droplet_2) { VCAP::CloudController::DropletModel.make(app_guid: app.guid) }
-    let!(:admin_droplet) { VCAP::CloudController::DropletModel.make }
+    let!(:user_droplet_1) { DropletModel.make(app_guid: app.guid) }
+    let!(:user_droplet_2) { DropletModel.make(app_guid: app.guid) }
+    let!(:admin_droplet) { DropletModel.make }
 
     before do
       allow_user_read_access(user, space: space)
@@ -695,10 +695,10 @@ describe DropletsController, type: :controller do
 
     context 'accessed as an app subresource' do
       it 'returns droplets for the app' do
-        app       = VCAP::CloudController::AppModel.make(space: space)
-        droplet_1 = VCAP::CloudController::DropletModel.make(app_guid: app.guid)
-        droplet_2 = VCAP::CloudController::DropletModel.make(app_guid: app.guid)
-        VCAP::CloudController::DropletModel.make
+        app       = AppModel.make(space: space)
+        droplet_1 = DropletModel.make(app_guid: app.guid)
+        droplet_2 = DropletModel.make(app_guid: app.guid)
+        DropletModel.make
 
         get :index, app_guid: app.guid
 
@@ -737,8 +737,8 @@ describe DropletsController, type: :controller do
     end
 
     context 'accessed as a package subresource' do
-      let(:package) { VCAP::CloudController::PackageModel.make(app_guid: app.guid) }
-      let!(:droplet_1) { VCAP::CloudController::DropletModel.make(package_guid: package.guid) }
+      let(:package) { PackageModel.make(app_guid: app.guid) }
+      let!(:droplet_1) { DropletModel.make(package_guid: package.guid) }
 
       it 'returns droplets for the package' do
         get :index, package_guid: package.guid
@@ -819,7 +819,7 @@ describe DropletsController, type: :controller do
     context 'permissions' do
       context 'when the user does not have read scope' do
         before do
-          set_current_user(VCAP::CloudController::User.make, scopes: [])
+          set_current_user(User.make, scopes: [])
         end
 
         it 'returns a 403 Not Authorized error' do

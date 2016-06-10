@@ -1,10 +1,8 @@
-module VCAP::CloudController
-  class ServiceBindingCreateFetcher
-    def fetch(app_guid, service_instance_guid)
-      instance = ServiceInstance.first(guid: service_instance_guid)
-      app = AppModel.first(guid: app_guid)
+class ServiceBindingCreateFetcher
+  def fetch(app_guid, service_instance_guid)
+    instance = ServiceInstance.first(guid: service_instance_guid)
+    app = AppModel.first(guid: app_guid)
 
-      [app, instance]
-    end
+    [app, instance]
   end
 end

@@ -28,7 +28,7 @@ module VCAP::Services::ServiceBrokers
           service_broker: catalog_service.service_broker,
           unique_id:      catalog_service.broker_provided_id,
         }
-        obj = find_or_new_model(VCAP::CloudController::Service, cond)
+        obj = find_or_new_model(Service, cond)
 
         obj.set(
           label:       catalog_service.name,
@@ -53,7 +53,7 @@ module VCAP::Services::ServiceBrokers
           unique_id: catalog_plan.broker_provided_id,
           service: catalog_plan.catalog_service.cc_service,
         }
-        plan = find_or_new_model(VCAP::CloudController::ServicePlan, cond)
+        plan = find_or_new_model(ServicePlan, cond)
         if plan.new?
           plan.public = false
         end

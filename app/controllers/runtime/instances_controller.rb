@@ -1,4 +1,4 @@
-module VCAP::CloudController
+module CloudController
   class InstancesController < RestController::ModelController
     def self.dependencies
       [:instances_reporters, :index_stopper]

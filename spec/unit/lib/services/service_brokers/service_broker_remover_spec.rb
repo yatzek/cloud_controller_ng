@@ -3,11 +3,11 @@ require 'spec_helper'
 module VCAP::Services::ServiceBrokers
   describe ServiceBrokerRemover do
     subject(:remover) { ServiceBrokerRemover.new(services_events_repository) }
-    let(:services_events_repository) { VCAP::CloudController::Repositories::ServiceEventRepository.new(user: user, user_email: email) }
-    let(:broker) { VCAP::CloudController::ServiceBroker.make }
+    let(:services_events_repository) { Repositories::ServiceEventRepository.new(user: user, user_email: email) }
+    let(:broker) { ServiceBroker.make }
     let(:dashboard_client_manager) { instance_double(VCAP::Services::SSO::DashboardClientManager) }
-    let(:security_context) { class_double(VCAP::CloudController::SecurityContext, current_user: user, current_user_email: email) }
-    let(:user) { VCAP::CloudController::User.make }
+    let(:security_context) { class_double(SecurityContext, current_user: user, current_user_email: email) }
+    let(:user) { User.make }
     let(:email) { 'email@example.com' }
 
     describe '#remove' do
@@ -30,12 +30,12 @@ module VCAP::Services::ServiceBrokers
       end
 
       it 'records service and service_plan deletion events' do
-        service = VCAP::CloudController::Service.make(service_broker: broker)
-        plan = VCAP::CloudController::ServicePlan.make(service: service)
+        service = Service.make(service_broker: broker)
+        plan = ServicePlan.make(service: service)
 
         remover.remove(broker)
 
-        event = VCAP::CloudController::Event.first(type: 'audit.service.delete')
+        event = Event.first(type: 'audit.service.delete')
         expect(event.type).to eq('audit.service.delete')
         expect(event.actor_type).to eq('service_broker')
         expect(event.actor).to eq(broker.guid)
@@ -48,7 +48,7 @@ module VCAP::Services::ServiceBrokers
         expect(event.organization_guid).to eq('')
         expect(event.metadata).to be_empty
 
-        event = VCAP::CloudController::Event.first(type: 'audit.service_plan.delete')
+        event = Event.first(type: 'audit.service_plan.delete')
         expect(event.type).to eq('audit.service_plan.delete')
         expect(event.actor_type).to eq('service_broker')
         expect(event.actor).to eq(broker.guid)

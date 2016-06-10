@@ -2,10 +2,10 @@ require 'spec_helper'
 require 'presenters/system_env_presenter'
 require_relative '../../../../../lib/vcap/vars_builder'
 
-module VCAP::CloudController::Diego
+module Diego
   describe Environment do
-    let(:app) { VCAP::CloudController::AppFactory.make }
-    let!(:binding) { VCAP::CloudController::ServiceBinding.make(app: app, service_instance: VCAP::CloudController::ManagedServiceInstance.make(space: app.space)) }
+    let(:app) { AppFactory.make }
+    let!(:binding) { ServiceBinding.make(app: app, service_instance: ManagedServiceInstance.make(space: app.space)) }
     before do
       app.environment_json = {
         APP_KEY1: 'APP_VAL1',
@@ -24,7 +24,7 @@ module VCAP::CloudController::Diego
       encoded_vcap_application_json = vcap_app.to_json
 
       vcap_services_key = :VCAP_SERVICES
-      system_env = SystemEnvPresenter.new(app.all_service_bindings).system_env
+      system_env        = SystemEnvPresenter.new(app.all_service_bindings).system_env
       expect(system_env).to have_key(vcap_services_key)
 
       encoded_vcap_services_json = system_env[vcap_services_key].to_json

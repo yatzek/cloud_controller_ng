@@ -7,10 +7,10 @@ module VCAP::Services::ServiceBrokers
     let(:client_manager) { instance_double(VCAP::Services::SSO::DashboardClientManager, synchronize_clients_with_catalog: true, warnings: []) }
     let(:catalog) { instance_double(VCAP::Services::ServiceBrokers::V2::Catalog, valid?: true) }
     let(:service_manager) { instance_double(VCAP::Services::ServiceBrokers::ServiceManager, sync_services_and_plans: true, has_warnings?: false) }
-    let(:services_event_repository) { instance_double(VCAP::CloudController::Repositories::ServiceEventRepository) }
+    let(:services_event_repository) { instance_double(Repositories::ServiceEventRepository) }
 
     describe 'initializing' do
-      let(:broker) { VCAP::CloudController::ServiceBroker.make }
+      let(:broker) { ServiceBroker.make }
 
       its(:broker) { should == broker }
       its(:warnings) { should == [] }
@@ -19,7 +19,7 @@ module VCAP::Services::ServiceBrokers
 
     describe '#create' do
       let(:broker) do
-        VCAP::CloudController::ServiceBroker.new(
+        ServiceBroker.new(
           name:          'Cool Broker',
           broker_url:    'http://broker.example.com',
           auth_username: 'cc',
@@ -44,9 +44,9 @@ module VCAP::Services::ServiceBrokers
       it 'creates a service broker' do
         expect {
           registration.create
-        }.to change(VCAP::CloudController::ServiceBroker, :count).from(0).to(1)
+        }.to change(ServiceBroker, :count).from(0).to(1)
 
-        expect(broker).to eq(VCAP::CloudController::ServiceBroker.last)
+        expect(broker).to eq(ServiceBroker.last)
 
         expect(broker.name).to eq('Cool Broker')
         expect(broker.broker_url).to eq('http://broker.example.com')
@@ -87,7 +87,7 @@ module VCAP::Services::ServiceBrokers
 
       context 'when invalid' do
         context 'because the broker has errors' do
-          let(:broker) { VCAP::CloudController::ServiceBroker.new }
+          let(:broker) { ServiceBroker.new }
 
           it 'returns nil' do
             expect(registration.create).to be_nil
@@ -96,7 +96,7 @@ module VCAP::Services::ServiceBrokers
           it 'does not create a new service broker' do
             expect {
               registration.create
-            }.to_not change(VCAP::CloudController::ServiceBroker, :count)
+            }.to_not change(ServiceBroker, :count)
           end
 
           it 'does not fetch the catalog' do
@@ -171,7 +171,7 @@ module VCAP::Services::ServiceBrokers
           it 'does not create a new service broker' do
             expect {
               registration.create rescue nil
-            }.to_not change(VCAP::CloudController::ServiceBroker, :count)
+            }.to_not change(ServiceBroker, :count)
           end
 
           it 'does not synchronize uaa clients' do
@@ -222,31 +222,31 @@ module VCAP::Services::ServiceBrokers
         before do
           allow(catalog).to receive(:valid?).and_return(true)
           allow(client_manager).to receive(:synchronize_clients_with_catalog) {
-            VCAP::CloudController::ServiceDashboardClient.make(uaa_id: 'my-uaa-id', service_broker_id: broker.id)
+            ServiceDashboardClient.make(uaa_id: 'my-uaa-id', service_broker_id: broker.id)
           }
           allow(service_manager).to receive(:sync_services_and_plans).and_raise(CloudController::Errors::ApiError.new_from_details('ServiceBrokerCatalogInvalid', 'omg it broke'))
         end
 
         it 'does not save new broker' do
-          expect(VCAP::CloudController::ServiceBroker.count).to eq(0)
+          expect(ServiceBroker.count).to eq(0)
           expect {
             begin
               registration.create
             rescue CloudController::Errors::ApiError
             end
-          }.to change { VCAP::CloudController::ServiceBroker.count }.by(0)
+          }.to change { ServiceBroker.count }.by(0)
         end
 
         it 'nullifies the service_broker_id field of the created dashboard clients' do
-          expect(VCAP::CloudController::ServiceDashboardClient.count).to eq(0)
+          expect(ServiceDashboardClient.count).to eq(0)
           expect {
             begin
               registration.create
             rescue CloudController::Errors::ApiError
             end
-          }.to change { VCAP::CloudController::ServiceDashboardClient.count }.by(1)
+          }.to change { ServiceDashboardClient.count }.by(1)
 
-          expect(VCAP::CloudController::ServiceDashboardClient.last.service_broker_id).to be_nil
+          expect(ServiceDashboardClient.last.service_broker_id).to be_nil
         end
       end
 
@@ -259,7 +259,7 @@ module VCAP::Services::ServiceBrokers
         it 'raises the error and does not create a new service broker' do
           expect {
             registration.create rescue nil
-          }.to_not change(VCAP::CloudController::ServiceBroker, :count)
+          }.to_not change(ServiceBroker, :count)
         end
 
         it 'does not synchronize the catalog' do
@@ -316,7 +316,7 @@ module VCAP::Services::ServiceBrokers
     describe '#update' do
       let(:old_broker_host) { 'broker.example.com' }
       let!(:broker) do
-        VCAP::CloudController::ServiceBroker.make(
+        ServiceBroker.make(
           name:          'Cool Broker',
           broker_url:    "http://#{old_broker_host}",
           auth_username: 'cc',
@@ -349,7 +349,7 @@ module VCAP::Services::ServiceBrokers
       it 'does not create a new service broker' do
         expect {
           registration.update
-        }.not_to change(VCAP::CloudController::ServiceBroker, :count)
+        }.not_to change(ServiceBroker, :count)
       end
 
       it 'updates a service broker' do
@@ -424,7 +424,7 @@ module VCAP::Services::ServiceBrokers
           it 'does not update the service broker' do
             expect {
               registration.update
-            }.to_not change { VCAP::CloudController::ServiceBroker[broker.id].name }
+            }.to_not change { ServiceBroker[broker.id].name }
           end
 
           it 'does not fetch the catalog' do
@@ -499,7 +499,7 @@ module VCAP::Services::ServiceBrokers
           it 'not update the service broker' do
             expect {
               registration.update rescue nil
-            }.to_not change { VCAP::CloudController::ServiceBroker[broker.id].name }
+            }.to_not change { ServiceBroker[broker.id].name }
           end
 
           it 'does not synchronize uaa clients' do
@@ -538,7 +538,7 @@ module VCAP::Services::ServiceBrokers
           it 'not update the service broker' do
             expect {
               registration.update rescue nil
-            }.to_not change { VCAP::CloudController::ServiceBroker[broker.id].name }
+            }.to_not change { ServiceBroker[broker.id].name }
           end
 
           it 'does not synchronize the catalog' do
@@ -565,7 +565,7 @@ module VCAP::Services::ServiceBrokers
               registration.update
             rescue CloudController::Errors::ApiError
             end
-          }.not_to change { VCAP::CloudController::ServiceBroker[broker.id].name }
+          }.not_to change { ServiceBroker[broker.id].name }
         end
       end
 
@@ -583,7 +583,7 @@ module VCAP::Services::ServiceBrokers
           broker.name = 'something-else'
           expect {
             registration.update rescue nil
-          }.not_to change { VCAP::CloudController::ServiceBroker[broker.id].name }
+          }.not_to change { ServiceBroker[broker.id].name }
         end
 
         it 'does not synchronize the catalog' do

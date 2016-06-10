@@ -1,6 +1,6 @@
 require 'presenters/system_env_presenter'
 
-module VCAP::CloudController
+module CloudController
   class AppsController < RestController::ModelController
     def self.dependencies
       [:app_event_repository, :droplet_blobstore]
@@ -144,7 +144,7 @@ module VCAP::CloudController
     end
 
     def before_create
-      space = VCAP::CloudController::Space[guid: request_attrs['space_guid']]
+      space = Space[guid: request_attrs['space_guid']]
       verify_enable_ssh(space)
     end
 
@@ -179,7 +179,7 @@ module VCAP::CloudController
 
     def verify_enable_ssh(space)
       app_enable_ssh = request_attrs['enable_ssh']
-      global_allow_ssh = VCAP::CloudController::Config.config[:allow_app_ssh_access]
+      global_allow_ssh = Config.config[:allow_app_ssh_access]
       ssh_allowed = global_allow_ssh && (space.allow_ssh || roles.admin?)
 
       if app_enable_ssh && !ssh_allowed

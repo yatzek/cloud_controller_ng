@@ -20,13 +20,13 @@ unless File.exist?(@config_file)
   warn "#{@config_file} not found. Try running bin/console <PATH_TO_CONFIG_FILE>."
   exit 1
 end
-@config = VCAP::CloudController::Config.from_file(@config_file)
+@config = Config.from_file(@config_file)
 logger = Logger.new(STDOUT)
 db_config = @config.fetch(:db)
 db_config[:database] ||= DbConfig.new.connection_string
 
-VCAP::CloudController::DB.load_models(db_config, logger)
-VCAP::CloudController::Config.configure_components(@config)
+DB.load_models(db_config, logger)
+Config.configure_components(@config)
 
 if ENV['NEW_RELIC_ENV'] == 'development'
   $LOAD_PATH.unshift(File.expand_path('../../../spec/support', __FILE__))
@@ -35,7 +35,5 @@ if ENV['NEW_RELIC_ENV'] == 'development'
   require 'fakes/blueprints'
 end
 
-module VCAP::CloudController
-  # rubocop:disable Debugger
-  binding.pry quiet: true
-end
+# rubocop:disable Debugger
+binding.pry quiet: true

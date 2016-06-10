@@ -1,6 +1,6 @@
 require 'active_model'
 
-module VCAP::CloudController::Validators
+module Validators
   class ArrayValidator < ActiveModel::EachValidator
     def validate_each(record, attr_name, value)
       record.errors.add(attr_name, 'must be an array') unless value.is_a? Array
@@ -53,8 +53,8 @@ module VCAP::CloudController::Validators
   class LifecycleValidator < ActiveModel::Validator
     def validate(record)
       data_message = {
-        VCAP::CloudController::Lifecycles::BUILDPACK => VCAP::CloudController::BuildpackLifecycleDataMessage,
-        VCAP::CloudController::Lifecycles::DOCKER    => VCAP::CloudController::DockerLifecycleDataMessage,
+        Lifecycles::BUILDPACK => BuildpackLifecycleDataMessage,
+        Lifecycles::DOCKER    => DockerLifecycleDataMessage,
       }
 
       lifecycle_data_message_class = data_message[record.lifecycle_type]
@@ -110,7 +110,7 @@ module VCAP::CloudController::Validators
     end
 
     def validate_guid(record, attribute, value)
-      VCAP::CloudController::BaseMessage::GuidValidator.new({ attributes: 'blah' }).validate_each(record, "#{attribute} Guid", value.values.first)
+      BaseMessage::GuidValidator.new({ attributes: 'blah' }).validate_each(record, "#{attribute} Guid", value.values.first)
     end
 
     def has_correct_structure?(value)
@@ -133,7 +133,7 @@ module VCAP::CloudController::Validators
 
     def validate_guids(record, attribute, value)
       guids     = value.map(&:values).flatten
-      validator = VCAP::CloudController::BaseMessage::GuidValidator.new({ attributes: 'blah' })
+      validator = BaseMessage::GuidValidator.new({ attributes: 'blah' })
       guids.each_with_index do |guid, idx|
         validator.validate_each(record, "#{attribute} Guid #{idx}", guid)
       end

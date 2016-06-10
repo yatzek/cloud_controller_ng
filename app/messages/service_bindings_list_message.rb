@@ -1,31 +1,29 @@
 require 'messages/list_message'
 
-module VCAP::CloudController
-  class ServiceBindingsListMessage < ListMessage
-    ALLOWED_KEYS = [:app_guids, :service_instance_guids, :order_by, :page, :per_page].freeze
+class ServiceBindingsListMessage < ListMessage
+  ALLOWED_KEYS = [:app_guids, :service_instance_guids, :order_by, :page, :per_page].freeze
 
-    attr_accessor(*ALLOWED_KEYS)
+  attr_accessor(*ALLOWED_KEYS)
 
-    validates_with NoAdditionalParamsValidator
+  validates_with NoAdditionalParamsValidator
 
-    def self.from_params(params)
-      opts = params.dup
+  def self.from_params(params)
+    opts = params.dup
 
-      %w(app_guids service_instance_guids).each do |key|
-        to_array!(opts, key)
-      end
-
-      new(opts.symbolize_keys)
+    %w(app_guids service_instance_guids).each do |key|
+      to_array!(opts, key)
     end
 
-    def initialize(params={})
-      super(params.symbolize_keys)
-    end
+    new(opts.symbolize_keys)
+  end
 
-    private
+  def initialize(params={})
+    super(params.symbolize_keys)
+  end
 
-    def allowed_keys
-      ALLOWED_KEYS
-    end
+  private
+
+  def allowed_keys
+    ALLOWED_KEYS
   end
 end

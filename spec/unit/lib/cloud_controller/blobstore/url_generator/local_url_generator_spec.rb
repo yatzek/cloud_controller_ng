@@ -35,7 +35,7 @@ module CloudController
           droplet_blobstore)
       end
 
-      let(:app) { VCAP::CloudController::AppFactory.make }
+      let(:app) { AppFactory.make }
 
       describe 'app package' do
         it 'gives a local URI to the blobstore host/port' do
@@ -86,7 +86,7 @@ module CloudController
       end
 
       describe 'admin buildpacks' do
-        let(:buildpack) { VCAP::CloudController::Buildpack.make }
+        let(:buildpack) { Buildpack.make }
 
         it 'gives a local URI to the blobstore host/port' do
           uri = URI.parse(url_generator.admin_buildpack_download_url(buildpack))
@@ -107,7 +107,7 @@ module CloudController
       end
 
       describe 'download droplets' do
-        let(:app) { VCAP::CloudController::AppFactory.make }
+        let(:app) { AppFactory.make }
         let(:blob) { instance_double(Blobstore::FogBlob) }
 
         before do
@@ -161,7 +161,7 @@ module CloudController
         end
 
         describe 'droplet downloads' do
-          let(:droplet) { VCAP::CloudController::DropletModel.make }
+          let(:droplet) { DropletModel.make }
 
           it 'returns a url to cloud controller' do
             uri = URI.parse(url_generator.v3_droplet_download_url(droplet))
@@ -182,7 +182,7 @@ module CloudController
         end
 
         describe 'package' do
-          let(:package) { VCAP::CloudController::PackageModel.make }
+          let(:package) { PackageModel.make }
 
           it 'gives a local URI to the blobstore host/port' do
             uri = URI.parse(url_generator.package_download_url(package))

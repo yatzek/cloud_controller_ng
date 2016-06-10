@@ -1,4 +1,4 @@
-module VCAP::CloudController
+module CloudController
   class AppBitsDownloadController < RestController::ModelController
     def self.dependencies
       [:package_blobstore, :missing_blob_handler]

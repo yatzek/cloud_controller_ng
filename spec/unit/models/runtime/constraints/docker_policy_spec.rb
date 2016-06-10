@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 describe DockerPolicy do
-  let(:app) { VCAP::CloudController::AppFactory.make }
+  let(:app) { AppFactory.make }
 
   subject(:validator) { DockerPolicy.new(app) }
 
@@ -21,7 +21,7 @@ describe DockerPolicy do
 
   context 'when Docker is disabled' do
     before do
-      VCAP::CloudController::FeatureFlag.create(name: 'diego_docker', enabled: false)
+      FeatureFlag.create(name: 'diego_docker', enabled: false)
     end
 
     context 'when app is being started' do
@@ -47,7 +47,7 @@ describe DockerPolicy do
 
   context 'when Docker is enabled' do
     before do
-      VCAP::CloudController::FeatureFlag.create(name: 'diego_docker', enabled: true)
+      FeatureFlag.create(name: 'diego_docker', enabled: true)
     end
 
     it 'does not register an error' do

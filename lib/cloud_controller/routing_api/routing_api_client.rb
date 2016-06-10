@@ -1,4 +1,4 @@
-module VCAP::CloudController::RoutingApi
+module RoutingApi
   class RoutingApiUnavailable < StandardError; end
   class UaaUnavailable < StandardError; end
 

@@ -5,12 +5,12 @@ require 'cloud_controller/security/access_context'
 require 'cloud_controller/basic_auth/basic_auth_authenticator'
 require 'cloud_controller/basic_auth/dea_basic_auth_authenticator'
 
-module VCAP::CloudController::RestController
+module RestController
   # The base class for all api endpoints.
   class BaseController
     V2_ROUTE_PREFIX ||= '/v2'.freeze
 
-    include VCAP::CloudController
+    include VCAP::RestAPI
     include CloudController::Errors
     include VCAP::RestAPI
     include Messages
@@ -129,15 +129,15 @@ module VCAP::CloudController::RestController
       # The logic here is a bit oddly ordered, but it supports the
       # legacy calls setting a user, but not providing a token.
       return if self.class.allow_unauthenticated_access?(op)
-      return if VCAP::CloudController::SecurityContext.current_user
+      return if SecurityContext.current_user
 
-      if VCAP::CloudController::SecurityContext.missing_token?
+      if SecurityContext.missing_token?
         raise CloudController::Errors::ApiError.new_from_details('NotAuthenticated')
-      elsif VCAP::CloudController::SecurityContext.invalid_token?
+      elsif SecurityContext.invalid_token?
         raise CloudController::Errors::ApiError.new_from_details('InvalidAuthToken')
       else
         logger.error 'Unexpected condition: valid token with no user/client id ' \
-                       "or admin scope. Token hash: #{VCAP::CloudController::SecurityContext.token}"
+                       "or admin scope. Token hash: #{SecurityContext.token}"
         raise CloudController::Errors::ApiError.new_from_details('InvalidAuthToken')
       end
     end
@@ -215,7 +215,7 @@ module VCAP::CloudController::RestController
     attr_reader :config, :logger, :env, :params, :body, :request_attrs
 
     class << self
-      include VCAP::CloudController
+      include VCAP::RestAPI
 
       # basename of the class
       #

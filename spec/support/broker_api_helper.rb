@@ -1,4 +1,4 @@
-module VCAP::CloudController::BrokerApiHelper
+module BrokerApiHelper
   def service_name
     'MySQL'
   end
@@ -54,9 +54,9 @@ module VCAP::CloudController::BrokerApiHelper
   end
 
   def setup_cc
-    org = VCAP::CloudController::Organization.make
+    org = Organization.make
     @org_guid = org.guid
-    @space = VCAP::CloudController::Space.make(organization: org)
+    @space = Space.make(organization: org)
     @space_guid = @space.guid
   end
 
@@ -192,7 +192,7 @@ module VCAP::CloudController::BrokerApiHelper
   end
 
   def create_app
-    application = VCAP::CloudController::AppFactory.make(space: @space)
+    application = AppFactory.make(space: @space)
     @app_guid = application.guid
   end
 

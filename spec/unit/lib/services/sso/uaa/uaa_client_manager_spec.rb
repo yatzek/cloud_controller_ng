@@ -11,7 +11,7 @@ module VCAP::Services::SSO::UAA
     end
 
     describe '#modify_transaction' do
-      let(:uaa_uri) { VCAP::CloudController::Config.config[:uaa][:url] }
+      let(:uaa_uri) { Config.config[:uaa][:url] }
       let(:tx_url) { uaa_uri + '/oauth/clients/tx/modify' }
       let(:auth_header) { 'bearer ACCESSTOKENSTUFF' }
       let(:token_info) { double('info', auth_header: auth_header) }
@@ -20,7 +20,7 @@ module VCAP::Services::SSO::UAA
 
       before do
         stub_request(:post, tx_url)
-        VCAP::CloudController::Config.config[:skip_cert_verify] = skip_cert_verify
+        Config.config[:skip_cert_verify] = skip_cert_verify
 
         opts = { skip_ssl_validation: skip_cert_verify }
         allow(CF::UAA::TokenIssuer).to receive(:new).with(uaa_uri, 'cc-service-dashboards', 'some-sekret', opts).
@@ -109,7 +109,7 @@ module VCAP::Services::SSO::UAA
 
           expect {
             client_manager.modify_transaction(changeset)
-          }.to raise_error(VCAP::CloudController::UaaResourceNotFound)
+          }.to raise_error(UaaResourceNotFound)
         end
       end
 
@@ -128,7 +128,7 @@ module VCAP::Services::SSO::UAA
 
           expect {
             client_manager.modify_transaction(changeset)
-          }.to raise_error(VCAP::CloudController::UaaUnavailable)
+          }.to raise_error(UaaUnavailable)
         end
       end
 
@@ -146,7 +146,7 @@ module VCAP::Services::SSO::UAA
 
           expect {
             client_manager.modify_transaction(changeset)
-          }.to raise_error(VCAP::CloudController::UaaResourceAlreadyExists)
+          }.to raise_error(UaaResourceAlreadyExists)
         end
       end
 
@@ -164,7 +164,7 @@ module VCAP::Services::SSO::UAA
 
           expect {
             client_manager.modify_transaction(changeset)
-          }.to raise_error(VCAP::CloudController::UaaResourceInvalid)
+          }.to raise_error(UaaResourceInvalid)
         end
       end
 
@@ -182,7 +182,7 @@ module VCAP::Services::SSO::UAA
 
           expect {
             client_manager.modify_transaction(changeset)
-          }.to raise_error(VCAP::CloudController::UaaUnexpectedResponse)
+          }.to raise_error(UaaUnexpectedResponse)
         end
       end
 
@@ -200,7 +200,7 @@ module VCAP::Services::SSO::UAA
 
           expect {
             client_manager.modify_transaction(changeset)
-          }.to raise_error(VCAP::CloudController::UaaUnavailable)
+          }.to raise_error(UaaUnavailable)
         end
       end
 
@@ -217,7 +217,7 @@ module VCAP::Services::SSO::UAA
           allow(mock_http).to receive(:cert_store).and_return(mock_cert_store)
           allow(mock_http).to receive(:request).and_return(double(:response, code: '200'))
           allow(mock_cert_store).to receive(:set_default_paths)
-          VCAP::CloudController::Config.config[:uaa][:url] = uaa_uri
+          Config.config[:uaa][:url] = uaa_uri
         end
 
         context 'without ssl' do
@@ -305,8 +305,8 @@ module VCAP::Services::SSO::UAA
         let(:client_manager) { UaaClientManager.new }
 
         before do
-          allow(VCAP::CloudController::Config.config).to receive(:[]).with(anything).and_call_original
-          allow(VCAP::CloudController::Config.config).to receive(:[]).with(:uaa_client_scope).and_return(configured_scope)
+          allow(Config.config).to receive(:[]).with(anything).and_call_original
+          allow(Config.config).to receive(:[]).with(:uaa_client_scope).and_return(configured_scope)
 
           client_manager.modify_transaction(changeset)
         end

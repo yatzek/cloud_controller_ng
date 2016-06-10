@@ -1,6 +1,6 @@
 require 'actions/services/service_binding_delete'
 
-module VCAP::CloudController
+module CloudController
   class ServiceInstanceBindingManager
     class ServiceInstanceNotFound < StandardError; end
     class RouteNotFound < StandardError; end
@@ -13,7 +13,7 @@ module VCAP::CloudController
     class RouteServiceDisabled < StandardError; end
     class VolumeMountServiceDisabled < StandardError; end
 
-    include VCAP::CloudController::LockCheck
+    include LockCheck
 
     def initialize(access_validator, logger)
       @access_validator = access_validator

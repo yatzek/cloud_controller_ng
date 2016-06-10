@@ -1,11 +1,11 @@
 require 'rails_helper'
 
 describe RouteMappingsController, type: :controller do
-  let(:app) { VCAP::CloudController::AppModel.make }
+  let(:app) { AppModel.make }
   let(:space) { app.space }
   let(:org) { space.organization }
-  let!(:app_process) { VCAP::CloudController::App.make(:process, app_guid: app.guid, type: 'web', space_guid: space.guid, ports: [8888]) }
-  let(:route) { VCAP::CloudController::Route.make(space: space) }
+  let!(:app_process) { App.make(:process, app_guid: app.guid, type: 'web', space_guid: space.guid, ports: [8888]) }
+  let(:route) { Route.make(space: space) }
   let(:process_type) { 'web' }
 
   describe '#create' do
@@ -19,7 +19,7 @@ describe RouteMappingsController, type: :controller do
         }
       }
     end
-    let(:user) { set_current_user(VCAP::CloudController::User.make) }
+    let(:user) { set_current_user(User.make) }
 
     before do
       allow_user_read_access(user, space: space)
@@ -30,7 +30,7 @@ describe RouteMappingsController, type: :controller do
       post :create, body: req_body
 
       expect(response.status).to eq(201)
-      expect(parsed_body['guid']).to eq(VCAP::CloudController::RouteMappingModel.last.guid)
+      expect(parsed_body['guid']).to eq(RouteMappingModel.last.guid)
     end
 
     context 'when there is a validation error' do
@@ -83,9 +83,9 @@ describe RouteMappingsController, type: :controller do
 
     context 'when the mapping is invalid' do
       before do
-        add_route_to_app = instance_double(VCAP::CloudController::RouteMappingCreate)
-        allow(VCAP::CloudController::RouteMappingCreate).to receive(:new).and_return(add_route_to_app)
-        allow(add_route_to_app).to receive(:add).and_raise(VCAP::CloudController::RouteMappingCreate::InvalidRouteMapping.new('shablam'))
+        add_route_to_app = instance_double(RouteMappingCreate)
+        allow(RouteMappingCreate).to receive(:new).and_return(add_route_to_app)
+        allow(add_route_to_app).to receive(:add).and_raise(RouteMappingCreate::InvalidRouteMapping.new('shablam'))
       end
 
       it 'returns an UnprocessableEntity error' do
@@ -140,8 +140,8 @@ describe RouteMappingsController, type: :controller do
   end
 
   describe '#show' do
-    let(:route_mapping) { VCAP::CloudController::RouteMappingModel.make(app: app, route: route) }
-    let(:user) { set_current_user(VCAP::CloudController::User.make) }
+    let(:route_mapping) { RouteMappingModel.make(app: app, route: route) }
+    let(:user) { set_current_user(User.make) }
 
     before do
       allow_user_read_access(user, space: space)
@@ -151,7 +151,7 @@ describe RouteMappingsController, type: :controller do
       get :show, app_guid: app.guid, route_mapping_guid: route_mapping.guid
 
       expect(response.status).to eq(200)
-      expect(parsed_body['guid']).to eq(VCAP::CloudController::RouteMappingModel.last.guid)
+      expect(parsed_body['guid']).to eq(RouteMappingModel.last.guid)
     end
 
     it 'returns a 404 if the route mapping does not exist' do
@@ -193,7 +193,7 @@ describe RouteMappingsController, type: :controller do
   end
 
   describe '#index' do
-    let(:user) { set_current_user(VCAP::CloudController::User.make) }
+    let(:user) { set_current_user(User.make) }
 
     before do
       allow_user_read_access(user, space: space)
@@ -201,9 +201,9 @@ describe RouteMappingsController, type: :controller do
     end
 
     it 'returns route mappings the user has roles to see' do
-      route_mapping_1 = VCAP::CloudController::RouteMappingModel.make(app: VCAP::CloudController::AppModel.make(space: space))
-      route_mapping_2 = VCAP::CloudController::RouteMappingModel.make(app: VCAP::CloudController::AppModel.make(space: space))
-      VCAP::CloudController::RouteMappingModel.make
+      route_mapping_1 = RouteMappingModel.make(app: AppModel.make(space: space))
+      route_mapping_2 = RouteMappingModel.make(app: AppModel.make(space: space))
+      RouteMappingModel.make
 
       get :index
 
@@ -219,9 +219,9 @@ describe RouteMappingsController, type: :controller do
 
     context 'when accessed as an app subresource' do
       it 'uses the app as a filter' do
-        route_mapping_1 = VCAP::CloudController::RouteMappingModel.make(app: app)
-        route_mapping_2 = VCAP::CloudController::RouteMappingModel.make(app: app)
-        VCAP::CloudController::RouteMappingModel.make(app: VCAP::CloudController::AppModel.make(space: space))
+        route_mapping_1 = RouteMappingModel.make(app: app)
+        route_mapping_2 = RouteMappingModel.make(app: app)
+        RouteMappingModel.make(app: AppModel.make(space: space))
 
         get :index, app_guid: app.guid
 
@@ -241,8 +241,8 @@ describe RouteMappingsController, type: :controller do
         let(:params) { { 'page' => page, 'per_page' => per_page } }
 
         it 'paginates the response' do
-          VCAP::CloudController::RouteMappingModel.make(app: app)
-          VCAP::CloudController::RouteMappingModel.make(app: app)
+          RouteMappingModel.make(app: app)
+          RouteMappingModel.make(app: app)
 
           get :index, params
 
@@ -295,9 +295,9 @@ describe RouteMappingsController, type: :controller do
         end
 
         it 'lists all route_mappings' do
-          route_mapping_1 = VCAP::CloudController::RouteMappingModel.make(app_guid: app.guid)
-          route_mapping_2 = VCAP::CloudController::RouteMappingModel.make(app_guid: app.guid)
-          route_mapping_3 = VCAP::CloudController::RouteMappingModel.make
+          route_mapping_1 = RouteMappingModel.make(app_guid: app.guid)
+          route_mapping_2 = RouteMappingModel.make(app_guid: app.guid)
+          route_mapping_3 = RouteMappingModel.make
 
           get :index
 
@@ -323,14 +323,14 @@ describe RouteMappingsController, type: :controller do
   end
 
   describe '#destroy' do
-    let(:user) { set_current_user(VCAP::CloudController::User.make) }
+    let(:user) { set_current_user(User.make) }
 
     before do
       allow_user_read_access(user, space: space)
       allow_user_write_access(user, space: space)
     end
 
-    let(:route_mapping) { VCAP::CloudController::RouteMappingModel.make(app: app, route: route) }
+    let(:route_mapping) { RouteMappingModel.make(app: app, route: route) }
 
     it 'successfully deletes the specified route mapping' do
       delete :destroy, app_guid: app.guid, route_mapping_guid: route_mapping.guid

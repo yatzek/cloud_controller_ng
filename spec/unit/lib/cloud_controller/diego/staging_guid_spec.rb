@@ -1,10 +1,10 @@
 require 'spec_helper'
 require 'cloud_controller/diego/staging_guid'
 
-module VCAP::CloudController::Diego
+module ::Diego
   describe StagingGuid do
     let(:app) do
-      VCAP::CloudController::AppFactory.make(staging_task_id: Sham.guid)
+      AppFactory.make(staging_task_id: Sham.guid)
     end
 
     describe 'staging_guid' do
@@ -33,7 +33,7 @@ module VCAP::CloudController::Diego
 
     context 'when the staging_task_id is not set on the app' do
       let(:app) do
-        VCAP::CloudController::AppFactory.make
+        AppFactory.make
       end
 
       it 'returns nil' do

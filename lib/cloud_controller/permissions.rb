@@ -1,19 +1,19 @@
-class VCAP::CloudController::Permissions
+class Permissions
   ROLES_FOR_READING ||= [
-    VCAP::CloudController::Membership::SPACE_DEVELOPER,
-    VCAP::CloudController::Membership::SPACE_MANAGER,
-    VCAP::CloudController::Membership::SPACE_AUDITOR,
-    VCAP::CloudController::Membership::ORG_MANAGER
+    Membership::SPACE_DEVELOPER,
+    Membership::SPACE_MANAGER,
+    Membership::SPACE_AUDITOR,
+    Membership::ORG_MANAGER
   ].freeze
 
   ROLES_FOR_SECRETS ||= [
-    VCAP::CloudController::Membership::SPACE_DEVELOPER,
-    VCAP::CloudController::Membership::SPACE_MANAGER,
-    VCAP::CloudController::Membership::ORG_MANAGER
+    Membership::SPACE_DEVELOPER,
+    Membership::SPACE_MANAGER,
+    Membership::ORG_MANAGER
   ].freeze
 
   ROLES_FOR_WRITING ||= [
-    VCAP::CloudController::Membership::SPACE_DEVELOPER,
+    Membership::SPACE_DEVELOPER,
   ].freeze
 
   def initialize(user)
@@ -41,10 +41,10 @@ class VCAP::CloudController::Permissions
   private
 
   def membership
-    VCAP::CloudController::Membership.new(@user)
+    Membership.new(@user)
   end
 
   def roles
-    VCAP::CloudController::SecurityContext.roles
+    SecurityContext.roles
   end
 end

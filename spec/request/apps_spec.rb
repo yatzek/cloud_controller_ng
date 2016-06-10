@@ -1,9 +1,9 @@
 require 'spec_helper'
 
 describe 'Apps' do
-  let(:user) { VCAP::CloudController::User.make }
+  let(:user) { User.make }
   let(:user_header) { headers_for(user) }
-  let(:space) { VCAP::CloudController::Space.make }
+  let(:space) { Space.make }
 
   before do
     space.organization.add_user(user)
@@ -12,7 +12,7 @@ describe 'Apps' do
 
   describe 'POST /v3/apps' do
     it 'creates an app' do
-      buildpack      = VCAP::CloudController::Buildpack.make
+      buildpack      = Buildpack.make
       create_request = {
         name:                  'my_app',
         environment_variables: { open: 'source' },
@@ -30,7 +30,7 @@ describe 'Apps' do
 
       post '/v3/apps', create_request, user_header
 
-      created_app       = VCAP::CloudController::AppModel.last
+      created_app       = AppModel.last
       expected_response = {
         'name'                    => 'my_app',
         'guid'                    => created_app.guid,
@@ -40,7 +40,7 @@ describe 'Apps' do
           'type' => 'buildpack',
           'data' => {
             'buildpack' => buildpack.name,
-            'stack'     => VCAP::CloudController::Stack.default.name,
+            'stack'     => Stack.default.name,
           }
         },
         'created_at'              => iso8601,
@@ -64,7 +64,7 @@ describe 'Apps' do
       expect(last_response.status).to eq(201)
       expect(parsed_response).to be_a_response_like(expected_response)
 
-      event = VCAP::CloudController::Event.last
+      event = Event.last
       expect(event.values).to include({
         type:              'audit.app.create',
         actee:             created_app.guid,
@@ -79,7 +79,7 @@ describe 'Apps' do
 
     describe 'Docker app' do
       before do
-        VCAP::CloudController::FeatureFlag.make(name: 'diego_docker', enabled: true, error_message: nil)
+        FeatureFlag.make(name: 'diego_docker', enabled: true, error_message: nil)
       end
 
       it 'create a docker app' do
@@ -97,7 +97,7 @@ describe 'Apps' do
 
         post '/v3/apps', create_request.to_json, user_header.merge({ 'CONTENT_TYPE' => 'application/json' })
 
-        created_app       = VCAP::CloudController::AppModel.last
+        created_app       = AppModel.last
         expected_response = {
           'name'                    => 'my_app',
           'guid'                    => created_app.guid,
@@ -128,7 +128,7 @@ describe 'Apps' do
         expect(last_response.status).to eq(201)
         expect(parsed_response).to be_a_response_like(expected_response)
 
-        event = VCAP::CloudController::Event.last
+        event = Event.last
         expect(event.values).to include({
           type:              'audit.app.create',
           actee:             created_app.guid,
@@ -145,9 +145,9 @@ describe 'Apps' do
 
   describe 'GET /v3/apps' do
     it 'returns a paginated list of apps the user has access to' do
-      buildpack                           = VCAP::CloudController::Buildpack.make(name: 'bp-name')
-      stack                               = VCAP::CloudController::Stack.make(name: 'stack-name')
-      app_model1                          = VCAP::CloudController::AppModel.make(:buildpack,
+      buildpack                           = Buildpack.make(name: 'bp-name')
+      stack                               = Stack.make(name: 'stack-name')
+      app_model1                          = AppModel.make(:buildpack,
         name:          'name1',
         space:         space,
         desired_state: 'STOPPED'
@@ -156,14 +156,14 @@ describe 'Apps' do
       app_model1.lifecycle_data.stack     = stack.name
       app_model1.lifecycle_data.save
 
-      app_model2 = VCAP::CloudController::AppModel.make(
+      app_model2 = AppModel.make(
         :docker,
         name:          'name2',
         space:         space,
         desired_state: 'STARTED'
       )
-      VCAP::CloudController::AppModel.make(space: space)
-      VCAP::CloudController::AppModel.make
+      AppModel.make(space: space)
+      AppModel.make
 
       get '/v3/apps?per_page=2', nil, user_header
 
@@ -247,9 +247,9 @@ describe 'Apps' do
       let(:admin_header) { headers_for(user, scopes: %w(cloud_controller.admin)) }
 
       it 'filters by guids' do
-        app_model1 = VCAP::CloudController::AppModel.make(name: 'name1')
-        VCAP::CloudController::AppModel.make(name: 'name2')
-        app_model3 = VCAP::CloudController::AppModel.make(name: 'name3')
+        app_model1 = AppModel.make(name: 'name1')
+        AppModel.make(name: 'name2')
+        app_model3 = AppModel.make(name: 'name3')
 
         get "/v3/apps?guids=#{app_model1.guid}%2C#{app_model3.guid}", nil, admin_header
 
@@ -270,9 +270,9 @@ describe 'Apps' do
       end
 
       it 'filters by names' do
-        VCAP::CloudController::AppModel.make(name: 'name1')
-        VCAP::CloudController::AppModel.make(name: 'name2')
-        VCAP::CloudController::AppModel.make(name: 'name3')
+        AppModel.make(name: 'name1')
+        AppModel.make(name: 'name2')
+        AppModel.make(name: 'name3')
 
         get '/v3/apps?names=name1%2Cname2', nil, admin_header
 
@@ -293,9 +293,9 @@ describe 'Apps' do
       end
 
       it 'filters by organizations' do
-        app_model1 = VCAP::CloudController::AppModel.make(name: 'name1')
-        VCAP::CloudController::AppModel.make(name: 'name2')
-        app_model3 = VCAP::CloudController::AppModel.make(name: 'name3')
+        app_model1 = AppModel.make(name: 'name1')
+        AppModel.make(name: 'name2')
+        app_model3 = AppModel.make(name: 'name3')
 
         get "/v3/apps?organization_guids=#{app_model1.organization.guid}%2C#{app_model3.organization.guid}", nil, admin_header
 
@@ -316,9 +316,9 @@ describe 'Apps' do
       end
 
       it 'filters by spaces' do
-        app_model1 = VCAP::CloudController::AppModel.make(name: 'name1')
-        VCAP::CloudController::AppModel.make(name: 'name2')
-        app_model3 = VCAP::CloudController::AppModel.make(name: 'name3')
+        app_model1 = AppModel.make(name: 'name1')
+        AppModel.make(name: 'name2')
+        app_model3 = AppModel.make(name: 'name3')
 
         get "/v3/apps?space_guids=#{app_model1.space.guid}%2C#{app_model3.space.guid}", nil, admin_header
 
@@ -342,9 +342,9 @@ describe 'Apps' do
 
   describe 'GET /v3/apps/:guid' do
     it 'gets a specific app' do
-      buildpack                          = VCAP::CloudController::Buildpack.make(name: 'bp-name')
-      stack                              = VCAP::CloudController::Stack.make(name: 'stack-name')
-      app_model                          = VCAP::CloudController::AppModel.make(
+      buildpack                          = Buildpack.make(name: 'bp-name')
+      stack                              = Stack.make(name: 'stack-name')
+      app_model                          = AppModel.make(
         :buildpack,
         name:                  'my_app',
         space:                 space,
@@ -355,8 +355,8 @@ describe 'Apps' do
       app_model.lifecycle_data.buildpack = buildpack.name
       app_model.lifecycle_data.stack     = stack.name
       app_model.lifecycle_data.save
-      app_model.add_process(VCAP::CloudController::App.make(space: space, instances: 1))
-      app_model.add_process(VCAP::CloudController::App.make(space: space, instances: 2))
+      app_model.add_process(App.make(space: space, instances: 1))
+      app_model.add_process(App.make(space: space, instances: 2))
 
       get "/v3/apps/#{app_model.guid}", nil, user_header
 
@@ -396,14 +396,14 @@ describe 'Apps' do
 
     describe 'redacting' do
       it 'redacts fields for auditors' do
-        app_model = VCAP::CloudController::AppModel.make(
+        app_model = AppModel.make(
           :buildpack,
           name:                  'my_app',
           space:                 space,
           environment_variables: { 'unicorn' => 'horn' },
         )
 
-        auditor = VCAP::CloudController::User.make
+        auditor = User.make
         space.organization.add_user(auditor)
         space.add_auditor(auditor)
 
@@ -418,26 +418,26 @@ describe 'Apps' do
 
   describe 'GET /v3/apps/:guid/env' do
     it 'returns the environment of the app, including environment variables provided by the system' do
-      app_model = VCAP::CloudController::AppModel.make(
+      app_model = AppModel.make(
         name:                  'my_app',
         space:                 space,
         environment_variables: { 'unicorn' => 'horn' },
       )
 
-      group                  = VCAP::CloudController::EnvironmentVariableGroup.staging
+      group                  = EnvironmentVariableGroup.staging
       group.environment_json = { STAGING_ENV: 'staging_value' }
       group.save
 
-      group                  = VCAP::CloudController::EnvironmentVariableGroup.running
+      group                  = EnvironmentVariableGroup.running
       group.environment_json = { RUNNING_ENV: 'running_value' }
       group.save
 
-      service_instance = VCAP::CloudController::ManagedServiceInstance.make(
+      service_instance = ManagedServiceInstance.make(
         space: space,
         name:  'si-name',
         tags:  ['50% off']
       )
-      VCAP::CloudController::ServiceBindingModel.make(
+      ServiceBindingModel.make(
         service_instance: service_instance,
         app:              app_model,
         syslog_drain_url: 'https://syslog.example.com/drain',
@@ -497,10 +497,10 @@ describe 'Apps' do
   end
 
   describe 'DELETE /v3/apps/guid' do
-    let!(:app_model) { VCAP::CloudController::AppModel.make(name: 'app_name', space: space) }
-    let!(:package) { VCAP::CloudController::PackageModel.make(app: app_model) }
-    let!(:droplet) { VCAP::CloudController::DropletModel.make(package: package, app: app_model) }
-    let!(:process) { VCAP::CloudController::AppFactory.make(app: app_model, space: space) }
+    let!(:app_model) { AppModel.make(name: 'app_name', space: space) }
+    let!(:package) { PackageModel.make(app: app_model) }
+    let!(:droplet) { DropletModel.make(package: package, app: app_model) }
+    let!(:process) { AppFactory.make(app: app_model, space: space) }
 
     it 'deletes an App' do
       delete "/v3/apps/#{app_model.guid}", nil, user_header
@@ -512,7 +512,7 @@ describe 'Apps' do
       expect(droplet.exists?).to be_falsey
       expect(process.exists?).to be_falsey
 
-      event = VCAP::CloudController::Event.last(2).first
+      event = Event.last(2).first
       expect(event.values).to include({
         type:              'audit.app.delete-request',
         actee:             app_model.guid,
@@ -528,14 +528,14 @@ describe 'Apps' do
 
   describe 'PATCH /v3/apps/:guid' do
     it 'updates an app' do
-      app_model = VCAP::CloudController::AppModel.make(
+      app_model = AppModel.make(
         :buildpack,
         name:                  'original_name',
         space:                 space,
         environment_variables: { 'ORIGINAL' => 'ENVAR' },
         desired_state:         'STOPPED'
       )
-      stack = VCAP::CloudController::Stack.make(name: 'redhat')
+      stack = Stack.make(name: 'redhat')
 
       update_request = {
         name:                  'new-name',
@@ -585,7 +585,7 @@ describe 'Apps' do
       expect(last_response.status).to eq(200)
       expect(parsed_response).to be_a_response_like(expected_response)
 
-      event = VCAP::CloudController::Event.last
+      event = Event.last
       expect(event.values).to include({
         type:              'audit.app.update',
         actee:             app_model.guid,
@@ -605,8 +605,8 @@ describe 'Apps' do
 
   describe 'PUT /v3/apps/:guid/start' do
     it 'starts the app' do
-      stack     = VCAP::CloudController::Stack.make(name: 'stack-name')
-      app_model = VCAP::CloudController::AppModel.make(
+      stack     = Stack.make(name: 'stack-name')
+      app_model = AppModel.make(
         :buildpack,
         name:          'app-name',
         space:         space,
@@ -617,7 +617,7 @@ describe 'Apps' do
       app_model.lifecycle_data.stack     = stack.name
       app_model.lifecycle_data.save
 
-      droplet           = VCAP::CloudController::DropletModel.make(:buildpack, app: app_model, state: VCAP::CloudController::DropletModel::STAGED_STATE)
+      droplet           = DropletModel.make(:buildpack, app: app_model, state: DropletModel::STAGED_STATE)
       app_model.droplet = droplet
       app_model.save
 
@@ -657,7 +657,7 @@ describe 'Apps' do
       expect(last_response.status).to eq(200)
       expect(parsed_response).to be_a_response_like(expected_response)
 
-      event = VCAP::CloudController::Event.last
+      event = Event.last
       expect(event.values).to include({
         type:              'audit.app.start',
         actee:             app_model.guid,
@@ -673,8 +673,8 @@ describe 'Apps' do
 
   describe 'PUT /v3/apps/:guid/stop' do
     it 'stops the app' do
-      stack     = VCAP::CloudController::Stack.make(name: 'stack-name')
-      app_model = VCAP::CloudController::AppModel.make(
+      stack     = Stack.make(name: 'stack-name')
+      app_model = AppModel.make(
         :buildpack,
         name:          'app-name',
         space:         space,
@@ -685,7 +685,7 @@ describe 'Apps' do
       app_model.lifecycle_data.stack     = stack.name
       app_model.lifecycle_data.save
 
-      droplet           = VCAP::CloudController::DropletModel.make(:buildpack, app: app_model, state: VCAP::CloudController::DropletModel::STAGED_STATE)
+      droplet           = DropletModel.make(:buildpack, app: app_model, state: DropletModel::STAGED_STATE)
       app_model.droplet = droplet
       app_model.save
 
@@ -725,7 +725,7 @@ describe 'Apps' do
       expect(last_response.status).to eq(200)
       expect(parsed_response).to be_a_response_like(expected_response)
 
-      event = VCAP::CloudController::Event.last
+      event = Event.last
       expect(event.values).to include({
         type:              'audit.app.stop',
         actee:             app_model.guid,
@@ -740,12 +740,12 @@ describe 'Apps' do
   end
 
   describe 'GET /v3/apps/:guid/droplets/current' do
-    let(:app_model) { VCAP::CloudController::AppModel.make(space_guid: space.guid) }
+    let(:app_model) { AppModel.make(space_guid: space.guid) }
     let(:guid) { droplet_model.guid }
-    let(:package_model) { VCAP::CloudController::PackageModel.make(app_guid: app_model.guid) }
+    let(:package_model) { PackageModel.make(app_guid: app_model.guid) }
     let!(:droplet_model) do
-      VCAP::CloudController::DropletModel.make(
-        state:                       VCAP::CloudController::DropletModel::STAGED_STATE,
+      DropletModel.make(
+        state:                       DropletModel::STAGED_STATE,
         app_guid:                    app_model.guid,
         package_guid:                package_model.guid,
         buildpack_receipt_buildpack: 'http://buildpack.git.url.com',
@@ -775,7 +775,7 @@ describe 'Apps' do
       expect(last_response.status).to eq(200)
       expect(parsed_response).to be_a_response_like({
         'guid'                  => droplet_model.guid,
-        'state'                 => VCAP::CloudController::DropletModel::STAGED_STATE,
+        'state'                 => DropletModel::STAGED_STATE,
         'error'                 => 'example error',
         'lifecycle'             => {
           'type' => 'buildpack',
@@ -807,9 +807,9 @@ describe 'Apps' do
   end
 
   describe 'PUT /v3/apps/:guid/droplets/current' do
-    let(:stack) { VCAP::CloudController::Stack.make(name: 'stack-name') }
+    let(:stack) { Stack.make(name: 'stack-name') }
     let(:app_model) do
-      VCAP::CloudController::AppModel.make(
+      AppModel.make(
         :buildpack,
         name:          'my_app',
         space:         space,
@@ -824,11 +824,11 @@ describe 'Apps' do
     end
 
     it 'assigns the current droplet of the app' do
-      droplet = VCAP::CloudController::DropletModel.make(:docker,
+      droplet = DropletModel.make(:docker,
         app:           app_model,
         process_types: { web: 'rackup' },
-        state:         VCAP::CloudController::DropletModel::STAGED_STATE,
-        package: VCAP::CloudController::PackageModel.make
+        state:         DropletModel::STAGED_STATE,
+        package: PackageModel.make
       )
 
       request_body = { droplet_guid: droplet.guid }
@@ -837,7 +837,7 @@ describe 'Apps' do
 
       expected_response = {
         'guid'                  => droplet.guid,
-        'state'                 => VCAP::CloudController::DropletModel::STAGED_STATE,
+        'state'                 => DropletModel::STAGED_STATE,
         'error'                 => nil,
         'lifecycle'             => {
           'type' => 'docker',
@@ -866,7 +866,7 @@ describe 'Apps' do
       expect(last_response.status).to eq(200)
       expect(parsed_response).to be_a_response_like(expected_response)
 
-      events = VCAP::CloudController::Event.where(actor: user.guid).all
+      events = Event.where(actor: user.guid).all
 
       droplet_event = events.find { |e| e.type == 'audit.app.droplet_mapped' }
       expect(droplet_event.values).to include({
@@ -885,10 +885,10 @@ describe 'Apps' do
     end
 
     it 'creates audit.app.process.create events' do
-      droplet = VCAP::CloudController::DropletModel.make(
+      droplet = DropletModel.make(
         app:           app_model,
         process_types: { web: 'rackup', other: 'cron' },
-        state:         VCAP::CloudController::DropletModel::STAGED_STATE
+        state:         DropletModel::STAGED_STATE
       )
 
       request_body = { droplet_guid: droplet.guid }
@@ -897,7 +897,7 @@ describe 'Apps' do
 
       expect(last_response.status).to eq(200)
 
-      events = VCAP::CloudController::Event.where(actor: user.guid).all
+      events = Event.where(actor: user.guid).all
 
       expect(app_model.reload.processes.count).to eq(2)
       web_process   = app_model.processes.find { |i| i.type == 'web' }
@@ -933,12 +933,12 @@ describe 'Apps' do
     end
 
     it 'creates audit.app.process.update events' do
-      process_to_update = VCAP::CloudController::ProcessModel.make(app: app_model, type: 'web', command: 'original', space: app_model.space, metadata: {})
+      process_to_update = ProcessModel.make(app: app_model, type: 'web', command: 'original', space: app_model.space, metadata: {})
 
-      droplet = VCAP::CloudController::DropletModel.make(
+      droplet = DropletModel.make(
         app:           app_model,
         process_types: { web: 'rackup' },
-        state:         VCAP::CloudController::DropletModel::STAGED_STATE
+        state:         DropletModel::STAGED_STATE
       )
 
       request_body = { droplet_guid: droplet.guid }
@@ -947,7 +947,7 @@ describe 'Apps' do
 
       expect(last_response.status).to eq(200)
 
-      events = VCAP::CloudController::Event.where(actor: user.guid).all
+      events = Event.where(actor: user.guid).all
 
       expect(app_model.reload.processes.count).to eq(1)
 
@@ -972,12 +972,12 @@ describe 'Apps' do
     end
 
     it 'creates audit.app.process.delete events' do
-      process_to_delete = VCAP::CloudController::ProcessModel.make(app: app_model, type: 'bob', space: app_model.space)
+      process_to_delete = ProcessModel.make(app: app_model, type: 'bob', space: app_model.space)
 
-      droplet = VCAP::CloudController::DropletModel.make(
+      droplet = DropletModel.make(
         app:           app_model,
         process_types: { web: 'rackup' },
-        state:         VCAP::CloudController::DropletModel::STAGED_STATE
+        state:         DropletModel::STAGED_STATE
       )
 
       request_body = { droplet_guid: droplet.guid }
@@ -986,7 +986,7 @@ describe 'Apps' do
 
       expect(last_response.status).to eq(200)
 
-      events = VCAP::CloudController::Event.where(actor: user.guid).all
+      events = Event.where(actor: user.guid).all
 
       expect(app_model.reload.processes.count).to eq(1)
 

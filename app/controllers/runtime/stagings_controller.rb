@@ -3,7 +3,7 @@ require 'cloud_controller/blobstore/client'
 require 'presenters/api/staging_job_presenter'
 require 'utils/hash_utils'
 
-module VCAP::CloudController
+module CloudController
   class StagingsController < RestController::BaseController
     def self.dependencies
       [:droplet_blobstore, :buildpack_cache_blobstore, :package_blobstore,
@@ -24,8 +24,8 @@ module VCAP::CloudController
     allow_unauthenticated_access
 
     authenticate_basic_auth("#{STAGING_PATH}/*") do
-      [VCAP::CloudController::Config.config[:staging][:auth][:user],
-       VCAP::CloudController::Config.config[:staging][:auth][:password]]
+      [Config.config[:staging][:auth][:user],
+       Config.config[:staging][:auth][:password]]
     end
 
     attr_reader :config, :blobstore, :buildpack_cache_blobstore, :package_blobstore
@@ -154,7 +154,7 @@ module VCAP::CloudController
       raise ApiError.new_from_details('StagingError', "malformed buildpack cache upload request for #{guid}") unless v3_upload_path
       check_file_md5
 
-      cache_key = Presenters::V3::CacheKeyPresenter.cache_key(guid: guid, stack_name: stack_name)
+      cache_key = ::Presenters::V3::CacheKeyPresenter.cache_key(guid: guid, stack_name: stack_name)
 
       blobstore_upload = Jobs::Runtime::BlobstoreUpload.new(v3_upload_path, cache_key, :buildpack_cache_blobstore)
       Jobs::Enqueuer.new(blobstore_upload, queue: Jobs::LocalQueue.new(config)).enqueue

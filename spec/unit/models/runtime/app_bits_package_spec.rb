@@ -2,8 +2,8 @@ require 'spec_helper'
 
 describe AppBitsPackage do
   let(:compressed_path) { File.expand_path('../../../fixtures/good.zip', File.dirname(__FILE__)) }
-  let(:app) { VCAP::CloudController::AppFactory.make }
-  let(:package) { VCAP::CloudController::PackageModel.make }
+  let(:app) { AppFactory.make }
+  let(:package) { PackageModel.make }
   let(:blobstore_dir) { Dir.mktmpdir }
   let(:local_tmp_dir) { Dir.mktmpdir }
 
@@ -58,8 +58,8 @@ describe AppBitsPackage do
     end
 
     it 'expires any old packages' do
-      allow(VCAP::CloudController::Config).to receive(:config) { {} }
-      expect_any_instance_of(VCAP::CloudController::BitsExpiration).to receive(:expire_packages!)
+      allow(Config).to receive(:config) { {} }
+      expect_any_instance_of(BitsExpiration).to receive(:expire_packages!)
       create
     end
 

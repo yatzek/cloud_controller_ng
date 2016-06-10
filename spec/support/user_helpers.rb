@@ -3,14 +3,14 @@ module UserHelpers
     token_decoder = VCAP::UaaTokenDecoder.new(TestConfig.config[:uaa])
     header_token = user ? "bearer #{user_token(user, opts)}" : nil
     token_information = opts[:token] ? opts[:token] : token_decoder.decode_token(header_token)
-    VCAP::CloudController::SecurityContext.set(user, token_information, header_token)
+    SecurityContext.set(user, token_information, header_token)
     user
   end
 
   # rubocop:disable all
   def set_current_user_as_admin(opts={})
     # rubocop:enable all
-    user = opts.delete(:user) || VCAP::CloudController::User.make
+    user = opts.delete(:user) || User.make
     set_current_user(user, { admin: true }.merge(opts))
   end
 
@@ -72,8 +72,8 @@ module UserHelpers
   def permissions_double(user)
     @permissions ||= {}
     @permissions[user.guid] ||= begin
-      instance_double(VCAP::CloudController::Permissions).tap do |permissions|
-        allow(VCAP::CloudController::Permissions).to receive(:new).with(user).and_return(permissions)
+      instance_double(Permissions).tap do |permissions|
+        allow(Permissions).to receive(:new).with(user).and_return(permissions)
       end
     end
   end

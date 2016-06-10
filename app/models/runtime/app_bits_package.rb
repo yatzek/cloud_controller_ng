@@ -29,7 +29,7 @@ class AppBitsPackage
   def create_package_in_blobstore(package_guid, package_path)
     return unless package_path
 
-    package = VCAP::CloudController::PackageModel.find(guid: package_guid)
+    package = PackageModel.find(guid: package_guid)
     raise PackageNotFound if package.nil?
 
     begin
@@ -45,16 +45,16 @@ class AppBitsPackage
         package.db.transaction do
           package.lock!
           package.package_hash = Digester.new.digest_path(rezipped_package)
-          package.state = VCAP::CloudController::PackageModel::READY_STATE
+          package.state = PackageModel::READY_STATE
           package.save
         end
       end
 
-      VCAP::CloudController::BitsExpiration.new.expire_packages!(package.app)
+      BitsExpiration.new.expire_packages!(package.app)
     rescue => e
       package.db.transaction do
         package.lock!
-        package.state = VCAP::CloudController::PackageModel::FAILED_STATE
+        package.state = PackageModel::FAILED_STATE
         package.error = e.message
         package.save
       end
@@ -92,7 +92,7 @@ class AppBitsPackage
   end
 
   def tmp_dir
-    @tmp_dir ||= VCAP::CloudController::Config.config[:directories][:tmpdir]
+    @tmp_dir ||= Config.config[:directories][:tmpdir]
   end
 
   def package_blobstore
@@ -104,6 +104,6 @@ class AppBitsPackage
   end
 
   def max_package_size
-    @max_package_size ||= VCAP::CloudController::Config.config[:packages][:max_package_size] || 512 * 1024 * 1024
+    @max_package_size ||= Config.config[:packages][:max_package_size] || 512 * 1024 * 1024
   end
 end

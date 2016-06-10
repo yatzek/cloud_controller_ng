@@ -20,8 +20,6 @@ require File.expand_path('../../config/environment', __FILE__)
 Sequel.default_timezone = :utc
 ActiveSupport::JSON::Encoding.time_precision = 0
 
-module VCAP::CloudController; end
-
 require 'cloud_controller/errors/invalid_relation'
 require 'delayed_job_plugins/deserialization_retry'
 require 'sequel_plugins/sequel_plugins'
@@ -36,12 +34,14 @@ require 'cloud_controller/diagnostics'
 require 'cloud_controller/steno_configurer'
 require 'cloud_controller/constants'
 
-require 'controllers/base/front_controller'
+autoload :FrontController, 'controllers/base/front_controller'
+autoload :Config, 'cloud_controller/config'
+autoload :DB, 'cloud_controller/db'
+autoload :Runner, 'cloud_controller/runner'
+autoload :AppObserver, 'cloud_controller/app_observer'
+autoload :RackAppBuilder, 'cloud_controller/rack_app_builder'
+autoload :Metrics, 'cloud_controller/metrics'
 
-require 'cloud_controller/config'
-require 'cloud_controller/db'
-require 'cloud_controller/runner'
-require 'cloud_controller/app_observer'
 require 'cloud_controller/dea/staging_response'
 require 'cloud_controller/dea/staging_message'
 require 'cloud_controller/dea/app_stager_task'

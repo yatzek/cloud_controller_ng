@@ -17,7 +17,7 @@ module V3ErrorsHelper
 end
 
 class ApplicationController < ActionController::Base
-  include VCAP::CloudController
+  include VCAP::RestAPI
   include V3ErrorsHelper
 
   wrap_parameters :body, format: [:json, :url_encoded_form, :multipart_form]
@@ -46,15 +46,15 @@ class ApplicationController < ActionController::Base
   end
 
   def roles
-    VCAP::CloudController::SecurityContext.roles
+    SecurityContext.roles
   end
 
   def current_user
-    VCAP::CloudController::SecurityContext.current_user
+    SecurityContext.current_user
   end
 
   def current_user_email
-    VCAP::CloudController::SecurityContext.current_user_email
+    SecurityContext.current_user_email
   end
 
   def request_id
@@ -72,19 +72,19 @@ class ApplicationController < ActionController::Base
   ###
 
   def can_read?(space_guid, org_guid)
-    VCAP::CloudController::Permissions.new(current_user).can_read_from_space?(space_guid, org_guid)
+    Permissions.new(current_user).can_read_from_space?(space_guid, org_guid)
   end
 
   def can_see_secrets?(space)
-    VCAP::CloudController::Permissions.new(current_user).can_see_secrets_in_space?(space.guid, space.organization.guid)
+    Permissions.new(current_user).can_see_secrets_in_space?(space.guid, space.organization.guid)
   end
 
   def can_write?(space_guid)
-    VCAP::CloudController::Permissions.new(current_user).can_write_to_space?(space_guid)
+    Permissions.new(current_user).can_write_to_space?(space_guid)
   end
 
   def readable_space_guids
-    VCAP::CloudController::Permissions.new(current_user).readable_space_guids
+    Permissions.new(current_user).readable_space_guids
   end
 
   ###
@@ -120,7 +120,7 @@ class ApplicationController < ActionController::Base
   def validate_token!
     return if current_user
 
-    if VCAP::CloudController::SecurityContext.missing_token?
+    if SecurityContext.missing_token?
       raise CloudController::Errors::ApiError.new_from_details('NotAuthenticated')
     end
 

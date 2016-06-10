@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 describe 'Service Broker' do
-  include VCAP::CloudController::BrokerApiHelper
+  include BrokerApiHelper
 
   let(:catalog_with_no_plans) {{
     services:
@@ -258,9 +258,9 @@ describe 'Service Broker' do
       let(:service) { build_service(dashboard_client: { id: 'client-id', secret: 'shhhhh', redirect_uri: 'http://example.com/client-id' }) }
 
       before do
-        allow(VCAP::CloudController::Config.config).to receive(:[]).with(anything).and_call_original
-        allow(VCAP::CloudController::Config.config).to receive(:[]).with(:uaa_client_name).and_return nil
-        allow(VCAP::CloudController::Config.config).to receive(:[]).with(:uaa_client_secret).and_return nil
+        allow(Config.config).to receive(:[]).with(anything).and_call_original
+        allow(Config.config).to receive(:[]).with(:uaa_client_name).and_return nil
+        allow(Config.config).to receive(:[]).with(:uaa_client_secret).and_return nil
 
         stub_catalog_fetch(200, services: [service])
       end
@@ -285,7 +285,7 @@ describe 'Service Broker' do
           auth_password: 'password'
         }.to_json, json_headers(admin_headers))
 
-        expect(VCAP::CloudController::ServiceDashboardClient.count).to eq(0)
+        expect(ServiceDashboardClient.count).to eq(0)
       end
     end
   end
@@ -474,7 +474,7 @@ describe 'Service Broker' do
           auth_password: 'password'
         }.to_json, json_headers(admin_headers))
 
-        guid = VCAP::CloudController::ServiceBroker.first.guid
+        guid = ServiceBroker.first.guid
 
         stub_catalog_fetch(200, {
           services: [{
@@ -530,7 +530,7 @@ describe 'Service Broker' do
           update_broker(catalog_with_large_plan)
           expect(last_response).to have_status_code(200)
 
-          expect(VCAP::CloudController::ServicePlan.find(unique_id: 'plan1-guid-here')[:active]).to be false
+          expect(ServicePlan.find(unique_id: 'plan1-guid-here')[:active]).to be false
         end
 
         it 'returns a warning to the operator' do

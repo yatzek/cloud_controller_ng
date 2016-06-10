@@ -72,7 +72,7 @@ module CloudController
         end
 
         describe 'admin buildpacks' do
-          let(:buildpack) { VCAP::CloudController::Buildpack.make }
+          let(:buildpack) { Buildpack.make }
 
           it 'delegates to local_url_generator when local' do
             allow(admin_buildpack_blobstore).to receive(:local?).and_return(true)
@@ -108,7 +108,7 @@ module CloudController
         end
 
         describe 'download unauthorized droplets permalink' do
-          let(:app) { VCAP::CloudController::AppFactory.make }
+          let(:app) { AppFactory.make }
 
           it 'gives out a url to the cloud controller' do
             expect(url_generator.unauthorized_perma_droplet_download_url(app)).to eql("http://api.example.com:9292/internal/v2/droplets/#{app.guid}/#{app.droplet_hash}/download")

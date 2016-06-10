@@ -2,12 +2,12 @@ require 'rails_helper'
 
 describe PackagesController, type: :controller do
   describe '#upload' do
-    let(:package) { VCAP::CloudController::PackageModel.make }
+    let(:package) { PackageModel.make }
     let(:space) { package.space }
     let(:org) { space.organization }
     let(:params) { { 'bits_path' => 'path/to/bits' } }
     let(:form_headers) { { 'CONTENT_TYPE' => 'application/x-www-form-urlencoded' } }
-    let(:user) { set_current_user(VCAP::CloudController::User.make) }
+    let(:user) { set_current_user(User.make) }
 
     before do
       @request.env.merge!(form_headers)
@@ -20,12 +20,12 @@ describe PackagesController, type: :controller do
 
       expect(response.status).to eq(200)
       expect(MultiJson.load(response.body)['guid']).to eq(package.guid)
-      expect(package.reload.state).to eq(VCAP::CloudController::PackageModel::PENDING_STATE)
+      expect(package.reload.state).to eq(PackageModel::PENDING_STATE)
     end
 
     context 'when app_bits_upload is disabled' do
       before do
-        VCAP::CloudController::FeatureFlag.make(name: 'app_bits_upload', enabled: false, error_message: nil)
+        FeatureFlag.make(name: 'app_bits_upload', enabled: false, error_message: nil)
       end
 
       context 'non-admin user' do
@@ -46,7 +46,7 @@ describe PackagesController, type: :controller do
 
           expect(response.status).to eq(200)
           expect(MultiJson.load(response.body)['guid']).to eq(package.guid)
-          expect(package.reload.state).to eq(VCAP::CloudController::PackageModel::PENDING_STATE)
+          expect(package.reload.state).to eq(PackageModel::PENDING_STATE)
         end
       end
     end
@@ -88,7 +88,7 @@ describe PackagesController, type: :controller do
 
     context 'when the bits have already been uploaded' do
       before do
-        package.state = VCAP::CloudController::PackageModel::READY_STATE
+        package.state = PackageModel::READY_STATE
         package.save
       end
 
@@ -102,7 +102,7 @@ describe PackagesController, type: :controller do
 
     context 'when the package is invalid' do
       before do
-        allow_any_instance_of(VCAP::CloudController::PackageUpload).to receive(:upload).and_raise(VCAP::CloudController::PackageUpload::InvalidPackage.new('err'))
+        allow_any_instance_of(PackageUpload).to receive(:upload).and_raise(PackageUpload::InvalidPackage.new('err'))
       end
 
       it 'returns 422' do
@@ -157,10 +157,10 @@ describe PackagesController, type: :controller do
   end
 
   describe '#download' do
-    let(:package) { VCAP::CloudController::PackageModel.make(state: 'READY') }
+    let(:package) { PackageModel.make(state: 'READY') }
     let(:space) { package.space }
     let(:org) { space.organization }
-    let(:user) { set_current_user(VCAP::CloudController::User.make, email: 'utako') }
+    let(:user) { set_current_user(User.make, email: 'utako') }
 
     before do
       blob = instance_double(CloudController::Blobstore::FogBlob, public_download_url: 'http://package.example.com')
@@ -178,10 +178,10 @@ describe PackagesController, type: :controller do
     end
 
     it 'creates an audit event' do
-      allow(VCAP::CloudController::Repositories::PackageEventRepository).to receive(:record_app_package_download)
+      allow(Repositories::PackageEventRepository).to receive(:record_app_package_download)
       get :download, guid: package.guid
 
-      expect(VCAP::CloudController::Repositories::PackageEventRepository).to have_received(:record_app_package_download) do |package, user_guid, user_name|
+      expect(Repositories::PackageEventRepository).to have_received(:record_app_package_download) do |package, user_guid, user_name|
         expect(package).to eq package
         expect(user_guid).to eq user.guid
         expect(user_name).to eq 'utako'
@@ -204,7 +204,7 @@ describe PackagesController, type: :controller do
 
     context 'when the package has no bits' do
       before do
-        package.state = VCAP::CloudController::PackageModel::CREATED_STATE
+        package.state = PackageModel::CREATED_STATE
         package.save
       end
 
@@ -228,7 +228,7 @@ describe PackagesController, type: :controller do
     context 'permissions' do
       context 'user does not have read scope' do
         before do
-          set_current_user(VCAP::CloudController::User.make, scopes: ['cloud_controller.write'])
+          set_current_user(User.make, scopes: ['cloud_controller.write'])
         end
 
         it 'returns an Unauthorized error' do
@@ -268,9 +268,9 @@ describe PackagesController, type: :controller do
   end
 
   describe '#show' do
-    let(:package) { VCAP::CloudController::PackageModel.make }
+    let(:package) { PackageModel.make }
     let(:space) { package.space }
-    let(:user) { set_current_user(VCAP::CloudController::User.make) }
+    let(:user) { set_current_user(User.make) }
 
     before do
       allow_user_read_access(user, space: space)
@@ -322,8 +322,8 @@ describe PackagesController, type: :controller do
   end
 
   describe '#destroy' do
-    let(:package) { VCAP::CloudController::PackageModel.make }
-    let(:user) { set_current_user(VCAP::CloudController::User.make) }
+    let(:package) { PackageModel.make }
+    let(:user) { set_current_user(User.make) }
     let(:space) { package.space }
 
     before do
@@ -392,12 +392,12 @@ describe PackagesController, type: :controller do
   end
 
   describe '#index' do
-    let(:user) { set_current_user(VCAP::CloudController::User.make) }
-    let(:app_model) { VCAP::CloudController::AppModel.make }
+    let(:user) { set_current_user(User.make) }
+    let(:app_model) { AppModel.make }
     let(:space) { app_model.space }
-    let!(:user_package_1) { VCAP::CloudController::PackageModel.make(app_guid: app_model.guid) }
-    let!(:user_package_2) { VCAP::CloudController::PackageModel.make(app_guid: app_model.guid) }
-    let!(:admin_package) { VCAP::CloudController::PackageModel.make }
+    let!(:user_package_1) { PackageModel.make(app_guid: app_model.guid) }
+    let!(:user_package_2) { PackageModel.make(app_guid: app_model.guid) }
+    let!(:admin_package) { PackageModel.make }
 
     before do
       allow_user_read_access(user, space: space)
@@ -423,10 +423,10 @@ describe PackagesController, type: :controller do
 
     context 'when accessed as an app subresource' do
       it 'uses the app as a filter' do
-        app = VCAP::CloudController::AppModel.make(space: space)
-        package_1 = VCAP::CloudController::PackageModel.make(app_guid: app.guid)
-        package_2 = VCAP::CloudController::PackageModel.make(app_guid: app.guid)
-        VCAP::CloudController::PackageModel.make
+        app = AppModel.make(space: space)
+        package_1 = PackageModel.make(app_guid: app.guid)
+        package_2 = PackageModel.make(app_guid: app.guid)
+        PackageModel.make
 
         get :index, app_guid: app.guid
 
@@ -527,7 +527,7 @@ describe PackagesController, type: :controller do
 
       context 'when the user does not have the read scope' do
         before do
-          set_current_user(VCAP::CloudController::User.make, scopes: [])
+          set_current_user(User.make, scopes: [])
         end
 
         it 'returns a 403 NotAuthorized error' do
@@ -542,11 +542,11 @@ describe PackagesController, type: :controller do
 
   describe '#create' do
     describe '#create_new' do
-      let(:app_model) { VCAP::CloudController::AppModel.make }
+      let(:app_model) { AppModel.make }
       let(:space) { app_model.space }
       let(:org) { space.organization }
       let(:req_body) { { type: 'bits' } }
-      let(:user) { set_current_user(VCAP::CloudController::User.make) }
+      let(:user) { set_current_user(User.make) }
 
       before do
         allow_user_read_access(user, space: space)
@@ -590,7 +590,7 @@ describe PackagesController, type: :controller do
 
         context 'when the package is invalid' do
           before do
-            allow_any_instance_of(VCAP::CloudController::PackageCreate).to receive(:create).and_raise(VCAP::CloudController::PackageCreate::InvalidPackage.new('err'))
+            allow_any_instance_of(PackageCreate).to receive(:create).and_raise(PackageCreate::InvalidPackage.new('err'))
           end
 
           it 'returns 422' do
@@ -668,10 +668,10 @@ describe PackagesController, type: :controller do
     end
 
     describe '#create_copy' do
-      let(:source_app_model) { VCAP::CloudController::AppModel.make }
-      let(:original_package) { VCAP::CloudController::PackageModel.make(type: 'bits', app_guid: source_app_model.guid) }
-      let(:target_app_model) { VCAP::CloudController::AppModel.make }
-      let(:user) { set_current_user(VCAP::CloudController::User.make) }
+      let(:source_app_model) { AppModel.make }
+      let(:original_package) { PackageModel.make(type: 'bits', app_guid: source_app_model.guid) }
+      let(:target_app_model) { AppModel.make }
+      let(:user) { set_current_user(User.make) }
       let(:source_space) { source_app_model.space }
       let(:destination_space) { target_app_model.space }
 
@@ -698,7 +698,7 @@ describe PackagesController, type: :controller do
       context 'permissions' do
         context 'when the user does not have write scope' do
           before do
-            set_current_user(VCAP::CloudController::User.make, scopes: ['cloud_controller.read'])
+            set_current_user(User.make, scopes: ['cloud_controller.read'])
           end
 
           it 'returns a 403 NotAuthorized error' do
@@ -784,7 +784,7 @@ describe PackagesController, type: :controller do
 
       context 'when the package is invalid' do
         before do
-          allow_any_instance_of(VCAP::CloudController::PackageCopy).to receive(:copy).and_raise(VCAP::CloudController::PackageCopy::InvalidPackage.new('ruh roh'))
+          allow_any_instance_of(PackageCopy).to receive(:copy).and_raise(PackageCopy::InvalidPackage.new('ruh roh'))
         end
 
         it 'returns 422' do

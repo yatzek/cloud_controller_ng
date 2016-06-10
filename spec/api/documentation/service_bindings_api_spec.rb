@@ -3,7 +3,7 @@ require 'rspec_api_documentation/dsl'
 
 resource 'Service Bindings', type: [:api, :legacy_api] do
   let(:admin_auth_header) { admin_headers['HTTP_AUTHORIZATION'] }
-  let!(:service_binding) { VCAP::CloudController::ServiceBinding.make }
+  let!(:service_binding) { ServiceBinding.make }
   let(:guid) { service_binding.guid }
   authenticated_request
 
@@ -19,7 +19,7 @@ resource 'Service Bindings', type: [:api, :legacy_api] do
       to_return(status: 200, body: '{}')
   end
 
-  standard_model_list :service_binding, VCAP::CloudController::ServiceBindingsController
+  standard_model_list :service_binding, CloudController::ServiceBindingsController
   standard_model_get :service_binding, nested_associations: [:app, :service_instance]
   standard_model_delete :service_binding
 
@@ -30,9 +30,9 @@ resource 'Service Bindings', type: [:api, :legacy_api] do
     field :parameters, 'Arbitrary parameters to pass along to the service broker. Must be a JSON object', required: false
 
     example 'Create a Service Binding' do
-      space = VCAP::CloudController::Space.make
-      service_instance_guid = VCAP::CloudController::ServiceInstance.make(space: space).guid
-      app_guid = VCAP::CloudController::App.make(space: space).guid
+      space = Space.make
+      service_instance_guid = ServiceInstance.make(space: space).guid
+      app_guid = App.make(space: space).guid
       request_json = MultiJson.dump({ service_instance_guid: service_instance_guid, app_guid: app_guid, parameters: { the_service_broker: 'wants this object' } }, pretty: true)
 
       client.post '/v2/service_bindings', request_json, headers

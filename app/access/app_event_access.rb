@@ -1,4 +1,2 @@
-module VCAP::CloudController
-  class AppEventAccess < BaseAccess
-  end
+class AppEventAccess < BaseAccess
 end

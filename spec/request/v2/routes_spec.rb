@@ -1,8 +1,8 @@
 require 'spec_helper'
 
 describe 'Routes' do
-  let(:user) { VCAP::CloudController::User.make }
-  let(:space) { VCAP::CloudController::Space.make }
+  let(:user) { User.make }
+  let(:space) { Space.make }
 
   before do
     space.organization.add_user(user)
@@ -19,8 +19,8 @@ describe 'Routes' do
   end
 
   describe 'GET /v2/routes' do
-    let!(:route) { VCAP::CloudController::Route.make(domain: domain, space: space) }
-    let(:domain) { VCAP::CloudController::SharedDomain.make(router_group_guid: 'tcp-group') }
+    let!(:route) { Route.make(domain: domain, space: space) }
+    let(:domain) { SharedDomain.make(router_group_guid: 'tcp-group') }
 
     it 'lists all routes' do
       get '/v2/routes', nil, headers_for(user)
@@ -137,10 +137,10 @@ describe 'Routes' do
   end
 
   describe 'GET /v2/routes/:guid' do
-    let!(:route) { VCAP::CloudController::Route.make(domain: domain, space: space) }
+    let!(:route) { Route.make(domain: domain, space: space) }
 
     context 'with a shared domain' do
-      let(:domain) { VCAP::CloudController::SharedDomain.make(router_group_guid: 'tcp-group') }
+      let(:domain) { SharedDomain.make(router_group_guid: 'tcp-group') }
 
       it 'maps domain_url to the shared domains controller' do
         get "/v2/routes/#{route.guid}", nil, headers_for(user)
@@ -173,7 +173,7 @@ describe 'Routes' do
     end
 
     context 'with a private domain' do
-      let(:domain) { VCAP::CloudController::PrivateDomain.make(router_group_guid: 'tcp-group', owning_organization: space.organization) }
+      let(:domain) { PrivateDomain.make(router_group_guid: 'tcp-group', owning_organization: space.organization) }
 
       it 'maps domain_url to the shared domains controller' do
         get "/v2/routes/#{route.guid}", nil, headers_for(user)

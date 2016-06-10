@@ -44,7 +44,7 @@ module LegacyApiDsl
 
   def expected_attributes_for_model(model)
     return model.fields.keys if model.respond_to? :fields
-    "VCAP::CloudController::#{model.to_s.classify}".constantize.export_attrs
+    model.to_s.classify.to_s.constantize.export_attrs
   end
 
   def parsed_response
@@ -89,7 +89,7 @@ module LegacyApiDsl
   private
 
   def model_has_updated_at?(model)
-    "VCAP::CloudController::#{model.to_s.classify}".constantize.columns.include?(:updated_at)
+    model.to_s.classify.to_s.constantize.columns.include?(:updated_at)
   end
 
   def add_deprecation_warning

@@ -1,7 +1,7 @@
 require 'actions/organization_delete'
 require 'queries/organization_user_roles_fetcher'
 
-module VCAP::CloudController
+module CloudController
   class OrganizationsController < RestController::ModelController
     def self.dependencies
       [:username_and_roles_populating_collection_renderer, :username_lookup_uaa_client, :services_event_repository]
@@ -180,7 +180,7 @@ module VCAP::CloudController
       end
 
       delete_action = OrganizationDelete.new(SpaceDelete.new(current_user.guid, current_user_email, @services_event_repository))
-      deletion_job = VCAP::CloudController::Jobs::DeleteActionJob.new(Organization, guid, delete_action)
+      deletion_job = Jobs::DeleteActionJob.new(Organization, guid, delete_action)
       enqueue_deletion_job(deletion_job)
     end
 

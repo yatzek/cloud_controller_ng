@@ -1,10 +1,10 @@
-class Service < Sequel::Model
+class ServiceMigrationModel < Sequel::Model(:services)
 end
 
 Sequel.migration do
   up do
-    Service.filter(provider: nil).all.each do |service|
-      if Service.filter(label: service.label, provider: '').first
+    ServiceMigrationModel.filter(provider: nil).all.each do |service|
+      if ServiceMigrationModel.filter(label: service.label, provider: '').first
         service.update(label: "#{service.label}-#{service.id}", provider: '')
       else
         service.update(provider: '')
@@ -23,7 +23,7 @@ Sequel.migration do
       set_column_default :provider, nil
     end
 
-    Service.filter(provider: '').all.each do |service|
+    ServiceMigrationModel.filter(provider: '').all.each do |service|
       service.update(provider: nil)
     end
   end

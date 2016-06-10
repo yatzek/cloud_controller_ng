@@ -3,7 +3,7 @@ require 'cloud_controller/dea/app_stager_task'
 
 module CCInitializers
   def self.new_relic_app_stager_task_instrumentation(_)
-    VCAP::CloudController::Dea::AppStagerTask.class_eval do
+    Dea::AppStagerTask.class_eval do
       include ::NewRelic::Agent::MethodTracer
 
       %w(

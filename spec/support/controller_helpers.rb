@@ -1,6 +1,4 @@
 module ControllerHelpers
-  include VCAP::CloudController
-
   HTTPS_ENFORCEMENT_SCENARIOS = [
     { protocol: 'http',  config_setting: nil, user: 'user',  success: true },
     { protocol: 'http',  config_setting: nil, user: 'admin', success: true },

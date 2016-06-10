@@ -43,7 +43,7 @@ module CloudController
       end
 
       def validate_path(file_name)
-        checker = VCAP::CloudController::FilePathChecker
+        checker = FilePathChecker
         raise CloudController::Errors::ApiError.new_from_details('AppResourcesFilePathInvalid', "File path '#{file_name}' is not safe.") unless checker.safe_path? file_name
         file_name
       end

@@ -1,8 +1,6 @@
 require 'spec_helper'
 
 module CloudController
-  include VCAP::CloudController
-
   describe ControllerFactory do
     describe '#create_controller' do
       before do
@@ -18,28 +16,28 @@ module CloudController
       end
 
       it 'instantiates a CrashesController' do
-        controller = @controller_factory.create_controller(CrashesController)
-        expect(controller).to be_instance_of(CrashesController)
+        controller = @controller_factory.create_controller(CloudController::CrashesController)
+        expect(controller).to be_instance_of(CloudController::CrashesController)
       end
 
       it 'instantiates a SpaceSummariesController' do
-        controller = @controller_factory.create_controller(SpaceSummariesController)
-        expect(controller).to be_instance_of(SpaceSummariesController)
+        controller = @controller_factory.create_controller(CloudController::SpaceSummariesController)
+        expect(controller).to be_instance_of(CloudController::SpaceSummariesController)
       end
 
       it 'instantiates a CustomBuildpacksController' do
-        controller = @controller_factory.create_controller(BuildpacksController)
-        expect(controller).to be_instance_of(BuildpacksController)
+        controller = @controller_factory.create_controller(CloudController::BuildpacksController)
+        expect(controller).to be_instance_of(CloudController::BuildpacksController)
       end
 
       it 'instantiates an AppsController' do
-        controller = @controller_factory.create_controller(AppsController)
-        expect(controller).to be_instance_of(AppsController)
+        controller = @controller_factory.create_controller(CloudController::AppsController)
+        expect(controller).to be_instance_of(CloudController::AppsController)
       end
 
       it 'instantiates a SpacesController' do
-        controller = @controller_factory.create_controller(SpacesController)
-        expect(controller).to be_instance_of(SpacesController)
+        controller = @controller_factory.create_controller(CloudController::SpacesController)
+        expect(controller).to be_instance_of(CloudController::SpacesController)
       end
     end
   end

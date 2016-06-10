@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 describe MetadataPolicy do
-  let(:app) { VCAP::CloudController::AppFactory.make }
+  let(:app) { AppFactory.make }
 
   subject(:validator) { MetadataPolicy.new(app, metadata) }
 

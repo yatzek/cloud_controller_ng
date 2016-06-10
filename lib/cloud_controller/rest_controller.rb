@@ -6,7 +6,7 @@ require 'cloud_controller/rest_controller/preloaded_object_serializer'
 require 'cloud_controller/rest_controller/object_renderer'
 require 'cloud_controller/rest_controller/paginated_collection_renderer'
 
-module VCAP::CloudController
+module CloudController
   def self.controller_from_model(model)
     controller_from_model_name(model.class.name)
   end
@@ -16,6 +16,6 @@ module VCAP::CloudController
   end
 
   def self.controller_from_name(name)
-    VCAP::CloudController.const_get("#{name.to_s.pluralize.camelize}Controller")
+    CloudController.const_get("#{name.to_s.pluralize.camelize}Controller")
   end
 end

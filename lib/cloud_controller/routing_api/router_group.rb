@@ -1,4 +1,4 @@
-module VCAP::CloudController::RoutingApi
+module RoutingApi
   class RouterGroup
     attr_reader :guid, :type, :reservable_ports, :name
     def initialize(hash)

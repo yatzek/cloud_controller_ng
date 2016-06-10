@@ -5,7 +5,7 @@ describe 'max memory policies' do
   let(:error_name) { :random_memory_error }
 
   describe AppMaxMemoryPolicy do
-    let(:app) { VCAP::CloudController::AppFactory.make(memory: 100, state: 'STARTED') }
+    let(:app) { AppFactory.make(memory: 100, state: 'STARTED') }
 
     subject(:validator) { AppMaxMemoryPolicy.new(app, org_or_space, error_name) }
 
@@ -40,7 +40,7 @@ describe 'max memory policies' do
   end
 
   describe TaskMaxMemoryPolicy do
-    let(:task) { VCAP::CloudController::TaskModel.make memory_in_mb: 150 }
+    let(:task) { TaskModel.make memory_in_mb: 150 }
 
     subject(:validator) { TaskMaxMemoryPolicy.new(task, org_or_space, error_name) }
 

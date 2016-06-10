@@ -1,8 +1,8 @@
 require 'spec_helper'
 
-describe VCAP::CloudController::DatabaseUriGenerator do
+describe DatabaseUriGenerator do
   let(:service_uris) { ['postgres://username:password@host/db'] }
-  let(:services) { VCAP::CloudController::DatabaseUriGenerator.new(service_uris) }
+  let(:services) { DatabaseUriGenerator.new(service_uris) }
 
   describe '#database_uri' do
     subject(:database_uri) { services.database_uri }

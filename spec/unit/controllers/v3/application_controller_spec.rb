@@ -23,7 +23,7 @@ describe ApplicationController, type: :controller do
     end
 
     def secret_access
-      can_see_secrets?(VCAP::CloudController::Space.find(guid: params[:space_guid]))
+      can_see_secrets?(Space.find(guid: params[:space_guid]))
       head 200
     end
 
@@ -43,7 +43,7 @@ describe ApplicationController, type: :controller do
 
   describe 'read permission scope validation' do
     before do
-      set_current_user(VCAP::CloudController::User.new(guid: 'some-guid'), scopes: ['cloud_controller.write'])
+      set_current_user(User.new(guid: 'some-guid'), scopes: ['cloud_controller.write'])
     end
 
     it 'is required on index' do
@@ -76,7 +76,7 @@ describe ApplicationController, type: :controller do
 
   describe 'write permission scope validation' do
     before do
-      set_current_user(VCAP::CloudController::User.new(guid: 'some-guid'), scopes: ['cloud_controller.read'])
+      set_current_user(User.new(guid: 'some-guid'), scopes: ['cloud_controller.read'])
     end
 
     it 'is not required on index' do
@@ -124,8 +124,8 @@ describe ApplicationController, type: :controller do
 
   describe 'https schema validation' do
     before do
-      set_current_user(VCAP::CloudController::User.make)
-      VCAP::CloudController::Config.config[:https_required] = true
+      set_current_user(User.make)
+      Config.config[:https_required] = true
     end
 
     context 'when request is http' do
@@ -174,7 +174,7 @@ describe ApplicationController, type: :controller do
 
     context 'when the token is invalid' do
       before do
-        VCAP::CloudController::SecurityContext.set(nil, :invalid_token, nil)
+        SecurityContext.set(nil, :invalid_token, nil)
       end
 
       it 'raises InvalidAuthToken' do
@@ -187,7 +187,7 @@ describe ApplicationController, type: :controller do
     context 'when there is a token but no matching user' do
       before do
         user = nil
-        VCAP::CloudController::SecurityContext.set(user, 'valid_token', nil)
+        SecurityContext.set(user, 'valid_token', nil)
       end
 
       it 'raises InvalidAuthToken' do
@@ -199,13 +199,13 @@ describe ApplicationController, type: :controller do
   end
 
   describe '#can_read?' do
-    let!(:user) { set_current_user(VCAP::CloudController::User.make) }
+    let!(:user) { set_current_user(User.make) }
 
     it 'asks for #can_read_from_space? on behalf of the current user' do
       routes.draw { get 'read_access' => 'anonymous#read_access' }
 
-      permissions = instance_double(VCAP::CloudController::Permissions, can_read_from_space?: true)
-      allow(VCAP::CloudController::Permissions).to receive(:new).and_return(permissions)
+      permissions = instance_double(Permissions, can_read_from_space?: true)
+      allow(Permissions).to receive(:new).and_return(permissions)
 
       get :read_access, space_guid: 'space-guid', org_guid: 'org-guid'
 
@@ -214,14 +214,14 @@ describe ApplicationController, type: :controller do
   end
 
   describe '#can_see_secrets?' do
-    let!(:user) { set_current_user(VCAP::CloudController::User.make) }
+    let!(:user) { set_current_user(User.make) }
 
     it 'asks for #can_see_secrets_in_space? on behalf of the current user' do
       routes.draw { get 'secret_access' => 'anonymous#secret_access' }
 
-      space = VCAP::CloudController::Space.make
-      permissions = instance_double(VCAP::CloudController::Permissions, can_see_secrets_in_space?: true)
-      allow(VCAP::CloudController::Permissions).to receive(:new).and_return(permissions)
+      space = Space.make
+      permissions = instance_double(Permissions, can_see_secrets_in_space?: true)
+      allow(Permissions).to receive(:new).and_return(permissions)
 
       get :secret_access, space_guid: space.guid
 
@@ -230,13 +230,13 @@ describe ApplicationController, type: :controller do
   end
 
   describe '#can_write?' do
-    let!(:user) { set_current_user(VCAP::CloudController::User.make) }
+    let!(:user) { set_current_user(User.make) }
 
     it 'asks for #can_read_from_space? on behalf of the current user' do
       routes.draw { get 'write_access' => 'anonymous#write_access' }
 
-      permissions = instance_double(VCAP::CloudController::Permissions, can_write_to_space?: true)
-      allow(VCAP::CloudController::Permissions).to receive(:new).and_return(permissions)
+      permissions = instance_double(Permissions, can_write_to_space?: true)
+      allow(Permissions).to receive(:new).and_return(permissions)
 
       get :write_access, space_guid: 'space-guid', org_guid: 'org-guid'
 
@@ -245,7 +245,7 @@ describe ApplicationController, type: :controller do
   end
 
   describe '#handle_blobstore_error' do
-    let!(:user) { set_current_user(VCAP::CloudController::User.make) }
+    let!(:user) { set_current_user(User.make) }
 
     it 'rescues from ApiError and renders an error presenter' do
       routes.draw { get 'blobstore_error' => 'anonymous#blobstore_error' }
@@ -256,7 +256,7 @@ describe ApplicationController, type: :controller do
   end
 
   describe '#handle_api_error' do
-    let!(:user) { set_current_user(VCAP::CloudController::User.make) }
+    let!(:user) { set_current_user(User.make) }
 
     it 'rescues from ApiError and renders an error presenter' do
       routes.draw { get 'api_explode' => 'anonymous#api_explode' }

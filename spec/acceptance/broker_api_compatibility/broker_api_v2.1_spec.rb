@@ -2,7 +2,7 @@ require 'spec_helper'
 
 describe 'Service Broker API integration' do
   describe 'v2.1' do
-    include VCAP::CloudController::BrokerApiHelper
+    include BrokerApiHelper
 
     before { setup_cc }
 

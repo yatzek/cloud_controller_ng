@@ -1,4 +1,2 @@
-module VCAP::CloudController
-  class Job
-  end
+class Job
 end

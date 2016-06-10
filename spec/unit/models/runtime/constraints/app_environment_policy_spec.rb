@@ -2,7 +2,7 @@ require 'spec_helper'
 
 describe AppEnvironmentPolicy do
   describe 'env' do
-    let(:app) { VCAP::CloudController::AppFactory.make }
+    let(:app) { AppFactory.make }
 
     subject(:validator) { AppEnvironmentPolicy.new(app) }
 

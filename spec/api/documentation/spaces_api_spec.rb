@@ -3,7 +3,7 @@ require 'rspec_api_documentation/dsl'
 
 resource 'Spaces', type: [:api, :legacy_api] do
   let(:admin_auth_header) { admin_headers['HTTP_AUTHORIZATION'] }
-  let!(:space) { VCAP::CloudController::Space.make }
+  let!(:space) { Space.make }
   let(:guid) { space.guid }
 
   authenticated_request
@@ -36,7 +36,7 @@ resource 'Spaces', type: [:api, :legacy_api] do
       field :allow_ssh, 'Whether or not Space Developers can enable ssh on apps in the space'
     end
 
-    standard_model_list :space, VCAP::CloudController::SpacesController do
+    standard_model_list :space, CloudController::SpacesController do
       request_parameter :'order-by', 'Parameter to order results by', valid_values: ['name', 'id']
     end
     standard_model_get :space, nested_associations: [:organization]
@@ -45,21 +45,21 @@ resource 'Spaces', type: [:api, :legacy_api] do
     end
 
     def after_standard_model_delete(guid)
-      event = VCAP::CloudController::Event.find(type: 'audit.space.delete-request', actee: guid)
+      event = Event.find(type: 'audit.space.delete-request', actee: guid)
       audited_event event
     end
 
     post '/v2/spaces/' do
       include_context 'createable_fields', required: true
       example 'Creating a Space' do
-        organization_guid = VCAP::CloudController::Organization.make.guid
+        organization_guid = Organization.make.guid
         client.post '/v2/spaces', MultiJson.dump(required_fields.merge(organization_guid: organization_guid), pretty: true), headers
         expect(status).to eq(201)
 
         standard_entity_response parsed_response, :space
 
         space_guid = parsed_response['metadata']['guid']
-        audited_event VCAP::CloudController::Event.find(type: 'audit.space.create', actee: space_guid)
+        audited_event Event.find(type: 'audit.space.create', actee: space_guid)
       end
     end
 
@@ -77,7 +77,7 @@ resource 'Spaces', type: [:api, :legacy_api] do
         expect(status).to eq 201
         standard_entity_response parsed_response, :space, name: new_name
 
-        audited_event VCAP::CloudController::Event.find(type: 'audit.space.update', actee: guid)
+        audited_event Event.find(type: 'audit.space.update', actee: guid)
       end
     end
   end
@@ -87,11 +87,11 @@ resource 'Spaces', type: [:api, :legacy_api] do
 
     describe 'Routes' do
       before do
-        domain = VCAP::CloudController::PrivateDomain.make(owning_organization: space.organization)
-        VCAP::CloudController::Route.make(domain: domain, space: space)
+        domain = PrivateDomain.make(owning_organization: space.organization)
+        Route.make(domain: domain, space: space)
       end
 
-      standard_model_list :route, VCAP::CloudController::RoutesController, outer_model: :space, exclude_parameters: ['organization_guid']
+      standard_model_list :route, CloudController::RoutesController, outer_model: :space, exclude_parameters: ['organization_guid']
     end
 
     describe 'Developers' do
@@ -99,17 +99,17 @@ resource 'Spaces', type: [:api, :legacy_api] do
         space.organization.add_user(associated_developer)
         space.organization.add_user(developer)
         space.add_developer(associated_developer)
-        allow_any_instance_of(VCAP::CloudController::UaaClient).to receive(:usernames_for_ids).and_return({ associated_developer.guid => 'developer@example.com' })
+        allow_any_instance_of(UaaClient).to receive(:usernames_for_ids).and_return({ associated_developer.guid => 'developer@example.com' })
       end
 
-      let!(:associated_developer) { VCAP::CloudController::User.make }
-      let(:developer) { VCAP::CloudController::User.make }
+      let!(:associated_developer) { User.make }
+      let(:developer) { User.make }
 
       context 'by user guid' do
         let(:associated_developer_guid) { associated_developer.guid }
         let(:developer_guid) { developer.guid }
 
-        standard_model_list :user, VCAP::CloudController::UsersController, outer_model: :space, path: :developers
+        standard_model_list :user, CloudController::UsersController, outer_model: :space, path: :developers
 
         context 'has user guid param' do
           parameter :developer_guid, 'The guid of the developer'
@@ -155,17 +155,17 @@ resource 'Spaces', type: [:api, :legacy_api] do
         space.organization.add_user(associated_manager)
         space.organization.add_user(manager)
         space.add_manager(associated_manager)
-        allow_any_instance_of(VCAP::CloudController::UaaClient).to receive(:usernames_for_ids).and_return({ associated_manager.guid => 'manager@example.com' })
+        allow_any_instance_of(UaaClient).to receive(:usernames_for_ids).and_return({ associated_manager.guid => 'manager@example.com' })
       end
 
-      let!(:associated_manager) { VCAP::CloudController::User.make }
-      let(:manager) { VCAP::CloudController::User.make }
+      let!(:associated_manager) { User.make }
+      let(:manager) { User.make }
 
       context 'by user guid' do
         let(:associated_manager_guid) { associated_manager.guid }
         let(:manager_guid) { manager.guid }
 
-        standard_model_list :user, VCAP::CloudController::UsersController, outer_model: :space, path: :managers
+        standard_model_list :user, CloudController::UsersController, outer_model: :space, path: :managers
 
         context 'has user guid param' do
           parameter :manager_guid, 'The guid of the manager'
@@ -211,17 +211,17 @@ resource 'Spaces', type: [:api, :legacy_api] do
         space.organization.add_user(associated_auditor)
         space.organization.add_user(auditor)
         space.add_auditor(associated_auditor)
-        allow_any_instance_of(VCAP::CloudController::UaaClient).to receive(:usernames_for_ids).and_return({ associated_auditor.guid => 'auditor@example.com' })
+        allow_any_instance_of(UaaClient).to receive(:usernames_for_ids).and_return({ associated_auditor.guid => 'auditor@example.com' })
       end
 
-      let!(:associated_auditor) { VCAP::CloudController::User.make }
-      let(:auditor) { VCAP::CloudController::User.make }
+      let!(:associated_auditor) { User.make }
+      let(:auditor) { User.make }
 
       context 'by user guid' do
         let(:associated_auditor_guid) { associated_auditor.guid }
         let(:auditor_guid) { auditor.guid }
 
-        standard_model_list :user, VCAP::CloudController::UsersController, outer_model: :space, path: :auditors
+        standard_model_list :user, CloudController::UsersController, outer_model: :space, path: :auditors
 
         context 'has user guid param' do
           parameter :auditor_guid, 'The guid of the auditor'
@@ -263,7 +263,7 @@ resource 'Spaces', type: [:api, :legacy_api] do
     end
 
     describe 'User Roles' do
-      let(:everything_user) { VCAP::CloudController::User.make }
+      let(:everything_user) { User.make }
 
       before do
         space.organization.add_user(everything_user)
@@ -271,7 +271,7 @@ resource 'Spaces', type: [:api, :legacy_api] do
         space.add_auditor(everything_user)
         space.add_developer(everything_user)
 
-        allow_any_instance_of(VCAP::CloudController::UaaClient).to receive(:usernames_for_ids).and_return({ everything_user.guid => 'everything@example.com' })
+        allow_any_instance_of(UaaClient).to receive(:usernames_for_ids).and_return({ everything_user.guid => 'everything@example.com' })
       end
 
       get '/v2/spaces/:guid/user_roles' do
@@ -290,53 +290,53 @@ resource 'Spaces', type: [:api, :legacy_api] do
 
     describe 'Apps' do
       before do
-        VCAP::CloudController::AppFactory.make(space: space)
+        AppFactory.make(space: space)
       end
 
-      standard_model_list :app, VCAP::CloudController::AppsController, outer_model: :space
+      standard_model_list :app, CloudController::AppsController, outer_model: :space
     end
 
     describe 'Domains' do
-      standard_model_list :shared_domain, VCAP::CloudController::DomainsController, outer_model: :space, path: :domains
+      standard_model_list :shared_domain, CloudController::DomainsController, outer_model: :space, path: :domains
     end
 
     describe 'Service Instances' do
       before do
-        VCAP::CloudController::ManagedServiceInstance.make(space: space)
+        ManagedServiceInstance.make(space: space)
       end
 
       request_parameter :return_user_provided_service_instances, "When 'true', include user provided service instances."
 
-      standard_model_list :managed_service_instance, VCAP::CloudController::ServiceInstancesController, outer_model: :space, path: :service_instances
+      standard_model_list :managed_service_instance, CloudController::ServiceInstancesController, outer_model: :space, path: :service_instances
     end
 
     describe 'Services' do
       before do
-        some_service = VCAP::CloudController::Service.make(active: true)
-        VCAP::CloudController::ServicePlan.make(service: some_service, public: false)
-        VCAP::CloudController::ServicePlanVisibility.make(service_plan: some_service.service_plans.first, organization: space.organization)
+        some_service = Service.make(active: true)
+        ServicePlan.make(service: some_service, public: false)
+        ServicePlanVisibility.make(service_plan: some_service.service_plans.first, organization: space.organization)
       end
 
-      standard_model_list :service, VCAP::CloudController::ServicesController, outer_model: :space, path: :service, exclude_parameters: ['provider']
+      standard_model_list :service, CloudController::ServicesController, outer_model: :space, path: :service, exclude_parameters: ['provider']
     end
 
     describe 'Events' do
       before do
-        user                   = VCAP::CloudController::User.make
-        space_event_repository = VCAP::CloudController::Repositories::SpaceEventRepository.new
+        user                   = User.make
+        space_event_repository = Repositories::SpaceEventRepository.new
         space_event_repository.record_space_update(space, user, 'user@example.com', { 'name' => 'new_name' })
       end
 
-      standard_model_list :event, VCAP::CloudController::EventsController, outer_model: :space
+      standard_model_list :event, CloudController::EventsController, outer_model: :space
     end
 
     describe 'Security Groups' do
-      let!(:associated_security_group) { VCAP::CloudController::SecurityGroup.make(space_guids: [space.guid]) }
+      let!(:associated_security_group) { SecurityGroup.make(space_guids: [space.guid]) }
       let(:associated_security_group_guid) { associated_security_group.guid }
-      let(:security_group) { VCAP::CloudController::SecurityGroup.make }
+      let(:security_group) { SecurityGroup.make }
       let(:security_group_guid) { security_group.guid }
 
-      standard_model_list :security_group, VCAP::CloudController::SecurityGroupsController, outer_model: :space
+      standard_model_list :security_group, CloudController::SecurityGroupsController, outer_model: :space
 
       context 'has security group guid param' do
         parameter :security_group_guid, 'The guid of the security group'

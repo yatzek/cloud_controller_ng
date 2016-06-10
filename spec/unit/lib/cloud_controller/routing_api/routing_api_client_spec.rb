@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-module VCAP::CloudController::RoutingApi
+module RoutingApi
   describe Client do
     let(:token_issuer) { double(:token_issuer) }
     let(:token_info) { double(:token_info) }

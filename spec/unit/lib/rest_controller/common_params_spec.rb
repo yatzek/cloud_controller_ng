@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-module VCAP::CloudController::RestController
+module RestController
   describe CommonParams do
     let(:logger) do
       double('Logger').as_null_object

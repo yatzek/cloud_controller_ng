@@ -28,7 +28,7 @@ module VCAP::Services::ServiceBrokers::V2
       it 'defaults free field to true' do
         attrs = build_valid_plan_attrs
         attrs.delete('free')
-        plan = CatalogPlan.new(instance_double(VCAP::CloudController::ServiceBroker), attrs)
+        plan = CatalogPlan.new(instance_double(ServiceBroker), attrs)
 
         expect(plan.free).to be true
       end
@@ -37,7 +37,7 @@ module VCAP::Services::ServiceBrokers::V2
     describe 'validations' do
       it 'validates that @broker_provided_id is a string' do
         attrs = build_valid_plan_attrs(id: 123)
-        plan = CatalogPlan.new(instance_double(VCAP::CloudController::ServiceBroker), attrs)
+        plan = CatalogPlan.new(instance_double(ServiceBroker), attrs)
         plan.valid?
 
         expect(plan.errors.messages).to include 'Plan id must be a string, but has value 123'
@@ -46,7 +46,7 @@ module VCAP::Services::ServiceBrokers::V2
       it 'validates that @broker_provided_id is present' do
         attrs = build_valid_plan_attrs
         attrs['id'] = nil
-        plan = CatalogPlan.new(instance_double(VCAP::CloudController::ServiceBroker), attrs)
+        plan = CatalogPlan.new(instance_double(ServiceBroker), attrs)
         plan.valid?
 
         expect(plan.errors.messages).to include 'Plan id is required'
@@ -54,7 +54,7 @@ module VCAP::Services::ServiceBrokers::V2
 
       it 'validates that @name is a string' do
         attrs = build_valid_plan_attrs(name: 123)
-        plan = CatalogPlan.new(instance_double(VCAP::CloudController::ServiceBroker), attrs)
+        plan = CatalogPlan.new(instance_double(ServiceBroker), attrs)
         plan.valid?
 
         expect(plan.errors.messages).to include 'Plan name must be a string, but has value 123'
@@ -63,7 +63,7 @@ module VCAP::Services::ServiceBrokers::V2
       it 'validates that @name is present' do
         attrs = build_valid_plan_attrs
         attrs['name'] = nil
-        plan = CatalogPlan.new(instance_double(VCAP::CloudController::ServiceBroker), attrs)
+        plan = CatalogPlan.new(instance_double(ServiceBroker), attrs)
         plan.valid?
 
         expect(plan.errors.messages).to include 'Plan name is required'
@@ -71,7 +71,7 @@ module VCAP::Services::ServiceBrokers::V2
 
       it 'validates that @description is a string' do
         attrs = build_valid_plan_attrs(description: 123)
-        plan = CatalogPlan.new(instance_double(VCAP::CloudController::ServiceBroker), attrs)
+        plan = CatalogPlan.new(instance_double(ServiceBroker), attrs)
         plan.valid?
 
         expect(plan.errors.messages).to include 'Plan description must be a string, but has value 123'
@@ -80,7 +80,7 @@ module VCAP::Services::ServiceBrokers::V2
       it 'validates that @description is present' do
         attrs = build_valid_plan_attrs
         attrs['description'] = nil
-        plan = CatalogPlan.new(instance_double(VCAP::CloudController::ServiceBroker), attrs)
+        plan = CatalogPlan.new(instance_double(ServiceBroker), attrs)
         plan.valid?
 
         expect(plan.errors.messages).to include 'Plan description is required'
@@ -88,7 +88,7 @@ module VCAP::Services::ServiceBrokers::V2
 
       it 'validates that @metadata is a hash' do
         attrs = build_valid_plan_attrs(metadata: ['list', 'of', 'strings'])
-        plan = CatalogPlan.new(instance_double(VCAP::CloudController::ServiceBroker), attrs)
+        plan = CatalogPlan.new(instance_double(ServiceBroker), attrs)
         plan.valid?
 
         expect(plan.errors.messages).to include 'Plan metadata must be a hash, but has value ["list", "of", "strings"]'
@@ -96,7 +96,7 @@ module VCAP::Services::ServiceBrokers::V2
 
       it 'validates that @free is a boolean' do
         attrs = build_valid_plan_attrs(free: 'true')
-        plan = CatalogPlan.new(instance_double(VCAP::CloudController::ServiceBroker), attrs)
+        plan = CatalogPlan.new(instance_double(ServiceBroker), attrs)
         plan.valid?
 
         expect(plan.errors.messages).to include 'Plan free must be a boolean, but has value "true"'
@@ -105,14 +105,14 @@ module VCAP::Services::ServiceBrokers::V2
       describe '#valid?' do
         it 'is false if plan has errors' do
           attrs = build_valid_plan_attrs(metadata: ['list', 'of', 'strings'])
-          expect(CatalogPlan.new(instance_double(VCAP::CloudController::ServiceBroker), attrs).valid?).to be false
+          expect(CatalogPlan.new(instance_double(ServiceBroker), attrs).valid?).to be false
         end
       end
     end
 
     describe '#cc_plan' do
-      let(:service_broker) { VCAP::CloudController::ServiceBroker.make }
-      let(:cc_service) { VCAP::CloudController::Service.make(service_broker: service_broker) }
+      let(:service_broker) { ServiceBroker.make }
+      let(:cc_service) { Service.make(service_broker: service_broker) }
       let(:plan_broker_provided_id) { SecureRandom.uuid }
       let(:catalog_service) do
         CatalogService.new(service_broker,
@@ -136,7 +136,7 @@ module VCAP::Services::ServiceBrokers::V2
       end
       context 'when a ServicePlan exists for the same Service with the same broker_provided_id' do
         let!(:cc_plan) do
-          VCAP::CloudController::ServicePlan.make(service: cc_service, unique_id: plan_broker_provided_id)
+          ServicePlan.make(service: cc_service, unique_id: plan_broker_provided_id)
         end
 
         it 'returns that ServicePlan' do
@@ -146,7 +146,7 @@ module VCAP::Services::ServiceBrokers::V2
 
       context 'when a ServicePlan exists for a different Service with the same broker_provided_id' do
         before do
-          VCAP::CloudController::ServicePlan.make(unique_id: plan_broker_provided_id)
+          ServicePlan.make(unique_id: plan_broker_provided_id)
         end
 
         it 'returns nil' do

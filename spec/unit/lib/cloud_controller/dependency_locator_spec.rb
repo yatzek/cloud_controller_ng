@@ -10,7 +10,7 @@ describe CloudController::DependencyLocator do
 
   describe '#health_manager_client' do
     it 'should return the hm9000 client' do
-      expect(locator.health_manager_client).to be_an_instance_of(VCAP::CloudController::Dea::HM9000::Client)
+      expect(locator.health_manager_client).to be_an_instance_of(Dea::HM9000::Client)
     end
   end
 
@@ -119,7 +119,7 @@ describe CloudController::DependencyLocator do
   describe '#app_event_repository' do
     subject { locator.app_event_repository }
 
-    it { is_expected.to be_a(VCAP::CloudController::Repositories::AppEventRepository) }
+    it { is_expected.to be_a(Repositories::AppEventRepository) }
 
     it 'memoizes the instance' do
       expect(locator.app_event_repository).to eq(locator.app_event_repository)
@@ -129,19 +129,19 @@ describe CloudController::DependencyLocator do
   describe '#space_event_repository' do
     subject { locator.space_event_repository }
 
-    it { is_expected.to be_a(VCAP::CloudController::Repositories::SpaceEventRepository) }
+    it { is_expected.to be_a(Repositories::SpaceEventRepository) }
   end
 
   describe '#object_renderer' do
     it 'returns paginated collection renderer configured via config' do
-      eager_loader = instance_of(VCAP::CloudController::RestController::SecureEagerLoader)
-      serializer = instance_of(VCAP::CloudController::RestController::PreloadedObjectSerializer)
+      eager_loader = instance_of(RestController::SecureEagerLoader)
+      serializer = instance_of(RestController::PreloadedObjectSerializer)
       opts = { max_inline_relations_depth: 100_002 }
 
       TestConfig.override(renderer: opts)
 
       renderer = double('renderer')
-      expect(VCAP::CloudController::RestController::ObjectRenderer).
+      expect(RestController::ObjectRenderer).
         to receive(:new).
         with(eager_loader, serializer, opts).
         and_return(renderer)
@@ -152,8 +152,8 @@ describe CloudController::DependencyLocator do
 
   describe '#paginated_collection_renderer' do
     it 'returns paginated collection renderer configured via config' do
-      eager_loader = instance_of(VCAP::CloudController::RestController::SecureEagerLoader)
-      serializer = instance_of(VCAP::CloudController::RestController::PreloadedObjectSerializer)
+      eager_loader = instance_of(RestController::SecureEagerLoader)
+      serializer = instance_of(RestController::PreloadedObjectSerializer)
       opts = {
         max_results_per_page: 100_000,
         default_results_per_page: 100_001,
@@ -164,7 +164,7 @@ describe CloudController::DependencyLocator do
       TestConfig.override(renderer: opts)
 
       renderer = double('renderer')
-      expect(VCAP::CloudController::RestController::PaginatedCollectionRenderer).
+      expect(RestController::PaginatedCollectionRenderer).
         to receive(:new).
         with(eager_loader, serializer, opts).
         and_return(renderer)
@@ -175,8 +175,8 @@ describe CloudController::DependencyLocator do
 
   describe '#large_paginated_collection_renderer' do
     it 'returns paginated collection renderer configured via config with a max of 10,000 results per page' do
-      eager_loader = instance_of(VCAP::CloudController::RestController::SecureEagerLoader)
-      serializer = instance_of(VCAP::CloudController::RestController::PreloadedObjectSerializer)
+      eager_loader = instance_of(RestController::SecureEagerLoader)
+      serializer = instance_of(RestController::PreloadedObjectSerializer)
       opts = {
         max_results_per_page: 10,
         default_results_per_page: 100_001,
@@ -187,7 +187,7 @@ describe CloudController::DependencyLocator do
       TestConfig.override(renderer: opts)
 
       renderer = double('renderer')
-      expect(VCAP::CloudController::RestController::PaginatedCollectionRenderer).
+      expect(RestController::PaginatedCollectionRenderer).
         to receive(:new).
         with(eager_loader, serializer, opts.merge(max_results_per_page: 10_000)).
         and_return(renderer)
@@ -199,7 +199,7 @@ describe CloudController::DependencyLocator do
   describe '#username_populating_collection_renderer' do
     it 'returns paginated collection renderer with a UsernamePopulator transformer' do
       renderer = locator.username_populating_collection_renderer
-      expect(renderer.collection_transformer).to be_a(VCAP::CloudController::UsernamePopulator)
+      expect(renderer.collection_transformer).to be_a(UsernamePopulator)
     end
 
     it 'uses the username_lookup_uaa_client for the populator' do
@@ -213,7 +213,7 @@ describe CloudController::DependencyLocator do
   describe '#router_group_type_populating_collection_renderer' do
     it 'returns paginated collection renderer with a RouterGroupTypePopulator transformer' do
       renderer = locator.router_group_type_populating_collection_renderer
-      expect(renderer.collection_transformer).to be_a(VCAP::CloudController::RouterGroupTypePopulator)
+      expect(renderer.collection_transformer).to be_a(RouterGroupTypePopulator)
     end
 
     it 'uses the routing_api_client for the populator' do
@@ -261,7 +261,7 @@ describe CloudController::DependencyLocator do
 
       it 'returns a disabled client' do
         expect(locator.routing_api_client).
-          to be_an_instance_of(VCAP::CloudController::RoutingApi::DisabledClient)
+          to be_an_instance_of(RoutingApi::DisabledClient)
       end
     end
 
@@ -276,7 +276,7 @@ describe CloudController::DependencyLocator do
 
       client = locator.routing_api_client
 
-      expect(client).to be_an_instance_of(VCAP::CloudController::RoutingApi::Client)
+      expect(client).to be_an_instance_of(RoutingApi::Client)
       expect(client.token_issuer).to eq token_issuer
       expect(client.routing_api_uri.to_s).to eq(config[:routing_api][:url])
       expect(client.skip_cert_verify).to eq(config[:skip_cert_verify])
@@ -308,37 +308,37 @@ describe CloudController::DependencyLocator do
 
   describe '#nsync_client' do
     it 'returns the diego nsync listener client' do
-      expect(locator.nsync_client).to be_an_instance_of(VCAP::CloudController::Diego::NsyncClient)
+      expect(locator.nsync_client).to be_an_instance_of(::Diego::NsyncClient)
     end
   end
 
   describe '#stager_client' do
     it 'returns the diego stager client' do
-      expect(locator.stager_client).to be_an_instance_of(VCAP::CloudController::Diego::StagerClient)
+      expect(locator.stager_client).to be_an_instance_of(::Diego::StagerClient)
     end
   end
 
   describe '#tps_client' do
     it 'returns the diego tps client' do
-      expect(locator.tps_client).to be_an_instance_of(VCAP::CloudController::Diego::TPSClient)
+      expect(locator.tps_client).to be_an_instance_of(::Diego::TPSClient)
     end
   end
 
   describe '#stagers' do
     it 'returns the stagers' do
-      expect(locator.stagers).to be_an_instance_of(VCAP::CloudController::Stagers)
+      expect(locator.stagers).to be_an_instance_of(Stagers)
     end
   end
 
   describe '#runners' do
     it 'returns the runners' do
-      expect(locator.runners).to be_an_instance_of(VCAP::CloudController::Runners)
+      expect(locator.runners).to be_an_instance_of(Runners)
     end
   end
 
   describe '#instances_reporters' do
     it 'returns the instances reporters' do
-      expect(locator.instances_reporters).to be_an_instance_of(VCAP::CloudController::InstancesReporters)
+      expect(locator.instances_reporters).to be_an_instance_of(InstancesReporters)
     end
   end
 end

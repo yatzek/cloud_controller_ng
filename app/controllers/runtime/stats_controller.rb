@@ -1,4 +1,4 @@
-module VCAP::CloudController
+module CloudController
   class StatsController < RestController::ModelController
     def self.dependencies
       [:instances_reporters]

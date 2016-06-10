@@ -1,8 +1,8 @@
 require 'spec_helper'
 
 describe 'Apps' do
-  let(:user) { VCAP::CloudController::User.make }
-  let(:space) { VCAP::CloudController::Space.make }
+  let(:user) { User.make }
+  let(:space) { Space.make }
 
   before do
     space.organization.add_user(user)
@@ -11,7 +11,7 @@ describe 'Apps' do
 
   describe 'GET /v2/apps' do
     let!(:process) {
-      VCAP::CloudController::AppFactory.make(
+      AppFactory.make(
         space:            space,
         environment_json: { 'RAILS_ENV' => 'staging' },
         command:          'hello_world',
@@ -187,7 +187,7 @@ describe 'Apps' do
 
   describe 'GET /v2/apps/:guid' do
     let!(:process) {
-      VCAP::CloudController::App.make(
+      App.make(
         space: space,
         docker_credentials_json: { 'docker_user' => 'bob', 'docker_password' => 'password', 'docker_email' => 'blah@blah.com' }
       )
@@ -260,7 +260,7 @@ describe 'Apps' do
 
       post '/v2/apps', post_params, headers_for(user)
 
-      process = VCAP::CloudController::App.last
+      process = App.last
       expect(last_response.status).to eq(201)
       expect(MultiJson.load(last_response.body)).to be_a_response_like(
         {
@@ -317,7 +317,7 @@ describe 'Apps' do
 
   describe 'PUT /v2/apps/:guid' do
     let!(:process) {
-      VCAP::CloudController::AppFactory.make(
+      AppFactory.make(
         space:            space,
         name: 'mario',
         environment_json: { 'RAILS_ENV' => 'staging' },

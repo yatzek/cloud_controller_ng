@@ -18,8 +18,8 @@ resource 'Apps', type: [:api, :legacy_api] do
     }
   end
 
-  let(:space) { VCAP::CloudController::Space.make }
-  let(:app_obj) { VCAP::CloudController::AppFactory.make(space: space, droplet_hash: nil, package_state: 'PENDING') }
+  let(:space) { Space.make }
+  let(:app_obj) { AppFactory.make(space: space, droplet_hash: nil, package_state: 'PENDING') }
 
   authenticated_request
 
@@ -154,8 +154,8 @@ resource 'Apps', type: [:api, :legacy_api] do
   end
 
   post '/v2/apps/:guid/copy_bits' do
-    let(:src_app) { VCAP::CloudController::AppFactory.make }
-    let(:dest_app) { VCAP::CloudController::AppFactory.make }
+    let(:src_app) { AppFactory.make }
+    let(:dest_app) { AppFactory.make }
     let(:json_payload) { { source_app_guid: src_app.guid }.to_json }
 
     field :source_app_guid, 'The guid for the source app', required: true

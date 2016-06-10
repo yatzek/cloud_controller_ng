@@ -3,8 +3,8 @@ require 'rspec_api_documentation/dsl'
 
 resource 'Security Group Staging Defaults', type: [:api, :legacy_api] do
   let(:admin_auth_header) { admin_headers['HTTP_AUTHORIZATION'] }
-  let!(:sec_group) { VCAP::CloudController::SecurityGroup.make }
-  let!(:staging_default_sec_group) { VCAP::CloudController::SecurityGroup.make(staging_default: true) }
+  let!(:sec_group) { SecurityGroup.make }
+  let!(:staging_default_sec_group) { SecurityGroup.make(staging_default: true) }
 
   authenticated_request
 

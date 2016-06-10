@@ -1,4 +1,4 @@
-module VCAP::CloudController
+module CloudController
   class ServiceInstanceDeprovisioner
     def initialize(services_event_repository, access_validator, logger)
       @services_event_repository = services_event_repository
@@ -29,7 +29,7 @@ module VCAP::CloudController
     private
 
     def build_delete_job(service_instance, delete_action)
-      Jobs::DeleteActionJob.new(VCAP::CloudController::ServiceInstance, service_instance.guid, delete_action)
+      Jobs::DeleteActionJob.new(ServiceInstance, service_instance.guid, delete_action)
     end
 
     def build_audit_job(service_instance, deletion_job)

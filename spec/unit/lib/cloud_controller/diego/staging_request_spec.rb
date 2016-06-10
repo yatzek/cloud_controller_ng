@@ -1,12 +1,12 @@
 require 'spec_helper'
 require 'cloud_controller/diego/staging_request'
 
-module VCAP::CloudController::Diego
+module ::Diego
   describe StagingRequest do
     let(:app) do
-      a = VCAP::CloudController::App.make
+      a = App.make
       a.staging_task_id = 'staging-task-id'
-      a.stack = VCAP::CloudController::Stack.default
+      a.stack = Stack.default
       a.file_descriptors = 16384
       a.memory = 1024
       a.disk_quota = 4096

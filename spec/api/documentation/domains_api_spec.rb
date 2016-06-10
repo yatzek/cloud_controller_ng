@@ -3,7 +3,7 @@ require 'rspec_api_documentation/dsl'
 
 resource 'Domains (deprecated)', type: [:api, :legacy_api] do
   let(:admin_auth_header) { admin_headers['HTTP_AUTHORIZATION'] }
-  let!(:domain) { VCAP::CloudController::SharedDomain.make }
+  let!(:domain) { SharedDomain.make }
   let(:guid) { domain.guid }
 
   authenticated_request
@@ -14,7 +14,7 @@ resource 'Domains (deprecated)', type: [:api, :legacy_api] do
     field :wildcard, 'Allow routes with non-empty hosts', required: true, valid_values: [true, false]
     field :owning_organization_guid, 'The organization that owns the domain. If not specified, the domain is shared.', required: false
 
-    standard_model_list(:shared_domain, VCAP::CloudController::DomainsController, path: :domain)
+    standard_model_list(:shared_domain, CloudController::DomainsController, path: :domain)
     standard_model_get(:shared_domain, path: :domain)
     standard_model_delete(:domain)
 
@@ -31,7 +31,7 @@ resource 'Domains (deprecated)', type: [:api, :legacy_api] do
 
       context 'Creating a domain owned by an organization' do
         example 'Create a Domain owned by the given Organization' do
-          org_guid = VCAP::CloudController::Organization.make.guid
+          org_guid = Organization.make.guid
           payload = MultiJson.dump(
             {
               name:                     'exmaple.com',
@@ -54,12 +54,12 @@ resource 'Domains (deprecated)', type: [:api, :legacy_api] do
     field :guid, 'The guid of the Domain', required: true
 
     describe 'Spaces' do
-      let!(:domain) { VCAP::CloudController::PrivateDomain.make }
+      let!(:domain) { PrivateDomain.make }
       before do
-        VCAP::CloudController::Space.make(organization: domain.owning_organization)
+        Space.make(organization: domain.owning_organization)
       end
 
-      standard_model_list :space, VCAP::CloudController::SpacesController, outer_model: :domain
+      standard_model_list :space, CloudController::SpacesController, outer_model: :domain
     end
   end
 end

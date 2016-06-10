@@ -1,4 +1,2 @@
-module VCAP::CloudController
-  class SecurityGroupAccess < BaseAccess
-  end
+class SecurityGroupAccess < BaseAccess
 end

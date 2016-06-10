@@ -1,11 +1,11 @@
-module VCAP::CloudController
+module CloudController
   class SyslogDrainUrlsController < RestController::BaseController
     # Endpoint does its own basic auth
     allow_unauthenticated_access
 
     authenticate_basic_auth('/v2/syslog_drain_urls') do
-      [VCAP::CloudController::Config.config[:bulk_api][:auth_user],
-       VCAP::CloudController::Config.config[:bulk_api][:auth_password]]
+      [Config.config[:bulk_api][:auth_user],
+       Config.config[:bulk_api][:auth_password]]
     end
 
     get '/v2/syslog_drain_urls', :list

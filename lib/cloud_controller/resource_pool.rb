@@ -8,7 +8,7 @@ require 'fog'
 require 'httpclient'
 require 'steno'
 
-class VCAP::CloudController::ResourcePool
+class ResourcePool
   VALID_SHA_LENGTH = 40
 
   attr_accessor :minimum_size, :maximum_size

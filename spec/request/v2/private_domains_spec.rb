@@ -1,8 +1,8 @@
 require 'spec_helper'
 
 describe 'PrivateDomains' do
-  let(:user) { VCAP::CloudController::User.make }
-  let(:space) { VCAP::CloudController::Space.make }
+  let(:user) { User.make }
+  let(:space) { Space.make }
   let(:organization) { space.organization }
 
   before do
@@ -20,7 +20,7 @@ describe 'PrivateDomains' do
   end
 
   describe 'GET /v2/private_domains' do
-    let!(:domain) { VCAP::CloudController::PrivateDomain.make(name: 'my-domain.edu', router_group_guid: 'tcp-group', owning_organization: organization) }
+    let!(:domain) { PrivateDomain.make(name: 'my-domain.edu', router_group_guid: 'tcp-group', owning_organization: organization) }
 
     it 'lists all private domains' do
       get '/v2/private_domains', nil, headers_for(user)
@@ -56,7 +56,7 @@ describe 'PrivateDomains' do
   end
 
   describe 'GET /v2/private_domains/:guid' do
-    let!(:domain) { VCAP::CloudController::PrivateDomain.make(router_group_guid: 'tcp-group', owning_organization: organization) }
+    let!(:domain) { PrivateDomain.make(router_group_guid: 'tcp-group', owning_organization: organization) }
 
     it 'shows the private domain' do
       get "/v2/private_domains/#{domain.guid}", nil, admin_headers_for(user)
@@ -88,7 +88,7 @@ describe 'PrivateDomains' do
 
       expect(last_response.status).to be(201)
 
-      domain = VCAP::CloudController::PrivateDomain.last
+      domain = PrivateDomain.last
 
       parsed_response = MultiJson.load(last_response.body)
       expect(parsed_response).to be_a_response_like({
@@ -109,7 +109,7 @@ describe 'PrivateDomains' do
   end
 
   describe 'PUT /v2/private_domains/:guid' do
-    let!(:domain) { VCAP::CloudController::PrivateDomain.make(name: 'my-domain.edu', router_group_guid: 'tcp-group', owning_organization: organization) }
+    let!(:domain) { PrivateDomain.make(name: 'my-domain.edu', router_group_guid: 'tcp-group', owning_organization: organization) }
 
     it 'updates the private domain' do
       put "/v2/private_domains/#{domain.guid}", '{"name": "meow.com"}', admin_headers_for(user)
@@ -135,7 +135,7 @@ describe 'PrivateDomains' do
   end
 
   describe 'DELETE /v2/private_domains/:guid' do
-    let!(:domain) { VCAP::CloudController::PrivateDomain.make(name: 'my-domain.edu', router_group_guid: 'tcp-group', owning_organization: organization) }
+    let!(:domain) { PrivateDomain.make(name: 'my-domain.edu', router_group_guid: 'tcp-group', owning_organization: organization) }
 
     it 'deletes the private domain' do
       delete "/v2/private_domains/#{domain.guid}", nil, admin_headers_for(user)

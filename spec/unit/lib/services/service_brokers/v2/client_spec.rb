@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module VCAP::Services::ServiceBrokers::V2
   describe Client do
-    let(:service_broker) { VCAP::CloudController::ServiceBroker.make }
+    let(:service_broker) { ServiceBroker.make }
 
     let(:client_attrs) {
       {
@@ -79,11 +79,11 @@ module VCAP::Services::ServiceBrokers::V2
     end
 
     describe '#provision' do
-      let(:plan) { VCAP::CloudController::ServicePlan.make }
-      let(:space) { VCAP::CloudController::Space.make }
-      let(:service_instance_operation) { VCAP::CloudController::ServiceInstanceOperation.make }
+      let(:plan) { ServicePlan.make }
+      let(:space) { Space.make }
+      let(:service_instance_operation) { ServiceInstanceOperation.make }
       let(:instance) do
-        VCAP::CloudController::ManagedServiceInstance.make(
+        ManagedServiceInstance.make(
           service_plan: plan,
           space: space
         )
@@ -105,7 +105,7 @@ module VCAP::Services::ServiceBrokers::V2
       before do
         allow(http_client).to receive(:put).and_return(response)
         allow(http_client).to receive(:delete).and_return(response)
-        allow(VCAP::CloudController::SecurityContext).to receive(:current_user).and_return(developer)
+        allow(SecurityContext).to receive(:current_user).and_return(developer)
 
         instance.service_instance_operation = service_instance_operation
       end
@@ -325,10 +325,10 @@ module VCAP::Services::ServiceBrokers::V2
     end
 
     describe '#fetch_service_instance_state' do
-      let(:plan) { VCAP::CloudController::ServicePlan.make }
-      let(:space) { VCAP::CloudController::Space.make }
+      let(:plan) { ServicePlan.make }
+      let(:space) { Space.make }
       let(:instance) do
-        VCAP::CloudController::ManagedServiceInstance.make(
+        ManagedServiceInstance.make(
           service_plan: plan,
           space: space
         )
@@ -452,19 +452,19 @@ module VCAP::Services::ServiceBrokers::V2
     end
 
     describe '#update' do
-      let(:old_plan) { VCAP::CloudController::ServicePlan.make }
-      let(:new_plan) { VCAP::CloudController::ServicePlan.make }
+      let(:old_plan) { ServicePlan.make }
+      let(:new_plan) { ServicePlan.make }
 
-      let(:space) { VCAP::CloudController::Space.make }
+      let(:space) { Space.make }
       let(:last_operation) do
-        VCAP::CloudController::ServiceInstanceOperation.make(
+        ServiceInstanceOperation.make(
           type: 'create',
           state: 'succeeded'
         )
       end
 
       let(:instance) do
-        VCAP::CloudController::ManagedServiceInstance.make(
+        ManagedServiceInstance.make(
           service_plan: old_plan,
           space: space
         )
@@ -708,9 +708,9 @@ module VCAP::Services::ServiceBrokers::V2
     end
 
     describe '#create_service_key' do
-      let(:instance) { VCAP::CloudController::ManagedServiceInstance.make }
+      let(:instance) { ManagedServiceInstance.make }
       let(:key) do
-        VCAP::CloudController::ServiceKey.new(
+        ServiceKey.new(
           name: 'fake-service_key',
           service_instance: instance
         )
@@ -833,10 +833,10 @@ module VCAP::Services::ServiceBrokers::V2
     end
 
     describe '#bind' do
-      let(:instance) { VCAP::CloudController::ManagedServiceInstance.make }
-      let(:app) { VCAP::CloudController::App.make(space: instance.space) }
+      let(:instance) { ManagedServiceInstance.make }
+      let(:app) { App.make(space: instance.space) }
       let(:binding) do
-        VCAP::CloudController::ServiceBinding.new(
+        ServiceBinding.new(
           service_instance: instance,
           app: app
         )
@@ -910,7 +910,7 @@ module VCAP::Services::ServiceBrokers::V2
       end
 
       context 'when the binding does not have an app_guid' do
-        let(:binding) { VCAP::CloudController::RouteBinding.make }
+        let(:binding) { RouteBinding.make }
 
         it 'does not send the app_guid in the request' do
           client.bind(binding, arbitrary_parameters)
@@ -1011,9 +1011,9 @@ module VCAP::Services::ServiceBrokers::V2
       end
 
       context 'when binding fails' do
-        let(:instance) { VCAP::CloudController::ManagedServiceInstance.make }
+        let(:instance) { ManagedServiceInstance.make }
         let(:binding) do
-          VCAP::CloudController::ServiceBinding.make(
+          ServiceBinding.make(
             binding_options: { 'this' => 'that' }
           )
         end
@@ -1078,7 +1078,7 @@ module VCAP::Services::ServiceBrokers::V2
 
     describe '#unbind' do
       let(:binding) do
-        VCAP::CloudController::ServiceBinding.make(
+        ServiceBinding.make(
           binding_options: { 'this' => 'that' }
         )
       end
@@ -1142,7 +1142,7 @@ module VCAP::Services::ServiceBrokers::V2
     end
 
     describe '#deprovision' do
-      let(:instance) { VCAP::CloudController::ManagedServiceInstance.make }
+      let(:instance) { ManagedServiceInstance.make }
 
       let(:response_data) { {} }
 
@@ -1259,7 +1259,7 @@ module VCAP::Services::ServiceBrokers::V2
       end
 
       context 'when the broker returns an error' do
-        let(:instance) { VCAP::CloudController::ManagedServiceInstance.make }
+        let(:instance) { ManagedServiceInstance.make }
         let(:code) { '204' }
         let(:response_data) do
           { 'description' => 'Could not delete instance' }

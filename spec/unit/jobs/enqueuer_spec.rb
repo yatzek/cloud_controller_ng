@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-module VCAP::CloudController::Jobs
+module Jobs
   describe Enqueuer do
     describe '#enqueue' do
       let(:wrapped_job) { Runtime::DropletDeletion.new('one', 'two') }

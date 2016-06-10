@@ -47,7 +47,7 @@ module CloudFoundry
 
           middleware.call(env)
           expect(logger).to have_received(:info).with(
-            "CEF:#{cef_version}|cloud_foundry|cloud_controller_ng|#{VCAP::CloudController::Constants::API_VERSION}|" \
+            "CEF:#{cef_version}|cloud_foundry|cloud_controller_ng|#{Constants::API_VERSION}|" \
             "#{signature_id}|#{name}|" \
             "#{severity}|" \
             "rt=#{(Time.now.utc.to_f * 1000).to_i} " \
@@ -154,7 +154,7 @@ module CloudFoundry
           middleware.call(env)
 
           expect(logger).to have_received(:info).with(
-            "CEF:0|cloud_foundry|cloud_controller_ng|#{VCAP::CloudController::Constants::API_VERSION}|" \
+            "CEF:0|cloud_foundry|cloud_controller_ng|#{Constants::API_VERSION}|" \
             'a\|b pa\|th|a\|b pa\|th|' \
             '0|' \
             "rt=#{(Time.now.utc.to_f * 1000).to_i} " \
@@ -178,7 +178,7 @@ module CloudFoundry
           middleware.call(env)
 
           expect(logger).to have_received(:info).with(
-            "CEF:0|cloud_foundry|cloud_controller_ng|#{VCAP::CloudController::Constants::API_VERSION}|" \
+            "CEF:0|cloud_foundry|cloud_controller_ng|#{Constants::API_VERSION}|" \
             'a\\\\b pa\\\\th|a\\\\b pa\\\\th|' \
             '0|' \
             "rt=#{(Time.now.utc.to_f * 1000).to_i} " \
@@ -201,7 +201,7 @@ module CloudFoundry
           middleware.call(env)
 
           expect(logger).to have_received(:info).with(
-            "CEF:0|cloud_foundry|cloud_controller_ng|#{VCAP::CloudController::Constants::API_VERSION}|" \
+            "CEF:0|cloud_foundry|cloud_controller_ng|#{Constants::API_VERSION}|" \
             'request_method plain_path|request_method plain_path|' \
             '0|' \
             "rt=#{(Time.now.utc.to_f * 1000).to_i} " \
@@ -224,7 +224,7 @@ module CloudFoundry
           middleware.call(env)
 
           expect(logger).to have_received(:info).with(
-            "CEF:0|cloud_foundry|cloud_controller_ng|#{VCAP::CloudController::Constants::API_VERSION}|" \
+            "CEF:0|cloud_foundry|cloud_controller_ng|#{Constants::API_VERSION}|" \
             'request_method plain_path|request_method plain_path|' \
             '0|' \
             "rt=#{(Time.now.utc.to_f * 1000).to_i} " \

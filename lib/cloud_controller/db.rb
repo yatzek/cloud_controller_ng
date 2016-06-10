@@ -1,59 +1,57 @@
 require 'cloud_controller/db_migrator'
 
-module VCAP::CloudController
-  class DB
-    # Setup a Sequel connection pool
-    #
-    # @param [Logger]  Logger to pass to Sequel
-    #
-    # @option opts [String]  :database Database connection string
-    #
-    # @option opts [Symbol]  :log_level Steno log level
-    #
-    # @option opts  [Integer] :max_connections The maximum number of
-    # connections the connection pool will open (default 4)
-    #
-    # @option opts [Integer]  :pool_timeout The amount of seconds to wait to
-    # acquire a connection before raising a PoolTimeoutError (default 5)
-    #
-    # @return [Sequel::Database]
-    def self.connect(opts, logger)
-      connection_options = { sql_mode: [:strict_trans_tables, :strict_all_tables, :no_zero_in_date] }
-      [:max_connections, :pool_timeout].each do |key|
-        connection_options[key] = opts[key] if opts[key]
-      end
-
-      if opts[:database].index('mysql') == 0
-        connection_options[:charset] = 'utf8'
-      end
-
-      connection_options[:after_connect] = proc do |conn|
-        # time zone is a per connection setting, ensure it is set for each connection in the pool
-        if conn.class.to_s =~ /mysql/i
-          conn.query("SET time_zone = '+0:00'")
-        elsif conn.class.to_s =~ /postgres/i
-          conn.exec("SET time zone 'UTC'")
-        end
-      end
-
-      db = Sequel.connect(opts[:database], connection_options)
-      db.logger = logger
-      db.sql_log_level = :debug
-
-      if db.database_type == :mysql
-        Sequel::MySQL.default_collate = 'utf8_bin'
-      end
-
-      db
+class DB
+  # Setup a Sequel connection pool
+  #
+  # @param [Logger]  Logger to pass to Sequel
+  #
+  # @option opts [String]  :database Database connection string
+  #
+  # @option opts [Symbol]  :log_level Steno log level
+  #
+  # @option opts  [Integer] :max_connections The maximum number of
+  # connections the connection pool will open (default 4)
+  #
+  # @option opts [Integer]  :pool_timeout The amount of seconds to wait to
+  # acquire a connection before raising a PoolTimeoutError (default 5)
+  #
+  # @return [Sequel::Database]
+  def self.connect(opts, logger)
+    connection_options = { sql_mode: [:strict_trans_tables, :strict_all_tables, :no_zero_in_date] }
+    [:max_connections, :pool_timeout].each do |key|
+      connection_options[key] = opts[key] if opts[key]
     end
 
-    def self.load_models(db_config, logger)
-      db = connect(db_config, logger)
-      DBMigrator.new(db).check_migrations!
-
-      require 'models'
-      require 'delayed_job_sequel'
+    if opts[:database].index('mysql') == 0
+      connection_options[:charset] = 'utf8'
     end
+
+    connection_options[:after_connect] = proc do |conn|
+      # time zone is a per connection setting, ensure it is set for each connection in the pool
+      if conn.class.to_s =~ /mysql/i
+        conn.query("SET time_zone = '+0:00'")
+      elsif conn.class.to_s =~ /postgres/i
+        conn.exec("SET time zone 'UTC'")
+      end
+    end
+
+    db = Sequel.connect(opts[:database], connection_options)
+    db.logger = logger
+    db.sql_log_level = :debug
+
+    if db.database_type == :mysql
+      Sequel::MySQL.default_collate = 'utf8_bin'
+    end
+
+    db
+  end
+
+  def self.load_models(db_config, logger)
+    db = connect(db_config, logger)
+    DBMigrator.new(db).check_migrations!
+
+    require 'models'
+    require 'delayed_job_sequel'
   end
 end
 
@@ -68,7 +66,7 @@ Sequel::Model.plugin :validation_helpers
 Sequel::Database.extension(:current_datetime_timestamp)
 
 require 'cloud_controller/encryptor'
-Sequel::Model.include VCAP::CloudController::Encryptor::FieldEncryptor
+Sequel::Model.include Encryptor::FieldEncryptor
 
 # monkey patch sequel to make it easier to map validation failures to custom
 # exceptions, e.g.

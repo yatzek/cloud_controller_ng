@@ -1,8 +1,8 @@
 require 'spec_helper'
 
 describe 'Droplets' do
-  let(:space) { VCAP::CloudController::Space.make }
-  let(:app_model) { VCAP::CloudController::AppModel.make(space_guid: space.guid, name: 'my-app') }
+  let(:space) { Space.make }
+  let(:app_model) { AppModel.make(space_guid: space.guid, name: 'my-app') }
   let(:developer) { make_developer_for_space(space) }
   let(:developer_headers) { headers_for(developer) }
 
@@ -20,10 +20,10 @@ describe 'Droplets' do
       }
     end
     let!(:package) do
-      VCAP::CloudController::PackageModel.make(
+      PackageModel.make(
         app_guid: app_model.guid,
-        state:    VCAP::CloudController::PackageModel::READY_STATE,
-        type:     VCAP::CloudController::PackageModel::BITS_TYPE,
+        state:    PackageModel::READY_STATE,
+        type:     PackageModel::BITS_TYPE,
         url:      'hello.com'
       )
     end
@@ -56,7 +56,7 @@ describe 'Droplets' do
     it 'creates a droplet' do
       post "/v3/packages/#{package.guid}/droplets", create_request.to_json, json_headers(developer_headers)
 
-      created_droplet = VCAP::CloudController::DropletModel.last
+      created_droplet = DropletModel.last
 
       expected_response = {
         'guid'                  => created_droplet.guid,
@@ -103,7 +103,7 @@ describe 'Droplets' do
       expect(last_response.status).to eq(201)
       expect(parsed_response).to be_a_response_like(expected_response)
 
-      event = VCAP::CloudController::Event.last
+      event = Event.last
       expect(event.values).to include(
         type:              'audit.app.droplet.create',
         actee:             app_model.guid,
@@ -119,10 +119,10 @@ describe 'Droplets' do
 
   describe 'GET /v3/droplets/:guid' do
     let(:guid) { droplet_model.guid }
-    let(:package_model) { VCAP::CloudController::PackageModel.make(app_guid: app_model.guid) }
+    let(:package_model) { PackageModel.make(app_guid: app_model.guid) }
     let!(:droplet_model) do
-      VCAP::CloudController::DropletModel.make(
-        state:                       VCAP::CloudController::DropletModel::STAGED_STATE,
+      DropletModel.make(
+        state:                       DropletModel::STAGED_STATE,
         app_guid:                    app_model.guid,
         package_guid:                package_model.guid,
         buildpack_receipt_buildpack: 'http://buildpack.git.url.com',
@@ -150,7 +150,7 @@ describe 'Droplets' do
       expect(last_response.status).to eq(200)
       expect(parsed_response).to be_a_response_like({
         'guid'                  => droplet_model.guid,
-        'state'                 => VCAP::CloudController::DropletModel::STAGED_STATE,
+        'state'                 => DropletModel::STAGED_STATE,
         'error'                 => 'example error',
         'lifecycle'             => {
           'type' => 'buildpack',
@@ -181,7 +181,7 @@ describe 'Droplets' do
     end
 
     it 'redacts information for auditors' do
-      auditor = VCAP::CloudController::User.make
+      auditor = User.make
       space.organization.add_user(auditor)
       space.add_auditor(auditor)
 
@@ -197,16 +197,16 @@ describe 'Droplets' do
   end
 
   describe 'GET /v3/droplets' do
-    let(:buildpack) { VCAP::CloudController::Buildpack.make }
+    let(:buildpack) { Buildpack.make }
     let(:package_model) do
-      VCAP::CloudController::PackageModel.make(
+      PackageModel.make(
         app_guid: app_model.guid,
-        type:     VCAP::CloudController::PackageModel::BITS_TYPE
+        type:     PackageModel::BITS_TYPE
       )
     end
 
     let!(:droplet1) do
-      VCAP::CloudController::DropletModel.make(
+      DropletModel.make(
         app_guid:                         app_model.guid,
         created_at:                       Time.at(1),
         package_guid:                     package_model.guid,
@@ -219,14 +219,14 @@ describe 'Droplets' do
       )
     end
     let!(:droplet2) do
-      VCAP::CloudController::DropletModel.make(
+      DropletModel.make(
         app_guid:                     app_model.guid,
         created_at:                   Time.at(2),
         package_guid:                 package_model.guid,
         droplet_hash:                 'my-hash',
         buildpack_receipt_buildpack:  'http://buildpack.git.url.com',
         buildpack_receipt_stack_name: 'stack-2',
-        state:                        VCAP::CloudController::DropletModel::STAGED_STATE,
+        state:                        DropletModel::STAGED_STATE,
         process_types:                { 'web' => 'started' },
         staging_memory_in_mb:         123,
         staging_disk_in_mb:           456,
@@ -260,7 +260,7 @@ describe 'Droplets' do
         'resources' => [
           {
             'guid'                  => droplet2.guid,
-            'state'                 => VCAP::CloudController::DropletModel::STAGED_STATE,
+            'state'                 => DropletModel::STAGED_STATE,
             'error'                 => 'example-error',
             'lifecycle'             => {
               'type' => 'buildpack',
@@ -290,7 +290,7 @@ describe 'Droplets' do
           },
           {
             'guid'                  => droplet1.guid,
-            'state'                 => VCAP::CloudController::DropletModel::STAGING_STATE,
+            'state'                 => DropletModel::STAGING_STATE,
             'error'                 => 'example-error',
             'lifecycle'             => {
               'type' => 'buildpack',
@@ -318,7 +318,7 @@ describe 'Droplets' do
     end
 
     context 'when a droplet does not have a buildpack lifecycle' do
-      let!(:droplet_without_lifecycle) { VCAP::CloudController::DropletModel.make(:buildpack, package_guid: VCAP::CloudController::PackageModel.make.guid) }
+      let!(:droplet_without_lifecycle) { DropletModel.make(:buildpack, package_guid: PackageModel.make.guid) }
 
       it 'is excluded' do
         get '/v3/droplets', nil, developer_headers
@@ -327,11 +327,11 @@ describe 'Droplets' do
     end
 
     context 'faceted list' do
-      let(:space2) { VCAP::CloudController::Space.make }
-      let(:app_model2) { VCAP::CloudController::AppModel.make(space: space) }
-      let(:app_model3) { VCAP::CloudController::AppModel.make(space: space2) }
-      let!(:droplet3) { VCAP::CloudController::DropletModel.make(app: app_model2, state: VCAP::CloudController::DropletModel::PENDING_STATE) }
-      let!(:droplet4) { VCAP::CloudController::DropletModel.make(app: app_model3, state: VCAP::CloudController::DropletModel::PENDING_STATE) }
+      let(:space2) { Space.make }
+      let(:app_model2) { AppModel.make(space: space) }
+      let(:app_model3) { AppModel.make(space: space2) }
+      let!(:droplet3) { DropletModel.make(app: app_model2, state: DropletModel::PENDING_STATE) }
+      let!(:droplet4) { DropletModel.make(app: app_model3, state: DropletModel::PENDING_STATE) }
 
       it 'filters by states' do
         get '/v3/droplets?states=STAGED,PENDING', nil, developer_headers
@@ -429,28 +429,28 @@ describe 'Droplets' do
   end
 
   describe 'DELETE /v3/droplets/:guid' do
-    let!(:droplet) { VCAP::CloudController::DropletModel.make(:buildpack, app_guid: app_model.guid) }
+    let!(:droplet) { DropletModel.make(:buildpack, app_guid: app_model.guid) }
 
     it 'deletes a droplet' do
       expect {
         delete "/v3/droplets/#{droplet.guid}", nil, developer_headers
-      }.to change { VCAP::CloudController::DropletModel.count }.by(-1)
+      }.to change { DropletModel.count }.by(-1)
       expect(last_response.status).to eq(204)
-      expect(VCAP::CloudController::DropletModel.find(guid: droplet.guid)).to be_nil
+      expect(DropletModel.find(guid: droplet.guid)).to be_nil
     end
   end
 
   describe 'GET /v3/apps/:guid/droplets' do
-    let(:buildpack) { VCAP::CloudController::Buildpack.make }
+    let(:buildpack) { Buildpack.make }
     let(:package_model) do
-      VCAP::CloudController::PackageModel.make(
+      PackageModel.make(
         app_guid: app_model.guid,
-        type:     VCAP::CloudController::PackageModel::BITS_TYPE
+        type:     PackageModel::BITS_TYPE
       )
     end
 
     let!(:droplet1) do
-      VCAP::CloudController::DropletModel.make(
+      DropletModel.make(
         app_guid:                         app_model.guid,
         created_at:                       Time.at(1),
         package_guid:                     package_model.guid,
@@ -460,18 +460,18 @@ describe 'Droplets' do
         environment_variables:            { 'yuu' => 'huuu' },
         staging_disk_in_mb:               235,
         error:                            'example-error',
-        state:                            VCAP::CloudController::DropletModel::PENDING_STATE,
+        state:                            DropletModel::PENDING_STATE,
       )
     end
     let!(:droplet2) do
-      VCAP::CloudController::DropletModel.make(
+      DropletModel.make(
         app_guid:                     app_model.guid,
         created_at:                   Time.at(2),
         package_guid:                 package_model.guid,
         droplet_hash:                 'my-hash',
         buildpack_receipt_buildpack:  'http://buildpack.git.url.com',
         buildpack_receipt_stack_name: 'stack-2',
-        state:                        VCAP::CloudController::DropletModel::STAGED_STATE,
+        state:                        DropletModel::STAGED_STATE,
         process_types:                { 'web' => 'started' },
         staging_memory_in_mb:         123,
         staging_disk_in_mb:           456,
@@ -524,7 +524,7 @@ describe 'Droplets' do
         'resources' => [
           {
             'guid'                  => droplet2.guid,
-            'state'                 => VCAP::CloudController::DropletModel::STAGED_STATE,
+            'state'                 => DropletModel::STAGED_STATE,
             'error'                 => 'example-error',
             'lifecycle'             => {
               'type' => 'buildpack',
@@ -554,7 +554,7 @@ describe 'Droplets' do
           },
           {
             'guid'                  => droplet1.guid,
-            'state'                 => VCAP::CloudController::DropletModel::PENDING_STATE,
+            'state'                 => DropletModel::PENDING_STATE,
             'error'                 => 'example-error',
             'lifecycle'             => {
               'type' => 'buildpack',
@@ -583,16 +583,16 @@ describe 'Droplets' do
   end
 
   describe 'GET /v3/packages/:guid/droplets' do
-    let(:buildpack) { VCAP::CloudController::Buildpack.make }
+    let(:buildpack) { Buildpack.make }
     let(:package_model) do
-      VCAP::CloudController::PackageModel.make(
+      PackageModel.make(
         app_guid: app_model.guid,
-        type:     VCAP::CloudController::PackageModel::BITS_TYPE
+        type:     PackageModel::BITS_TYPE
       )
     end
 
     let!(:droplet1) do
-      VCAP::CloudController::DropletModel.make(
+      DropletModel.make(
         app_guid:                         app_model.guid,
         created_at:                       Time.at(1),
         package_guid:                     package_model.guid,
@@ -602,19 +602,19 @@ describe 'Droplets' do
         environment_variables:            { 'yuu' => 'huuu' },
         staging_disk_in_mb:               235,
         error:                            'example-error',
-        state:                            VCAP::CloudController::DropletModel::PENDING_STATE,
+        state:                            DropletModel::PENDING_STATE,
       )
     end
 
     let!(:droplet2) do
-      VCAP::CloudController::DropletModel.make(
+      DropletModel.make(
         app_guid:                     app_model.guid,
         created_at:                   Time.at(2),
         package_guid:                 package_model.guid,
         droplet_hash:                 'my-hash',
         buildpack_receipt_buildpack:  'http://buildpack.git.url.com',
         buildpack_receipt_stack_name: 'stack-2',
-        state:                        VCAP::CloudController::DropletModel::STAGED_STATE,
+        state:                        DropletModel::STAGED_STATE,
         process_types:                { 'web' => 'started' },
         staging_memory_in_mb:         123,
         staging_disk_in_mb:           456,
@@ -667,7 +667,7 @@ describe 'Droplets' do
         'resources' => [
           {
             'guid'                  => droplet2.guid,
-            'state'                 => VCAP::CloudController::DropletModel::STAGED_STATE,
+            'state'                 => DropletModel::STAGED_STATE,
             'error'                 => 'example-error',
             'lifecycle'             => {
               'type' => 'buildpack',
@@ -697,7 +697,7 @@ describe 'Droplets' do
           },
           {
             'guid'                  => droplet1.guid,
-            'state'                 => VCAP::CloudController::DropletModel::PENDING_STATE,
+            'state'                 => DropletModel::PENDING_STATE,
             'error'                 => 'example-error',
             'lifecycle'             => {
               'type' => 'buildpack',
@@ -726,11 +726,11 @@ describe 'Droplets' do
   end
 
   describe 'POST /v3/droplets/:guid/copy' do
-    let(:new_app) { VCAP::CloudController::AppModel.make(space_guid: space.guid) }
-    let(:package_model) { VCAP::CloudController::PackageModel.make(app_guid: app_model.guid) }
+    let(:new_app) { AppModel.make(space_guid: space.guid) }
+    let(:package_model) { PackageModel.make(app_guid: app_model.guid) }
     let!(:og_droplet) do
-      VCAP::CloudController::DropletModel.make(
-        state:                       VCAP::CloudController::DropletModel::STAGED_STATE,
+      DropletModel.make(
+        state:                       DropletModel::STAGED_STATE,
         app_guid:                    app_model.guid,
         package_guid:                package_model.guid,
         buildpack_receipt_buildpack: 'http://buildpack.git.url.com',
@@ -759,12 +759,12 @@ describe 'Droplets' do
       post "/v3/droplets/#{og_droplet.guid}/copy", copy_request_json, json_headers(developer_headers)
 
       parsed_response = MultiJson.load(last_response.body)
-      copied_droplet = VCAP::CloudController::DropletModel.last
+      copied_droplet = DropletModel.last
 
       expect(last_response.status).to eq(201)
       expect(parsed_response).to be_a_response_like({
         'guid'                  => copied_droplet.guid,
-        'state'                 => VCAP::CloudController::DropletModel::PENDING_STATE,
+        'state'                 => DropletModel::PENDING_STATE,
         'error'                 => nil,
         'lifecycle'             => {
           'type' => 'buildpack',

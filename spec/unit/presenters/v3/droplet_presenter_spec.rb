@@ -1,12 +1,12 @@
 require 'spec_helper'
 require 'presenters/v3/droplet_presenter'
 
-module VCAP::CloudController::Presenters::V3
+module Presenters::V3
   describe DropletPresenter do
     let(:droplet) do
-      VCAP::CloudController::DropletModel.make(
+      DropletModel.make(
         :buildpack,
-        state:                 VCAP::CloudController::DropletModel::STAGED_STATE,
+        state:                 DropletModel::STAGED_STATE,
         error:                 'example error',
         process_types:         { 'web' => 'npm start', 'worker' => 'start worker' },
         environment_variables: { 'elastic' => 'runtime' },
@@ -65,7 +65,7 @@ module VCAP::CloudController::Presenters::V3
         describe 'result' do
           context 'when droplet is in a "complete" state' do
             before do
-              droplet.state = VCAP::CloudController::DropletModel::COMPLETED_STATES.first
+              droplet.state = DropletModel::COMPLETED_STATES.first
               droplet.save
             end
 
@@ -77,7 +77,7 @@ module VCAP::CloudController::Presenters::V3
 
           context 'when droplet is NOT in a "complete" state' do
             before do
-              droplet.state = VCAP::CloudController::DropletModel::PENDING_STATE
+              droplet.state = DropletModel::PENDING_STATE
               droplet.save
             end
 
@@ -94,7 +94,7 @@ module VCAP::CloudController::Presenters::V3
 
           describe 'links' do
             context 'when the buildpack is an admin buildpack' do
-              let(:droplet) { VCAP::CloudController::DropletModel.make(:buildpack, buildpack_receipt_buildpack_guid: 'some-guid') }
+              let(:droplet) { DropletModel.make(:buildpack, buildpack_receipt_buildpack_guid: 'some-guid') }
 
               it 'links to the buildpack' do
                 expect(result[:links][:buildpack][:href]).to eq('/v2/buildpacks/some-guid')
@@ -102,7 +102,7 @@ module VCAP::CloudController::Presenters::V3
             end
 
             context 'when the buildpack is not an admin buildpack' do
-              let(:droplet) { VCAP::CloudController::DropletModel.make(:buildpack) }
+              let(:droplet) { DropletModel.make(:buildpack) }
 
               it 'links to nil' do
                 expect(result[:links][:buildpack]).to be_nil
@@ -110,7 +110,7 @@ module VCAP::CloudController::Presenters::V3
             end
 
             context 'when there is no package guid' do
-              let(:droplet) { VCAP::CloudController::DropletModel.make(:buildpack, package_guid: nil) }
+              let(:droplet) { DropletModel.make(:buildpack, package_guid: nil) }
 
               it 'links to nil' do
                 expect(result[:links][:package]).to be nil
@@ -122,9 +122,9 @@ module VCAP::CloudController::Presenters::V3
 
       context 'docker lifecycle' do
         let(:droplet) do
-          VCAP::CloudController::DropletModel.make(
+          DropletModel.make(
             :docker,
-            state: VCAP::CloudController::DropletModel::STAGED_STATE
+            state: DropletModel::STAGED_STATE
           )
         end
 

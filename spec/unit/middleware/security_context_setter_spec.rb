@@ -12,7 +12,7 @@ module CloudFoundry
         }
       end
       let(:token_decoder) { instance_double(VCAP::UaaTokenDecoder) }
-      let(:security_context_configurer) { VCAP::CloudController::Security::SecurityContextConfigurer.new(token_decoder) }
+      let(:security_context_configurer) { Security::SecurityContextConfigurer.new(token_decoder) }
 
       describe '#call' do
         let(:token_information) { { 'user_id' => 'user-id-1', 'user_name' => 'mrpotato' } }
@@ -23,8 +23,8 @@ module CloudFoundry
 
         it 'sets the security context token and the raw token' do
           middleware.call(env)
-          expect(VCAP::CloudController::SecurityContext.token).to eq(token_information)
-          expect(VCAP::CloudController::SecurityContext.auth_token).to eq('auth-token')
+          expect(SecurityContext.token).to eq(token_information)
+          expect(SecurityContext.auth_token).to eq('auth-token')
         end
 
         it 'sets user name and guid on the env' do

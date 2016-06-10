@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 describe CustomBuildpackPolicy do
-  let(:app) { VCAP::CloudController::AppFactory.make }
+  let(:app) { AppFactory.make }
   let(:buildpack) { double('build') }
 
   subject(:validator) { CustomBuildpackPolicy.new(app, custom_buildpacks_enabled) }

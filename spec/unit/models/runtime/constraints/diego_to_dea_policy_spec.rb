@@ -8,9 +8,9 @@ describe DiegoToDeaPolicy do
       ports: [8081, 8082]
     }
   end
-  let(:app) { VCAP::CloudController::AppFactory.make(app_hash) }
-  let(:route) { VCAP::CloudController::Route.make(host: 'host', space: app.space) }
-  let(:route2) { VCAP::CloudController::Route.make(host: 'host', space: app.space) }
+  let(:app) { AppFactory.make(app_hash) }
+  let(:route) { Route.make(host: 'host', space: app.space) }
+  let(:route2) { Route.make(host: 'host', space: app.space) }
   let(:validator) { DiegoToDeaPolicy.new(app, true) }
 
   context 'app with no route mappings' do
@@ -24,8 +24,8 @@ describe DiegoToDeaPolicy do
   end
 
   context 'app with multiple ports but only one port mapped' do
-    let!(:route_mapping_1) { VCAP::CloudController::RouteMapping.make(app: app, route: route) }
-    let!(:route_mapping_2) { VCAP::CloudController::RouteMapping.make(app: app, route: route2) }
+    let!(:route_mapping_1) { RouteMapping.make(app: app, route: route) }
+    let!(:route_mapping_2) { RouteMapping.make(app: app, route: route2) }
 
     before do
       app.diego = false
@@ -37,8 +37,8 @@ describe DiegoToDeaPolicy do
   end
 
   context 'app with multiple route mappings' do
-    let!(:route_mapping_1) { VCAP::CloudController::RouteMapping.make(app: app, route: route) }
-    let!(:route_mapping_2) { VCAP::CloudController::RouteMapping.make(app: app, route: route2) }
+    let!(:route_mapping_1) { RouteMapping.make(app: app, route: route) }
+    let!(:route_mapping_2) { RouteMapping.make(app: app, route: route2) }
 
     before do
       route_mapping_2.app_port = 8082

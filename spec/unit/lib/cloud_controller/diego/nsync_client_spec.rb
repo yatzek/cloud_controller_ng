@@ -1,10 +1,10 @@
 require 'spec_helper'
 require 'cloud_controller/diego/v3/protocol/task_protocol'
 
-module VCAP::CloudController::Diego
+module ::Diego
   describe NsyncClient do
     let(:content_type_header) { { 'Content-Type' => 'application/json' } }
-    let(:app) { VCAP::CloudController::AppFactory.make }
+    let(:app) { AppFactory.make }
     let(:process_guid) { ProcessGuid.from_process(app) }
     let(:desire_message) { MultiJson.dump({ process_guid: process_guid }) }
     let(:config) { TestConfig.config }
@@ -184,8 +184,8 @@ module VCAP::CloudController::Diego
 
     describe '#desire_task' do
       let(:content_type_header) { { 'Content-Type' => 'application/json' } }
-      let(:droplet) { VCAP::CloudController::DropletModel.make(droplet_hash: 'some-fake-key') }
-      let(:task) { VCAP::CloudController::TaskModel.make(droplet: droplet, state: 'PENDING') }
+      let(:droplet) { DropletModel.make(droplet_hash: 'some-fake-key') }
+      let(:task) { TaskModel.make(droplet: droplet, state: 'PENDING') }
       let(:config) { {} }
       let(:client_url) { "#{config[:diego_nsync_url]}/v1/tasks" }
 
@@ -208,11 +208,11 @@ module VCAP::CloudController::Diego
             internal_service_hostname: 'hostname'
           }
         end
-        let(:protocol) { instance_double(VCAP::CloudController::Diego::V3::Protocol::TaskProtocol) }
+        let(:protocol) { instance_double(::Diego::V3::Protocol::TaskProtocol) }
         let(:desired_message) { MultiJson.dump({ process_guid: 'process-guid' }) }
 
         before do
-          allow(VCAP::CloudController::Diego::V3::Protocol::TaskProtocol).to receive(:new).and_return(protocol)
+          allow(::Diego::V3::Protocol::TaskProtocol).to receive(:new).and_return(protocol)
           allow(protocol).to receive(:task_request).and_return(desired_message)
           stub_request(:post, client_url).to_return(status: 202, body: '')
         end
@@ -256,14 +256,14 @@ module VCAP::CloudController::Diego
 
     describe '#cancel_task' do
       let(:content_type_header) { { 'Content-Type' => 'application/json' } }
-      let(:task) { VCAP::CloudController::TaskModel.make(state: VCAP::CloudController::TaskModel::CANCELING_STATE) }
+      let(:task) { TaskModel.make(state: TaskModel::CANCELING_STATE) }
       let(:config) { {} }
       let(:client_url) { "#{config[:diego_nsync_url]}/v1/tasks/#{task.guid}" }
 
       context 'when the config is missing a diego task url' do
         it 'leaves the state as CANCELING and returns an error' do
           expect { client.cancel_task(task) }.to raise_error CloudController::Errors::ApiError, /Diego Task URL does not exist/
-          expect(task.state).to eq(VCAP::CloudController::TaskModel::CANCELING_STATE)
+          expect(task.state).to eq(TaskModel::CANCELING_STATE)
         end
       end
 
@@ -285,7 +285,7 @@ module VCAP::CloudController::Diego
 
         it 'keeps the task state as CANCELING' do
           expect { client.cancel_task(task) }.not_to raise_error
-          expect(task.state).to eq(VCAP::CloudController::TaskModel::CANCELING_STATE)
+          expect(task.state).to eq(TaskModel::CANCELING_STATE)
         end
 
         it 'sends the proper DELETE request to nsync' do

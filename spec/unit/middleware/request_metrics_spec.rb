@@ -6,7 +6,7 @@ module CloudFoundry
     describe RequestMetrics do
       let(:middleware) { described_class.new(app, request_metrics) }
       let(:app) { double(:app, call: [200, {}, 'a body']) }
-      let(:request_metrics) { instance_double(VCAP::CloudController::Metrics::RequestMetrics, start_request: nil, complete_request: nil) }
+      let(:request_metrics) { instance_double(Metrics::RequestMetrics, start_request: nil, complete_request: nil) }
 
       describe 'handling the request' do
         it 'calls start request on request metrics before the request' do

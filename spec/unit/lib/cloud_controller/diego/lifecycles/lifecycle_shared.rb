@@ -1,5 +1,5 @@
 shared_examples_for 'a lifecycle' do
-  let(:droplet) { VCAP::CloudController::DropletModel.make }
+  let(:droplet) { DropletModel.make }
 
   it 'creates a lifecycle data model' do
     expect {
@@ -16,7 +16,7 @@ shared_examples_for 'a lifecycle' do
   end
 
   it 'provides a staging message' do
-    expect(subject.staging_message).to be_a(VCAP::CloudController::DropletCreateMessage)
+    expect(subject.staging_message).to be_a(DropletCreateMessage)
   end
 
   it 'provides validations' do

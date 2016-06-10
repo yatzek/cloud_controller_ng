@@ -1,4 +1,4 @@
-module VCAP::CloudController
+module CloudController
   class UsersController < RestController::ModelController
     def self.dependencies
       [:username_populating_collection_renderer]

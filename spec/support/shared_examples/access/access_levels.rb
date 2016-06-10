@@ -36,9 +36,9 @@ end
 
 shared_context :admin_setup do
   before do
-    token = { 'scope' => [::VCAP::CloudController::Roles::CLOUD_CONTROLLER_ADMIN_SCOPE] }
-    VCAP::CloudController::SecurityContext.set(user, token)
+    token = { 'scope' => [::Roles::CLOUD_CONTROLLER_ADMIN_SCOPE] }
+    SecurityContext.set(user, token)
   end
 
-  after { VCAP::CloudController::SecurityContext.clear }
+  after { SecurityContext.clear }
 end

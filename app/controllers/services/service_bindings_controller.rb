@@ -1,7 +1,7 @@
 require 'services/api'
 require 'controllers/services/lifecycle/service_instance_binding_manager'
 
-module VCAP::CloudController
+module CloudController
   class ServiceBindingsController < RestController::ModelController
     define_attributes do
       to_one :app

@@ -1,4 +1,2 @@
-module VCAP::CloudController
-  class QuotaDefinitionAccess < BaseAccess
-  end
+class QuotaDefinitionAccess < BaseAccess
 end

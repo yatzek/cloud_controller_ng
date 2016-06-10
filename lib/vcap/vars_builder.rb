@@ -16,7 +16,7 @@ module VCAP
     end
 
     def to_hash
-      if @process.class == VCAP::CloudController::AppModel
+      if @process.class == AppModel
         app_name = @process.name
         uris = @process.routes.map(&:fqdn)
       else

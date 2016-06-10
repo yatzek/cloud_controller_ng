@@ -1,9 +1,9 @@
 require 'spec_helper'
 
-module VCAP::CloudController::Diego
+module ::Diego
   describe TPSClient do
-    let(:app) { VCAP::CloudController::AppFactory.make }
-    let(:app2) { VCAP::CloudController::AppFactory.make }
+    let(:app) { AppFactory.make }
+    let(:app2) { AppFactory.make }
 
     let(:process_guid) { "#{app.guid}-#{app.version}" }
     let(:process_guid2) { "#{app2.guid}-#{app2.version}" }
@@ -99,7 +99,7 @@ module VCAP::CloudController::Diego
     describe 'fetching lrp stats' do
       context 'when there is a tps stats url is configured' do
         before do
-          allow(VCAP::CloudController::SecurityContext).to receive(:auth_token).and_return('my-token')
+          allow(SecurityContext).to receive(:auth_token).and_return('my-token')
         end
 
         context 'and the first attempt returns instance info with stats' do

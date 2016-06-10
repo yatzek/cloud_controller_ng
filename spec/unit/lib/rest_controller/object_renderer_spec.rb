@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-module VCAP::CloudController::RestController
+module RestController
   describe ObjectRenderer do
     subject(:renderer) { described_class.new(eager_loader, serializer, renderer_opts) }
     let(:eager_loader) { SecureEagerLoader.new }
@@ -8,10 +8,10 @@ module VCAP::CloudController::RestController
     let(:renderer_opts) { { max_inline_relations_depth: 100_000 } }
 
     describe '#render_json' do
-      let(:controller) { VCAP::CloudController::TestModelSecondLevelsController }
+      let(:controller) { TestModelSecondLevelsController }
       let(:opts) { {} }
 
-      let(:instance) { VCAP::CloudController::TestModelSecondLevel.make }
+      let(:instance) { TestModelSecondLevel.make }
 
       context 'when asked inline_relations_depth is more than max inline_relations_depth' do
         before { renderer_opts.merge!(max_inline_relations_depth: 10) }

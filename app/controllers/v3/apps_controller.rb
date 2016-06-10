@@ -49,7 +49,7 @@ class AppsV3Controller < ApplicationController
     space_not_found! unless can_read?(space.guid, space.organization_guid)
     unauthorized! unless can_write?(message.space_guid)
 
-    if message.lifecycle_type == VCAP::CloudController::PackageModel::DOCKER_TYPE
+    if message.lifecycle_type == PackageModel::DOCKER_TYPE
       FeatureFlag.raise_unless_enabled!('diego_docker')
     end
 

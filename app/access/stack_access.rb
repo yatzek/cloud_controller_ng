@@ -1,4 +1,2 @@
-module VCAP::CloudController
-  class StackAccess < BaseAccess
-  end
+class StackAccess < BaseAccess
 end

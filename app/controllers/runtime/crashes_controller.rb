@@ -1,4 +1,4 @@
-module VCAP::CloudController
+module CloudController
   class CrashesController < RestController::ModelController
     def self.dependencies
       [:instances_reporters]

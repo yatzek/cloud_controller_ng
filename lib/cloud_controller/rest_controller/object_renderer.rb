@@ -1,6 +1,6 @@
 require 'addressable/uri'
 
-module VCAP::CloudController::RestController
+module RestController
   class ObjectRenderer
     def initialize(eager_loader, serializer, opts)
       @eager_loader = eager_loader
@@ -64,8 +64,8 @@ module VCAP::CloudController::RestController
     private
 
     def default_visibility_filter
-      user = VCAP::CloudController::SecurityContext.current_user
-      admin = VCAP::CloudController::SecurityContext.admin?
+      user = SecurityContext.current_user
+      admin = SecurityContext.admin?
       proc { |ds| ds.filter(ds.model.user_visibility(user, admin)) }
     end
   end

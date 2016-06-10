@@ -63,7 +63,7 @@ class PackagesController < ApplicationController
     unprocessable!('Package type must be bits.') unless package.type == 'bits'
     unprocessable!('Package has no bits to download.') unless package.state == 'READY'
 
-    VCAP::CloudController::Repositories::PackageEventRepository.record_app_package_download(
+    Repositories::PackageEventRepository.record_app_package_download(
       package,
       current_user.guid,
       current_user_email,
@@ -140,6 +140,6 @@ class PackagesController < ApplicationController
 
   def send_package_blob(package)
     package_blobstore = CloudController::DependencyLocator.instance.package_blobstore
-    BlobDispatcher.new(blobstore: package_blobstore, controller: self).send_or_redirect(guid: package.guid)
+    CloudController::BlobDispatcher.new(blobstore: package_blobstore, controller: self).send_or_redirect(guid: package.guid)
   end
 end

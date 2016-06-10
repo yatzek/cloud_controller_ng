@@ -1,6 +1,6 @@
 require 'presenters/api/job_presenter'
 
-module VCAP::CloudController::RestController
+module RestController
   # Wraps models and presents collection and per object rest end points
   class ModelController < BaseController
     include Routes
@@ -123,7 +123,7 @@ module VCAP::CloudController::RestController
 
       associated_model = obj.class.association_reflection(name).associated_class
 
-      associated_controller = VCAP::CloudController.controller_from_model_name(associated_model)
+      associated_controller = CloudController.controller_from_model_name(associated_model)
 
       associated_path = "#{self.class.url_for_guid(guid)}/#{name}"
 
@@ -133,7 +133,7 @@ module VCAP::CloudController::RestController
         Query.filtered_dataset_from_query_params(
           associated_model,
           obj.user_visible_relationship_dataset(name,
-                                                VCAP::CloudController::SecurityContext.current_user,
+                                                SecurityContext.current_user,
                                                 SecurityContext.admin?),
           associated_controller.query_parameters,
           @opts
@@ -259,7 +259,7 @@ module VCAP::CloudController::RestController
 
     def enumerate_dataset
       qp = self.class.query_parameters
-      visible_objects = model.user_visible(VCAP::CloudController::SecurityContext.current_user, SecurityContext.admin?)
+      visible_objects = model.user_visible(SecurityContext.current_user, SecurityContext.admin?)
       filtered_objects = filter_dataset(visible_objects)
       get_filtered_dataset_for_enumeration(model, filtered_objects, qp, @opts)
     end
@@ -307,7 +307,7 @@ module VCAP::CloudController::RestController
     end
 
     class << self
-      include VCAP::CloudController
+      include VCAP::RestAPI
 
       attr_accessor :attributes
       attr_accessor :to_many_relationships
@@ -334,7 +334,7 @@ module VCAP::CloudController::RestController
       # @return [Sequel::Model] The class of the model associated with
       # this rest endpoint.
       def model(name=nil)
-        @model ||= VCAP::CloudController.const_get(model_class_name(name))
+        @model ||= const_get(model_class_name(name))
       end
 
       # Get and set the model class name associated with this rest/api endpoint.

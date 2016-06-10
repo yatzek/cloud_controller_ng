@@ -1,10 +1,9 @@
 require 'cloud_controller/blobstore/client'
 require 'cloud_controller/dependency_locator'
 
-module VCAP::CloudController
   module Jobs
     module Runtime
-      class AppBitsPacker < VCAP::CloudController::Jobs::CCJob
+      class AppBitsPacker < Jobs::CCJob
         attr_accessor :app_guid, :uploaded_compressed_path, :fingerprints
 
         def initialize(app_guid, uploaded_compressed_path, fingerprints)
@@ -16,7 +15,7 @@ module VCAP::CloudController
         def perform
           logger.info("Packing the app bits for app '#{app_guid}'")
 
-          app = VCAP::CloudController::App.find(guid: app_guid)
+          app = App.find(guid: app_guid)
 
           if app.nil?
             logger.error("App not found: #{app_guid}")
@@ -49,4 +48,3 @@ module VCAP::CloudController
       end
     end
   end
-end

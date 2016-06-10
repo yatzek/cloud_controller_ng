@@ -1,10 +1,10 @@
 require 'rails_helper'
 
 describe ProcessesController, type: :controller do
-  let(:space) { VCAP::CloudController::Space.make }
+  let(:space) { Space.make }
 
   describe '#index' do
-    let(:user) { set_current_user(VCAP::CloudController::User.make) }
+    let(:user) { set_current_user(User.make) }
 
     before do
       stub_readable_space_guids_for(user, space)
@@ -12,9 +12,9 @@ describe ProcessesController, type: :controller do
     end
 
     it 'returns 200 and lists the processes' do
-      process1 = VCAP::CloudController::ProcessModel.make(space: space)
-      process2 = VCAP::CloudController::ProcessModel.make(space: space)
-      VCAP::CloudController::ProcessModel.make
+      process1 = ProcessModel.make(space: space)
+      process2 = ProcessModel.make(space: space)
+      ProcessModel.make
 
       get :index
 
@@ -24,12 +24,12 @@ describe ProcessesController, type: :controller do
     end
 
     context 'when accessed as an app subresource' do
-      let(:app) { VCAP::CloudController::AppModel.make(space: space) }
+      let(:app) { AppModel.make(space: space) }
 
       it 'uses the app as a filter' do
-        process1 = VCAP::CloudController::ProcessModel.make(app_guid: app.guid)
-        process2 = VCAP::CloudController::ProcessModel.make(app_guid: app.guid)
-        VCAP::CloudController::ProcessModel.make
+        process1 = ProcessModel.make(app_guid: app.guid)
+        process2 = ProcessModel.make(app_guid: app.guid)
+        ProcessModel.make
 
         get :index, app_guid: app.guid
 
@@ -49,8 +49,8 @@ describe ProcessesController, type: :controller do
         let(:params) { { 'page' => page, 'per_page' => per_page, app_guid: app.guid } }
 
         it 'paginates the response' do
-          VCAP::CloudController::ProcessModel.make(app_guid: app.guid)
-          VCAP::CloudController::ProcessModel.make(app_guid: app.guid)
+          ProcessModel.make(app_guid: app.guid)
+          ProcessModel.make(app_guid: app.guid)
 
           get :index, params
 
@@ -85,7 +85,7 @@ describe ProcessesController, type: :controller do
     end
 
     it 'fails without read permissions scope on the auth token' do
-      set_current_user(VCAP::CloudController::User.make, scopes: ['cloud_controller.write'])
+      set_current_user(User.make, scopes: ['cloud_controller.write'])
       get :index
 
       expect(response.status).to eq(403)
@@ -130,8 +130,8 @@ describe ProcessesController, type: :controller do
   end
 
   describe '#show' do
-    let(:process_type) { VCAP::CloudController::App.make(space: space) }
-    let(:user) { set_current_user(VCAP::CloudController::User.make) }
+    let(:process_type) { App.make(space: space) }
+    let(:user) { set_current_user(User.make) }
 
     before do
       allow_user_read_access(user, space: space)
@@ -146,9 +146,9 @@ describe ProcessesController, type: :controller do
     end
 
     context 'accessed as an app sub resource' do
-      let(:app) { VCAP::CloudController::AppModel.make(space: space) }
-      let(:process_type) { VCAP::CloudController::App.make(app_guid: app.guid, type: 'web') }
-      let!(:process_type2) { VCAP::CloudController::App.make(app_guid: app.guid, type: 'worker') }
+      let(:app) { AppModel.make(space: space) }
+      let(:process_type) { App.make(app_guid: app.guid, type: 'web') }
+      let!(:process_type2) { App.make(app_guid: app.guid, type: 'worker') }
 
       it 'returns a 200 and the process' do
         get :show, type: process_type.type, app_guid: app.guid
@@ -159,8 +159,8 @@ describe ProcessesController, type: :controller do
 
       context 'when the requested process does not belong to the provided app guid' do
         it 'returns a 404' do
-          other_app = VCAP::CloudController::AppModel.make
-          other_process = VCAP::CloudController::App.make(app_guid: other_app.guid, type: 'potato')
+          other_app = AppModel.make
+          other_process = App.make(app_guid: other_app.guid, type: 'potato')
 
           get :show, type: other_process.type, app_guid: app.guid
 
@@ -234,13 +234,13 @@ describe ProcessesController, type: :controller do
   end
 
   describe '#update' do
-    let(:process_type) { VCAP::CloudController::App.make(:process, space: space) }
+    let(:process_type) { App.make(:process, space: space) }
     let(:req_body) do
       {
           'command' => 'new command',
       }
     end
-    let(:user) { set_current_user(VCAP::CloudController::User.make) }
+    let(:user) { set_current_user(User.make) }
 
     before do
       allow_user_read_access(user, space: space)
@@ -278,7 +278,7 @@ describe ProcessesController, type: :controller do
 
     context 'when the process is invalid' do
       before do
-        allow_any_instance_of(VCAP::CloudController::ProcessUpdate).to receive(:update).and_raise(VCAP::CloudController::ProcessUpdate::InvalidProcess.new('errorz'))
+        allow_any_instance_of(ProcessUpdate).to receive(:update).and_raise(ProcessUpdate::InvalidProcess.new('errorz'))
       end
 
       it 'returns 422' do
@@ -331,7 +331,7 @@ describe ProcessesController, type: :controller do
       end
 
       context 'when the user does not have write permissions' do
-        before { set_current_user(VCAP::CloudController::User.make, scopes: ['cloud_controller.read']) }
+        before { set_current_user(User.make, scopes: ['cloud_controller.read']) }
 
         it 'raises an ApiError with a 403 code' do
           patch :update, req_body.to_json, { process_guid: process_type.guid }
@@ -344,10 +344,10 @@ describe ProcessesController, type: :controller do
   end
 
   describe '#terminate' do
-    let(:app) { VCAP::CloudController::AppModel.make(space: space) }
-    let(:process_type) { VCAP::CloudController::AppFactory.make(app: app, space: space) }
-    let(:index_stopper) { instance_double(VCAP::CloudController::IndexStopper) }
-    let(:user) { set_current_user(VCAP::CloudController::User.make) }
+    let(:app) { AppModel.make(space: space) }
+    let(:process_type) { AppFactory.make(app: app, space: space) }
+    let(:index_stopper) { instance_double(IndexStopper) }
+    let(:user) { set_current_user(User.make) }
 
     before do
       allow(index_stopper).to receive(:stop_index)
@@ -466,9 +466,9 @@ describe ProcessesController, type: :controller do
 
   describe '#scale' do
     let(:req_body) { { instances: 2, memory_in_mb: 100, disk_in_mb: 200 } }
-    let(:app) { VCAP::CloudController::AppModel.make(space: space) }
-    let(:process_type) { VCAP::CloudController::App.make(app: app, space: space) }
-    let(:user) { set_current_user(VCAP::CloudController::User.make) }
+    let(:app) { AppModel.make(space: space) }
+    let(:process_type) { App.make(app: app, space: space) }
+    let(:user) { set_current_user(User.make) }
 
     before do
       allow_user_read_access(user, space: space)
@@ -558,7 +558,7 @@ describe ProcessesController, type: :controller do
 
     context 'when the process is invalid' do
       before do
-        allow_any_instance_of(VCAP::CloudController::ProcessScale).to receive(:scale).and_raise(VCAP::CloudController::ProcessScale::InvalidProcess.new('errorz'))
+        allow_any_instance_of(ProcessScale).to receive(:scale).and_raise(ProcessScale::InvalidProcess.new('errorz'))
       end
 
       it 'returns 422' do
@@ -571,7 +571,7 @@ describe ProcessesController, type: :controller do
     end
 
     context 'when scaling is disabled' do
-      before { VCAP::CloudController::FeatureFlag.make(name: 'app_scaling', enabled: false, error_message: nil) }
+      before { FeatureFlag.make(name: 'app_scaling', enabled: false, error_message: nil) }
 
       context 'non-admin user' do
         it 'raises 403' do
@@ -658,11 +658,11 @@ describe ProcessesController, type: :controller do
   end
 
   describe '#stats' do
-    let(:app) { VCAP::CloudController::AppModel.make(space: space) }
-    let(:process_type) { VCAP::CloudController::AppFactory.make(diego: true, type: 'potato', app_guid: app.guid, space: space) }
+    let(:app) { AppModel.make(space: space) }
+    let(:process_type) { AppFactory.make(diego: true, type: 'potato', app_guid: app.guid, space: space) }
     let(:stats) { { 0 => { stats: { usage: {}, net_info: { ports: [] } } } } }
     let(:instances_reporters) { double(:instances_reporters) }
-    let(:user) { set_current_user(VCAP::CloudController::User.make) }
+    let(:user) { set_current_user(User.make) }
 
     before do
       allow_user_read_access(user, space: space)

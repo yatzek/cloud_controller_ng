@@ -1,12 +1,12 @@
 require 'spec_helper'
 require 'messages/validators'
 
-module VCAP::CloudController::Validators
+module Validators
   describe 'Validators' do
     let(:fake_class) do
       Class.new do
         include ActiveModel::Model
-        include VCAP::CloudController::Validators
+        include Validators
 
         attr_accessor :field
       end
@@ -181,7 +181,7 @@ module VCAP::CloudController::Validators
     end
 
     describe 'LifecycleValidator' do
-      class LifecycleMessage < VCAP::CloudController::BaseMessage
+      class LifecycleMessage < BaseMessage
         attr_accessor :lifecycle
 
         validates_with LifecycleValidator
@@ -221,7 +221,7 @@ module VCAP::CloudController::Validators
     end
 
     describe 'RelationshipValidator' do
-      class RelationshipMessage < VCAP::CloudController::BaseMessage
+      class RelationshipMessage < BaseMessage
         attr_accessor :relationships
 
         def allowed_keys
@@ -230,7 +230,7 @@ module VCAP::CloudController::Validators
 
         validates_with RelationshipValidator
 
-        class Relationships < VCAP::CloudController::BaseMessage
+        class Relationships < BaseMessage
           attr_accessor :foo
 
           def allowed_keys
@@ -255,7 +255,7 @@ module VCAP::CloudController::Validators
     end
 
     describe 'DataValidator' do
-      class DataMessage < VCAP::CloudController::BaseMessage
+      class DataMessage < BaseMessage
         attr_accessor :data
 
         def allowed_keys
@@ -264,7 +264,7 @@ module VCAP::CloudController::Validators
 
         validates_with DataValidator
 
-        class Data < VCAP::CloudController::BaseMessage
+        class Data < BaseMessage
           attr_accessor :foo
 
           def allowed_keys
@@ -289,7 +289,7 @@ module VCAP::CloudController::Validators
     end
 
     describe 'ToOneRelationshipValidator' do
-      class FooMessage < VCAP::CloudController::BaseMessage
+      class FooMessage < BaseMessage
         attr_accessor :bar
 
         def allowed_keys
@@ -311,7 +311,7 @@ module VCAP::CloudController::Validators
     end
 
     describe 'ToManyRelationshipValidator' do
-      class BarMessage < VCAP::CloudController::BaseMessage
+      class BarMessage < BaseMessage
         attr_accessor :routes
 
         def allowed_keys

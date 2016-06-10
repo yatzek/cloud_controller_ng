@@ -3,8 +3,8 @@ require 'rspec_api_documentation/dsl'
 
 resource 'Apps', type: [:api, :legacy_api] do
   let(:admin_auth_header) { admin_headers['HTTP_AUTHORIZATION'] }
-  let(:space) { VCAP::CloudController::Space.make }
-  let(:app_obj) { VCAP::CloudController::AppFactory.make space: space, package_state: 'STAGED' }
+  let(:space) { Space.make }
+  let(:app_obj) { AppFactory.make space: space, package_state: 'STAGED' }
   let(:user) { make_developer_for_space(app_obj.space) }
 
   authenticated_request

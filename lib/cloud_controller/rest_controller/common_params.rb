@@ -1,6 +1,6 @@
 require 'cgi'
 
-module VCAP::CloudController::RestController
+module RestController
   class CommonParams
     def initialize(logger)
       @logger = logger

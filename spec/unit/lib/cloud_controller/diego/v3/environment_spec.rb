@@ -1,18 +1,18 @@
 require 'spec_helper'
 require 'cloud_controller/diego/v3/environment'
 
-module VCAP::CloudController::Diego
+module ::Diego
   module V3
     describe Environment do
       let(:app_env_vars) { { 'ENV_VAR_2' => 'jeff' } }
-      let(:app) { VCAP::CloudController::AppModel.make(environment_variables: app_env_vars, name: 'utako') }
-      let(:task) { VCAP::CloudController::TaskModel.make(name: 'my-task', command: 'echo foo', memory_in_mb: 1024) }
+      let(:app) { AppModel.make(environment_variables: app_env_vars, name: 'utako') }
+      let(:task) { TaskModel.make(name: 'my-task', command: 'echo foo', memory_in_mb: 1024) }
       let(:space) { app.space }
       let(:staging_disk_in_mb) { 512 }
-      let(:service) { VCAP::CloudController::Service.make(label: 'elephantsql-n/a', provider: 'cool-provider') }
-      let(:service_plan) { VCAP::CloudController::ServicePlan.make(service: service) }
-      let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space, service_plan: service_plan, name: 'elephantsql-vip-uat', tags: ['excellent']) }
-      let!(:service_binding) { VCAP::CloudController::ServiceBindingModel.make(app: app, service_instance: service_instance, syslog_drain_url: 'logs.go-here.com') }
+      let(:service) { Service.make(label: 'elephantsql-n/a', provider: 'cool-provider') }
+      let(:service_plan) { ServicePlan.make(service: service) }
+      let(:service_instance) { ManagedServiceInstance.make(space: space, service_plan: service_plan, name: 'elephantsql-vip-uat', tags: ['excellent']) }
+      let!(:service_binding) { ServiceBindingModel.make(app: app, service_instance: service_instance, syslog_drain_url: 'logs.go-here.com') }
 
       let(:expected_vcap_application) do
         {
@@ -115,12 +115,12 @@ module VCAP::CloudController::Diego
               users: nil
             }
           end
-          let(:route1) { VCAP::CloudController::Route.make(space: space) }
-          let(:route2) { VCAP::CloudController::Route.make(space: space) }
+          let(:route1) { Route.make(space: space) }
+          let(:route2) { Route.make(space: space) }
 
           before do
-            VCAP::CloudController::RouteMappingModel.make(app: app, route: route1)
-            VCAP::CloudController::RouteMappingModel.make(app: app, route: route2)
+            RouteMappingModel.make(app: app, route: route1)
+            RouteMappingModel.make(app: app, route: route2)
           end
 
           it 'includes the uris as part of vcap application' do

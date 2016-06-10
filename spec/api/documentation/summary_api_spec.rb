@@ -4,13 +4,13 @@ require 'rspec_api_documentation/dsl'
 # rubocop:disable Metrics/LineLength
 resource 'Apps', type: [:api, :legacy_api] do
   let(:admin_auth_header) { admin_headers['HTTP_AUTHORIZATION'] }
-  let(:space) { VCAP::CloudController::Space.make }
-  let(:app_obj) { VCAP::CloudController::AppFactory.make space: space, droplet_hash: nil, package_state: 'PENDING' }
+  let(:space) { Space.make }
+  let(:app_obj) { AppFactory.make space: space, droplet_hash: nil, package_state: 'PENDING' }
   let(:user) { make_developer_for_space(app_obj.space) }
-  let(:shared_domain) { VCAP::CloudController::SharedDomain.make }
-  let(:route1) { VCAP::CloudController::Route.make(space: space) }
-  let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space) }
-  let(:service_binding) { VCAP::CloudController::ServiceBinding.make(app: app_obj, service_instance: service_instance) }
+  let(:shared_domain) { SharedDomain.make }
+  let(:route1) { Route.make(space: space) }
+  let(:service_instance) { ManagedServiceInstance.make(space: space) }
+  let(:service_binding) { ServiceBinding.make(app: app_obj, service_instance: service_instance) }
 
   authenticated_request
 
@@ -65,16 +65,16 @@ end
 
 resource 'Spaces', type: [:api, :legacy_api] do
   let(:admin_auth_header) { admin_headers['HTTP_AUTHORIZATION'] }
-  let(:space) { VCAP::CloudController::Space.make }
-  let(:app_obj) { VCAP::CloudController::AppFactory.make space: space, droplet_hash: nil, package_state: 'PENDING' }
+  let(:space) { Space.make }
+  let(:app_obj) { AppFactory.make space: space, droplet_hash: nil, package_state: 'PENDING' }
   let(:user) { make_developer_for_space(app_obj.space) }
-  let(:shared_domain) { VCAP::CloudController::SharedDomain.make }
-  let(:route1) { VCAP::CloudController::Route.make(space: space) }
-  let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space) }
-  let(:service_binding) { VCAP::CloudController::ServiceBinding.make(app: app_obj, service_instance: service_instance) }
+  let(:shared_domain) { SharedDomain.make }
+  let(:route1) { Route.make(space: space) }
+  let(:service_instance) { ManagedServiceInstance.make(space: space) }
+  let(:service_binding) { ServiceBinding.make(app: app_obj, service_instance: service_instance) }
 
   before do
-    service_instance.service_instance_operation = VCAP::CloudController::ServiceInstanceOperation.make(type: 'create', state: 'succeeded')
+    service_instance.service_instance_operation = ServiceInstanceOperation.make(type: 'create', state: 'succeeded')
   end
 
   authenticated_request
@@ -102,8 +102,8 @@ end
 
 resource 'Organizations', type: [:api, :legacy_api] do
   let(:admin_auth_header) { admin_headers['HTTP_AUTHORIZATION'] }
-  let(:organization) { VCAP::CloudController::Organization.make }
-  let!(:space) { VCAP::CloudController::Space.make(organization: organization) }
+  let(:organization) { Organization.make }
+  let!(:space) { Space.make(organization: organization) }
 
   authenticated_request
 
@@ -126,7 +126,7 @@ end
 
 resource 'Users', type: [:api, :legacy_api] do
   let(:admin_auth_header) { admin_headers['HTTP_AUTHORIZATION'] }
-  let(:user) { VCAP::CloudController::User.make }
+  let(:user) { User.make }
 
   authenticated_request
 
@@ -141,8 +141,8 @@ resource 'Users', type: [:api, :legacy_api] do
     field :organizations, 'List of organizations that the user is a member of.'
 
     example 'Get User summary' do
-      organization = VCAP::CloudController::Organization.make
-      space = VCAP::CloudController::Space.make(organization: organization)
+      organization = Organization.make
+      space = Space.make(organization: organization)
       user.add_organization organization
       organization.add_manager user
       organization.add_billing_manager user

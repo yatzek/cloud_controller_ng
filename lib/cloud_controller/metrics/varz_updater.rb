@@ -1,6 +1,6 @@
 require 'vcap/component'
 
-module VCAP::CloudController::Metrics
+module Metrics
   class VarzUpdater
     def record_user_count(user_count)
       ::VCAP::Component.varz.synchronize { ::VCAP::Component.varz[:cc_user_count] = user_count }

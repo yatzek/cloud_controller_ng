@@ -2,10 +2,10 @@ require 'spec_helper'
 
 describe OrganizationPresenter do
   describe '#to_hash' do
-    let(:org) { VCAP::CloudController::Organization.make }
+    let(:org) { Organization.make }
     before do
-      VCAP::CloudController::Space.make(organization: org)
-      user = VCAP::CloudController::User.make
+      Space.make(organization: org)
+      user = User.make
       user.add_organization org
       user.add_managed_organization org
     end

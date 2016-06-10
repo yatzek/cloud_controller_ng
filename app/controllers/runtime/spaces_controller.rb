@@ -1,7 +1,7 @@
 require 'actions/space_delete'
 require 'queries/space_user_roles_fetcher'
 
-module VCAP::CloudController
+module CloudController
   class SpacesController < RestController::ModelController
     def self.dependencies
       [:space_event_repository, :username_and_roles_populating_collection_renderer, :username_lookup_uaa_client, :services_event_repository]
@@ -131,7 +131,7 @@ module VCAP::CloudController
       @space_event_repository.record_space_delete_request(space, SecurityContext.current_user, SecurityContext.current_user_email, recursive_delete?)
 
       delete_action = SpaceDelete.new(current_user.guid, current_user_email, @services_event_repository)
-      deletion_job = VCAP::CloudController::Jobs::DeleteActionJob.new(Space, guid, delete_action)
+      deletion_job = Jobs::DeleteActionJob.new(Space, guid, delete_action)
       enqueue_deletion_job(deletion_job)
     end
 

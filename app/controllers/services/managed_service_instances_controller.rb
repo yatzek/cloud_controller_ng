@@ -1,6 +1,6 @@
 require 'services/api'
 
-module VCAP::CloudController
+module CloudController
   class ManagedServiceInstancesController < RestController::ModelController
     allow_unauthenticated_access
 

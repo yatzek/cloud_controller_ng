@@ -3,15 +3,15 @@ require 'spec_helper'
 describe 'Broker API Versions' do
   let(:spec_sha) do
     {
-      'broker_api_v2.0_spec.rb' => '422a65005622f00897964e258ca1a0c2',
-      'broker_api_v2.1_spec.rb' => '4d031aeec862463e7a4b9d74702ac254',
-      'broker_api_v2.2_spec.rb' => '29d240c39137cc654c1aeff6e0e2abf1',
-      'broker_api_v2.3_spec.rb' => 'a2c1cbefdc9f5ccb3054e0646e3825d9',
-      'broker_api_v2.4_spec.rb' => '5ad08dddf1869af9f5918bdd9d1736e8',
-      'broker_api_v2.5_spec.rb' => '5babf49a7cee063016bb6bc024b8d290',
-      'broker_api_v2.6_spec.rb' => '13f4c11e90402cf4ca4c32e3f1145771',
-      'broker_api_v2.7_spec.rb' => 'fc8a571ba931fe8a559d82cca3c6247e',
-      'broker_api_v2.8_spec.rb' => '1ce71b607fe9332e01d15f5def5d249c',
+      'broker_api_v2.0_spec.rb' => 'd00c5116c35df3542e7e1cd15c568c0c',
+      'broker_api_v2.1_spec.rb' => '3890c9414856e61fc786e18f4f454f18',
+      'broker_api_v2.2_spec.rb' => 'cd6ffe2feae45c6d3ebc4539f9cc9624',
+      'broker_api_v2.3_spec.rb' => '01c91447e7bd4319bfea73e9b2168495',
+      'broker_api_v2.4_spec.rb' => '15e96ff92772407a34a860dc5060e582',
+      'broker_api_v2.5_spec.rb' => '021103a168dc80c780c981500de2d5be',
+      'broker_api_v2.6_spec.rb' => 'a394f1177e03b48d480ab5b690173b66',
+      'broker_api_v2.7_spec.rb' => '53c1a676d407023c8fe4dcec7f90ae86',
+      'broker_api_v2.8_spec.rb' => '6fb8870e7f5262dd455c7c07105c3333',
     }
   end
   let(:digester) { Digester.new(algorithm: Digest::MD5) }

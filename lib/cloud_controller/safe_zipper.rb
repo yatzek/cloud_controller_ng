@@ -77,13 +77,13 @@ class SafeZipper
     zip_info.split("\n")[3..-3].map do |info|
       info.match(/^\s*\d+\s+[\d-]+\s+[\d:]+\s+(.*)$/)[1]
     end.any? do |path|
-      !VCAP::CloudController::FilePathChecker.safe_path? path, @zip_destination
+      !FilePathChecker.safe_path? path, @zip_destination
     end
   end
 
   def any_outside_symlinks?
     Find.find(@zip_destination).find do |item|
-      File.symlink?(item) && !VCAP::CloudController::FilePathChecker.safe_path?(File.readlink(item), @zip_destination)
+      File.symlink?(item) && !FilePathChecker.safe_path?(File.readlink(item), @zip_destination)
     end
   end
 end

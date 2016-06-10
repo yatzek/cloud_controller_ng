@@ -1,12 +1,12 @@
 require 'spec_helper'
 require 'presenters/v3/process_presenter'
 
-module VCAP::CloudController::Presenters::V3
+module Presenters::V3
   describe ProcessPresenter do
     describe '#to_hash' do
-      let(:app_model) { VCAP::CloudController::AppModel.make }
+      let(:app_model) { AppModel.make }
       let(:process) {
-        VCAP::CloudController::App.make(
+        App.make(
           diego:                true,
           app_guid:             app_model.guid,
           instances:            3,
@@ -61,7 +61,7 @@ module VCAP::CloudController::Presenters::V3
         let(:open_process_ports) { double(:app_ports, to_a: [5678]) }
 
         before do
-          allow(VCAP::CloudController::Diego::Protocol::OpenProcessPorts).to receive(:new).with(process).and_return(open_process_ports)
+          allow(::Diego::Protocol::OpenProcessPorts).to receive(:new).with(process).and_return(open_process_ports)
         end
 
         it 'uses those ports' do

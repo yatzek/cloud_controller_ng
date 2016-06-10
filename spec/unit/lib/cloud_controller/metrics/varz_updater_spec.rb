@@ -1,7 +1,7 @@
 require 'spec_helper'
 require 'cloud_controller/metrics/varz_updater'
 
-module VCAP::CloudController::Metrics
+module Metrics
   describe VarzUpdater do
     let(:varz) { VarzUpdater.new }
 

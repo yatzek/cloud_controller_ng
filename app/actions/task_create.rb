@@ -1,61 +1,59 @@
 require 'cloud_controller/diego/v3/environment'
 require 'repositories/task_event_repository'
 
-module VCAP::CloudController
-  class TaskCreate
-    class InvalidTask < StandardError; end
-    class TaskCreateError < StandardError; end
-    class NoAssignedDroplet < TaskCreateError; end
+class TaskCreate
+  class InvalidTask < StandardError; end
+  class TaskCreateError < StandardError; end
+  class NoAssignedDroplet < TaskCreateError; end
 
-    def initialize(config)
-      @config = config
+  def initialize(config)
+    @config = config
+  end
+
+  def create(app, message, user_guid, user_email, droplet: nil)
+    droplet ||= app.droplet
+    no_assigned_droplet! unless droplet
+
+    task = nil
+    TaskModel.db.transaction do
+      task = TaskModel.create(
+        name:                  message.name,
+        state:                 TaskModel::PENDING_STATE,
+        droplet:               droplet,
+        command:               message.command,
+        app:                   app,
+        memory_in_mb:          message.memory_in_mb || config[:default_app_memory],
+        environment_variables: message.environment_variables
+      )
+
+      app_usage_event_repository.create_from_task(task, 'TASK_STARTED')
+      task_event_repository.record_task_create(task, user_guid, user_email)
     end
 
-    def create(app, message, user_guid, user_email, droplet: nil)
-      droplet ||= app.droplet
-      no_assigned_droplet! unless droplet
+    dependency_locator.nsync_client.desire_task(task)
 
-      task = nil
-      TaskModel.db.transaction do
-        task = TaskModel.create(
-          name:                  message.name,
-          state:                 TaskModel::PENDING_STATE,
-          droplet:               droplet,
-          command:               message.command,
-          app:                   app,
-          memory_in_mb:          message.memory_in_mb || config[:default_app_memory],
-          environment_variables: message.environment_variables
-        )
+    task
+  rescue Sequel::ValidationFailed => e
+    raise InvalidTask.new(e.message)
+  end
 
-        app_usage_event_repository.create_from_task(task, 'TASK_STARTED')
-        task_event_repository.record_task_create(task, user_guid, user_email)
-      end
+  private
 
-      dependency_locator.nsync_client.desire_task(task)
+  attr_reader :config
 
-      task
-    rescue Sequel::ValidationFailed => e
-      raise InvalidTask.new(e.message)
-    end
+  def dependency_locator
+    CloudController::DependencyLocator.instance
+  end
 
-    private
+  def no_assigned_droplet!
+    raise NoAssignedDroplet.new('Task must have a droplet. Specify droplet or assign current droplet to app.')
+  end
 
-    attr_reader :config
+  def app_usage_event_repository
+    Repositories::AppUsageEventRepository.new
+  end
 
-    def dependency_locator
-      CloudController::DependencyLocator.instance
-    end
-
-    def no_assigned_droplet!
-      raise NoAssignedDroplet.new('Task must have a droplet. Specify droplet or assign current droplet to app.')
-    end
-
-    def app_usage_event_repository
-      Repositories::AppUsageEventRepository.new
-    end
-
-    def task_event_repository
-      Repositories::TaskEventRepository.new
-    end
+  def task_event_repository
+    Repositories::TaskEventRepository.new
   end
 end

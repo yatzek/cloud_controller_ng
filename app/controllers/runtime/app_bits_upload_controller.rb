@@ -1,6 +1,6 @@
 require 'presenters/api/job_presenter'
 
-module VCAP::CloudController
+module CloudController
   class AppBitsUploadController < RestController::ModelController
     def self.dependencies
       [:app_event_repository]
@@ -18,7 +18,7 @@ module VCAP::CloudController
       auth = env['HTTP_AUTHORIZATION']
       grace_period = config.fetch(:app_bits_upload_grace_period_in_seconds, 0)
       relaxed_token_decoder = VCAP::UaaTokenDecoder.new(config[:uaa], grace_period)
-      VCAP::CloudController::Security::SecurityContextConfigurer.new(relaxed_token_decoder).configure(auth)
+      Security::SecurityContextConfigurer.new(relaxed_token_decoder).configure(auth)
       super
     end
 
