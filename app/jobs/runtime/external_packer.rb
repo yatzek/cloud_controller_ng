@@ -29,13 +29,14 @@ module VCAP::CloudController
             receipt = JSON.parse(entries_response.body)
             fingerprints.concat(receipt)
           end
-
           package_response = bits_client.bundles(fingerprints.to_json)
+
           package = Tempfile.new('package.zip').binmode
           package.write(package_response.body)
           package.close
 
-          app.package_hash = upload_package(bits_client, package.path)
+          package_blobstore.cp_to_blobstore(package.path, app.guid)
+          app.package_hash = Digester.new.digest_file(package)
           app.save
         rescue => e
           app.mark_as_failed_to_stage
@@ -56,6 +57,10 @@ module VCAP::CloudController
         end
 
         private
+
+        def package_blobstore
+          @package_blobstore ||= CloudController::DependencyLocator.instance.package_blobstore
+        end
 
         def upload_package(bits_client, file_path)
           bits_client.upload_package(file_path)
