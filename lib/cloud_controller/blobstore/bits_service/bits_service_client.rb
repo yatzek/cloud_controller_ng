@@ -1,4 +1,5 @@
 require 'net/http/post/multipart'
+require 'cloud_controller/blobstore/bits_service/blob'
 
 module CloudController
   module Blobstore
@@ -57,11 +58,11 @@ module CloudController
       end
 
       def blob(key)
-        OpenStruct.new({
+        BitsServiceBlob.new(
           guid: key,
           public_download_url: resolve_redirects(public_http_client, key),
           internal_download_url: resolve_redirects(private_http_client, key)
-        })
+        )
       end
 
       def delete_blob(blob)
