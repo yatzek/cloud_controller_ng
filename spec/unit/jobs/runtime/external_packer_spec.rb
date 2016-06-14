@@ -10,7 +10,6 @@ module VCAP::CloudController
       let(:receipt) { [{ 'sha1' => '12345', 'fn' => 'app.rb' }] }
       let(:fingerprints) { [{ 'sha1' => 'abcde', 'fn' => 'lib.rb' }] }
       let(:package_file) { Tempfile.new('package') }
-      let(:package_guid) { 'package-guid' }
       let(:bits_client) { double(BitsClient) }
 
       subject(:job) do
@@ -20,12 +19,13 @@ module VCAP::CloudController
       before do
         allow_any_instance_of(CloudController::DependencyLocator).to receive(:bits_client).
           and_return(bits_client)
+        allow_any_instance_of(CloudController::DependencyLocator).to receive(:package_blobstore).
+          and_return(package_blobstore)
         allow(bits_client).to receive(:upload_entries).
           and_return(double(:response, code: 201, body: receipt.to_json))
         allow(bits_client).to receive(:bundles).
           and_return(double(:response, code: 200, body: 'contents'))
-        allow(bits_client).to receive(:upload_package).
-          and_return(package_guid)
+        allow(package_blobstore).to receive(:cp_to_blobstore)
         allow(Tempfile).to receive(:new).and_return(package_file)
       end
 
@@ -45,9 +45,10 @@ module VCAP::CloudController
         end
 
         it 'uploads the package to the bits service' do
-          expect(bits_client).to receive(:upload_package) do |package_path|
+          expect(package_blobstore).to receive(:cp_to_blobstore) do |package_path, guid|
             expect(File.read(package_path)).to eq('contents')
-          end.and_return(double(Net::HTTPCreated, body: { guid: package_guid }.to_json))
+            expect(guid).to eq(app.guid)
+          end.and_return(double(Net::HTTPCreated))
           job.perform
         end
 
@@ -66,9 +67,9 @@ module VCAP::CloudController
           expect(logger).to have_received(:error).with("App not found: #{app_guid}")
         end
 
-        it 'sets the package hash in the app' do
+        it 'sets the correct package hash in the app' do
           job.perform
-          expect(app.reload.package_hash).to eq(package_guid)
+          expect(app.reload.package_hash).to eq(Digester.new.digest_file(package_file))
         end
 
         shared_examples 'a packaging failure' do
@@ -104,15 +105,16 @@ module VCAP::CloudController
           end
 
           it 'uploads the package to the bits service' do
-            expect(bits_client).to receive(:upload_package) do |package_path|
+            expect(package_blobstore).to receive(:cp_to_blobstore) do |package_path, guid|
               expect(File.read(package_path)).to eq('contents')
+              expect(guid).to eq(app.guid)
             end
             job.perform
           end
 
-          it 'sets the package hash in the app' do
+          it 'sets the correct package hash in the app' do
             job.perform
-            expect(app.reload.package_hash).to eq(package_guid)
+            expect(app.reload.package_hash).to eq(Digester.new.digest_file(package_file))
           end
         end
 
@@ -149,7 +151,7 @@ module VCAP::CloudController
           let(:expected_exception) { StandardError.new('some error') }
 
           before do
-            allow(bits_client).to receive(:upload_package).and_raise(expected_exception)
+            allow(package_blobstore).to receive(:cp_to_blobstore).and_raise(expected_exception)
           end
 
           it_behaves_like 'a packaging failure'

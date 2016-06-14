@@ -24,8 +24,8 @@ module CloudController
 
       def cp_to_blobstore(source_path, destination_key)
         with_file_attachment!(source_path, 'blob') do |file_attachment|
-          body = { resource_type_singular => file_attachment }
-          multipart_put("/#{resource_type}/#{destination_key}", body)
+          body = { :"#{resource_type_singular}" => file_attachment }
+          put("/#{resource_type}/#{destination_key}", body)
         end
       end
 
@@ -153,13 +153,6 @@ module CloudController
       def put(path, body, header={})
         request = Net::HTTP::Put::Multipart.new(path, body, header)
         do_request(private_http_client, request)
-      end
-
-      def multipart_put(path, body, header={})
-        request = Net::HTTP::Put::Multipart.new(path, body, header)
-        do_request(private_http_client, request).tap do |response|
-          validate_response_code!(201, response)
-        end
       end
 
       def delete_request(path)
