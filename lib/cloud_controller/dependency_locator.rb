@@ -5,12 +5,14 @@ require 'cloud_controller/rest_controller/object_renderer'
 require 'cloud_controller/rest_controller/paginated_collection_renderer'
 require 'cloud_controller/upload_handler'
 require 'cloud_controller/blob_sender/nginx_blob_sender'
+require 'cloud_controller/blob_sender/bits_service_blob_sender'
 require 'cloud_controller/blob_sender/default_blob_sender'
 require 'cloud_controller/blob_sender/missing_blob_handler'
 require 'cloud_controller/diego/stager_client'
 require 'cloud_controller/diego/tps_client'
 require 'cloud_controller/diego/messenger'
 require 'cloud_controller/blobstore/client_provider'
+require 'bits_client/client'
 
 module CloudController
   class DependencyLocator
@@ -79,7 +81,9 @@ module CloudController
 
       Blobstore::ClientProvider.provide(
         options: options,
-        directory_key: options.fetch(:droplet_directory_key)
+        directory_key: options.fetch(:droplet_directory_key),
+        resource_type: :droplets,
+        bits_service_options: bits_service_options
       )
     end
 
@@ -89,7 +93,9 @@ module CloudController
       Blobstore::ClientProvider.provide(
         options: options,
         directory_key: options.fetch(:droplet_directory_key),
-        root_dir: 'buildpack_cache'
+        root_dir: 'buildpack_cache',
+        resource_type: :buildpack_cache,
+        bits_service_options: bits_service_options
       )
     end
 
@@ -98,7 +104,9 @@ module CloudController
 
       Blobstore::ClientProvider.provide(
         options: options,
-        directory_key: options.fetch(:app_package_directory_key)
+        directory_key: options.fetch(:app_package_directory_key),
+        resource_type: :packages,
+        bits_service_options: bits_service_options
       )
     end
 
@@ -116,7 +124,9 @@ module CloudController
 
       Blobstore::ClientProvider.provide(
         options: options,
-        directory_key: options.fetch(:buildpack_directory_key, 'cc-buildpacks')
+        directory_key: options.fetch(:buildpack_directory_key, 'cc-buildpacks'),
+        resource_type: :buildpacks,
+        bits_service_options: bits_service_options
       )
     end
 
@@ -133,7 +143,7 @@ module CloudController
         package_blobstore,
         buildpack_cache_blobstore,
         buildpack_blobstore,
-        droplet_blobstore
+        droplet_blobstore,
       )
     end
 
@@ -215,11 +225,26 @@ module CloudController
     end
 
     def blob_sender
-      if @config[:nginx][:use_nginx]
+      if use_bits_service
+        CloudController::BlobSender::BitsServiceBlobSender.new(use_nginx: @config[:nginx][:use_nginx])
+      elsif @config[:nginx][:use_nginx]
         CloudController::BlobSender::NginxLocalBlobSender.new
       else
         CloudController::BlobSender::DefaultLocalBlobSender.new
       end
+    end
+
+    def bits_client
+      return nil unless use_bits_service
+      BitsClient.new(public_endpoint: bits_service_options[:public_endpoint], private_endpoint: bits_service_options[:private_endpoint])
+    end
+
+    def bits_service_options
+      @config[:bits_service] || { enabled: false }
+    end
+
+    def use_bits_service
+      bits_service_options[:enabled]
     end
 
     private

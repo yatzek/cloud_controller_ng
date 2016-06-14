@@ -5,6 +5,13 @@ RSpec.describe CloudController::DependencyLocator do
   subject(:locator) { CloudController::DependencyLocator.instance }
 
   let(:config) { TestConfig.config }
+  let(:bits_service_config) do
+    {
+      enabled: true,
+      public_endpoint: 'https://bits-service.com',
+      private_endpoint: 'http://bits-service.service.cf.internal'
+    }
+  end
 
   before { locator.config = config }
 
@@ -25,8 +32,27 @@ RSpec.describe CloudController::DependencyLocator do
     end
 
     it 'creates blob store' do
-      expect(CloudController::Blobstore::ClientProvider).to receive(:provide).with(options: config[:droplets], directory_key: 'key')
+      expect(CloudController::Blobstore::ClientProvider).to receive(:provide).
+        with(options: config[:droplets], directory_key: 'key', resource_type: :droplets, bits_service_options: { enabled: false })
       locator.droplet_blobstore
+    end
+
+    context('when bits service is enabled') do
+      let(:config) do
+        {
+          droplets: {
+            fog_connection: 'fog_connection',
+            droplet_directory_key: 'key',
+          },
+          bits_service: bits_service_config
+        }
+      end
+
+      it 'creates the client with the right arguments' do
+        expect(CloudController::Blobstore::ClientProvider).to receive(:provide).
+          with(options: config[:droplets], directory_key: 'key', resource_type: :droplets, bits_service_options: bits_service_config)
+        locator.droplet_blobstore
+      end
     end
   end
 
@@ -41,8 +67,31 @@ RSpec.describe CloudController::DependencyLocator do
     end
 
     it 'creates blob store' do
-      expect(CloudController::Blobstore::ClientProvider).to receive(:provide).with(options: config[:droplets], directory_key: 'key', root_dir: 'buildpack_cache')
+      expect(CloudController::Blobstore::ClientProvider).to receive(:provide).with(
+        options: config[:droplets],
+        directory_key: 'key',
+        root_dir: 'buildpack_cache',
+        resource_type: :buildpack_cache,
+        bits_service_options: { enabled: false })
       locator.buildpack_cache_blobstore
+    end
+
+    context('when bits service is enabled') do
+      let(:config) do
+        {
+          droplets: {
+            fog_connection: 'fog_connection',
+            droplet_directory_key: 'key',
+          },
+          bits_service: bits_service_config
+        }
+      end
+
+      it 'creates the client with the right arguments' do
+        expect(CloudController::Blobstore::ClientProvider).to receive(:provide).
+          with(options: config[:droplets], directory_key: 'key', root_dir: 'buildpack_cache', resource_type: :buildpack_cache, bits_service_options: bits_service_config)
+        locator.buildpack_cache_blobstore
+      end
     end
   end
 
@@ -57,8 +106,26 @@ RSpec.describe CloudController::DependencyLocator do
     end
 
     it 'creates blob store' do
-      expect(CloudController::Blobstore::ClientProvider).to receive(:provide).with(options: config[:packages], directory_key: 'key')
+      expect(CloudController::Blobstore::ClientProvider).to receive(:provide).
+        with(options: config[:packages], directory_key: 'key', resource_type: :packages, bits_service_options: { enabled: false })
       locator.package_blobstore
+    end
+
+    context('when bits service is enabled') do
+      let(:config) do
+        {
+          packages: {
+            app_package_directory_key: 'key'
+          },
+          bits_service: bits_service_config
+        }
+      end
+
+      it 'creates the client with the right arguments' do
+        expect(CloudController::Blobstore::ClientProvider).to receive(:provide).
+          with(options: config[:packages], directory_key: 'key', resource_type: :packages, bits_service_options: bits_service_config)
+        locator.package_blobstore
+      end
     end
   end
 
@@ -293,16 +360,37 @@ RSpec.describe CloudController::DependencyLocator do
 
   describe '#blob_sender' do
     let(:sender) { double('sender') }
-    it 'returns the correct sender when using ngx' do
-      config[:nginx][:use_nginx] = true
-      expect(CloudController::BlobSender::NginxLocalBlobSender).to receive(:new).and_return(sender)
-      expect(locator.blob_sender).to eq(sender)
+
+    context 'when using local' do
+      context 'with nginx' do
+        before do
+          config[:nginx][:use_nginx] = true
+        end
+
+        it 'returns the correct sender' do
+          expect(CloudController::BlobSender::NginxLocalBlobSender).to receive(:new).and_return(sender)
+          expect(locator.blob_sender).to eq(sender)
+        end
+      end
+
+      context 'without nginx' do
+        it 'returns the correct sender' do
+          config[:nginx][:use_nginx] = false
+          expect(CloudController::BlobSender::DefaultLocalBlobSender).to receive(:new).and_return(sender)
+          expect(locator.blob_sender).to eq(sender)
+        end
+      end
     end
 
-    it 'returns the correct sender when not using ngx' do
-      config[:nginx][:use_nginx] = false
-      expect(CloudController::BlobSender::DefaultLocalBlobSender).to receive(:new).and_return(sender)
-      expect(locator.blob_sender).to eq(sender)
+    context 'when using bits service' do
+      before do
+        config[:bits_service] = { enabled: true }
+      end
+
+      it 'returns the correct sender' do
+        expect(CloudController::BlobSender::BitsServiceBlobSender).to receive(:new).and_return(sender)
+        expect(locator.blob_sender).to eq(sender)
+      end
     end
   end
 
