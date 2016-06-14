@@ -23,9 +23,11 @@ module CloudController
       end
 
       def cp_to_blobstore(source_path, destination_key)
-        with_file_attachment!(source_path, 'blob') do |file_attachment|
+        filename = File.basename(source_path)
+        with_file_attachment!(source_path, filename) do |file_attachment|
           body = { :"#{resource_type_singular}" => file_attachment }
-          put("/#{resource_type}/#{destination_key}", body)
+          response = put(resource_path(destination_key), body)
+          validate_response_code!(201, response)
         end
       end
 
