@@ -69,7 +69,7 @@ module CloudController
         it 'makes the correct request to the bits-service' do
           expect(VCAP::Request).to receive(:current_id).at_least(:twice).and_return('0815')
           request = stub_request(:put, private_resource_endpoint).
-                    with(body: /name="#{resource_type.to_s.singularize}"; filename="blob"/).
+                    with(body: /name="#{resource_type.to_s.singularize}"/).
                     to_return(status: 201)
 
           subject.cp_to_blobstore(file_path, key)
@@ -133,7 +133,7 @@ module CloudController
           download_request = stub_request(:get, private_resource_endpoint).
                              to_return(status: 200, body: File.new(file_path))
           upload_request = stub_request(:put, File.join(options[:private_endpoint], resource_type.to_s, destination_key)).
-                           with(body: /name="#{resource_type.to_s.singularize}"; filename="blob"\r\n.*\r\n.*\r\n.*\r\n\r\n#{File.new(file_path).read}/).
+                           with(body: /name="#{resource_type.to_s.singularize}";.*\r\n.*\r\n.*\r\n.*\r\n\r\n#{File.new(file_path).read}/).
                            to_return(status: 201)
 
           subject.cp_file_between_keys(key, destination_key)
