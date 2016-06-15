@@ -21,11 +21,6 @@ class VCAP::CloudController::ResourcePool
   def initialize(config={})
     options = config.fetch(:resource_pool, {})
 
-    @blobstore = CloudController::Blobstore::ClientProvider.provide(
-      options: options,
-      directory_key: options.fetch(:resource_directory_key, 'cc-resources')
-    )
-
     @minimum_size = options[:minimum_size] || 0
     @maximum_size = options[:maximum_size] || 512 * 1024 * 1024 # MB
   end
@@ -70,26 +65,28 @@ class VCAP::CloudController::ResourcePool
   end
 
   def copy(descriptor, destination)
-    if resource_known?(descriptor)
-      logger.debug 'resource_pool.sync.start', resource: descriptor, destination: destination
+    logger.debug 'resource_pool.sync.start', resource: descriptor, destination: destination
 
-      logger.debug 'resource_pool.download.starting',
-        destination: destination
+    logger.debug 'resource_pool.download.starting',
+      destination: destination
 
-      start = Time.now.utc
+    start = Time.now.utc
 
-      blobstore.download_from_blobstore(descriptor['sha1'], destination)
+    blobstore.download_from_blobstore(descriptor['sha1'], destination, mode: descriptor['mode'])
 
-      took = Time.now.utc - start
+    took = Time.now.utc - start
 
-      logger.debug 'resource_pool.download.complete', took: took, destination: destination
-    else
-      logger.warn 'resource_pool.sync.failed', unknown_resource: descriptor, destination: destination
-      raise ArgumentError.new("Can not copy bits we do not have #{descriptor}")
-    end
+    logger.debug 'resource_pool.download.complete', took: took, destination: destination
   end
 
   private
+
+  def blobstore
+    @blobstore ||= CloudController::Blobstore::ClientProvider.provide(
+      options: options,
+      directory_key: options.fetch(:resource_directory_key, 'cc-resources')
+    )
+  end
 
   def logger
     @logger ||= Steno.logger('cc.resource_pool')

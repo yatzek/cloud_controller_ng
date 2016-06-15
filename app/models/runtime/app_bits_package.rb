@@ -11,10 +11,11 @@ class AppBitsPackage
     CloudController::Blobstore::LocalAppBits.from_compressed_bits(uploaded_tmp_compressed_path, tmp_dir) do |local_app_bits|
       validate_size!(fingerprints_in_app_cache, local_app_bits)
 
-      global_app_bits_cache.cp_r_to_blobstore(local_app_bits.uncompressed_path)
+      VCAP::CloudController::ResourcePool.instance.add_directory(local_app_bits.uncompressed_path)
 
-      fingerprints_in_app_cache.each do |local_destination, app_bit_sha, mode|
-        global_app_bits_cache.download_from_blobstore(app_bit_sha, File.join(local_app_bits.uncompressed_path, local_destination), mode: mode)
+      fingerprints_in_app_cache.fingerprints.each do |descriptor|
+        destination = File.join(local_app_bits.uncompressed_path, descriptor['fn'])
+        VCAP::CloudController::ResourcePool.instance.copy(descriptor, destination)
       end
 
       package = local_app_bits.create_package
