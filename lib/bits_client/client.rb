@@ -9,99 +9,6 @@ class BitsClient
     @logger = Steno.logger('cc.bits_client')
   end
 
-  def upload_buildpack(buildpack_path, filename)
-    with_file_attachment!(buildpack_path, filename) do |file_attachment|
-      body = { buildpack: file_attachment }
-      multipart_post('/buildpacks', body)
-    end
-  end
-
-  def delete_buildpack(guid)
-    delete("/buildpacks/#{guid}").tap do |response|
-      validate_response_code!(204, response)
-    end
-  end
-
-  def upload_buildpack_cache(key, file_path)
-    with_file_attachment!(file_path, nil) do |file_attachment|
-      body = { buildpack_cache: file_attachment }
-      put("/buildpack_cache/entries/#{key}", body).tap do |response|
-        validate_response_code!(201, response)
-      end
-    end
-  end
-
-  def delete_buildpack_cache(key)
-    delete("/buildpack_cache/entries/#{key}").tap do |response|
-      validate_response_code!(204, response)
-    end
-  end
-
-  def delete_all_buildpack_caches
-    delete('/buildpack_cache/entries').tap do |response|
-      validate_response_code!(204, response)
-    end
-  end
-
-  def upload_droplet(droplet_path)
-    with_file_attachment!(droplet_path, nil) do |file_attachment|
-      body = { droplet: file_attachment }
-      multipart_post('/droplets', body)
-    end
-  end
-
-  def delete_droplet(guid)
-    delete("/droplets/#{guid}").tap do |response|
-      validate_response_code!(204, response)
-    end
-  end
-
-  def upload_package(package_path)
-    response = with_file_attachment!(package_path, nil) do |file_attachment|
-      body = { package: file_attachment }
-      multipart_post('/packages', body)
-    end
-    JSON.parse(response.body)['guid']
-  end
-
-  def delete_package(guid)
-    delete("/packages/#{guid}").tap do |response|
-      validate_response_code!(204, response)
-    end
-  end
-
-  def duplicate_package(guid)
-    response = post('/packages', JSON.generate(source_guid: guid))
-    validate_response_code!(201, response)
-    JSON.parse(response.body)['guid']
-  end
-
-  def duplicate_droplet(guid)
-    response = post('/droplets', JSON.generate(source_guid: guid))
-    validate_response_code!(201, response)
-    JSON.parse(response.body)['guid']
-  end
-
-  def download_url(resource_type, guid)
-    path = resource_path(resource_type, guid)
-
-    head(public_http_client, path).tap do |response|
-      return response['location'] if response.code.to_i == 302
-    end
-
-    File.join(public_endpoint.to_s, path)
-  end
-
-  def internal_download_url(resource_type, guid)
-    path = resource_path(resource_type, guid)
-
-    head(private_http_client, path).tap do |response|
-      return response['location'] if response.code.to_i == 302
-    end
-
-    File.join(private_endpoint.to_s, path)
-  end
-
   def matches(resources_json)
     post('/app_stash/matches', resources_json).tap do |response|
       validate_response_code!(200, response)
@@ -124,11 +31,6 @@ class BitsClient
   private
 
   attr_reader :public_endpoint, :private_endpoint
-
-  def resource_path(resource_type, guid)
-    resource_type = 'buildpack_cache/entries' if resource_type.to_sym == :buildpack_cache
-    File.join('/', resource_type.to_s, guid.to_s)
-  end
 
   def validate_response_code!(expected, response)
     return if expected.to_i == response.code.to_i
@@ -159,20 +61,10 @@ class BitsClient
     raise Errors::FileDoesNotExist.new("Could not find file: #{file_path}")
   end
 
-  def head(http_client, path)
-    request = Net::HTTP::Head.new(path)
-    do_request(http_client, request)
-  end
-
   def post(path, body, header={})
     request = Net::HTTP::Post.new(path, header)
 
     request.body = body
-    do_request(private_http_client, request)
-  end
-
-  def put(path, body, header={})
-    request = Net::HTTP::Put::Multipart.new(path, body, header)
     do_request(private_http_client, request)
   end
 
@@ -181,11 +73,6 @@ class BitsClient
     do_request(private_http_client, request).tap do |response|
       validate_response_code!(201, response)
     end
-  end
-
-  def delete(path)
-    request = Net::HTTP::Delete.new(path)
-    do_request(private_http_client, request)
   end
 
   def do_request(http_client, request)
