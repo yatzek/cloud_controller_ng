@@ -89,6 +89,8 @@ module CloudController
         let(:destination_path) { "#{Dir.mktmpdir}/destination" }
 
         before do
+          stub_request(:head, private_resource_endpoint).
+            to_return(status: 200)
           stub_request(:get, private_resource_endpoint).
             to_return(status: 200, body: File.new(file_path))
         end
@@ -105,6 +107,22 @@ module CloudController
           expect {
             subject.download_from_blobstore(key, destination_path)
           }.to change { File.exist?(destination_path) }.from(false).to(true)
+        end
+
+        context 'when there is a redirect' do
+          let(:redirected_location) { 'http://some.where/else' }
+          before do
+            stub_request(:head, private_resource_endpoint).
+              to_return(status: 302, headers: { location: redirected_location })
+          end
+
+          it 'follows the redirect' do
+            request = stub_request(:get, redirected_location).
+                      to_return(status: 200, body: File.new(file_path))
+
+            subject.download_from_blobstore(key, destination_path)
+            expect(request).to have_been_requested
+          end
         end
 
         context 'when mode is defined' do
@@ -130,6 +148,8 @@ module CloudController
         let(:destination_key) { SecureRandom.uuid }
 
         it 'downloads the blob before uploading it again with the new key' do
+          stub_request(:head, private_resource_endpoint).to_return(status: 200)
+
           download_request = stub_request(:get, private_resource_endpoint).
                              to_return(status: 200, body: File.new(file_path))
           upload_request = stub_request(:put, File.join(options[:private_endpoint], resource_type.to_s, destination_key)).
