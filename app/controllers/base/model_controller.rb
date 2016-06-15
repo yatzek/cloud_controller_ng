@@ -191,16 +191,17 @@ module VCAP::CloudController::RestController
 
       singular_name = name.to_s.singularize
 
-      @request_attrs = { singular_name => other_guid }
+      @request_attrs = { singular_name => other_guid, verb: verb, relation: name, related_guid: other_guid }
 
       obj = find_guid(guid)
 
       before_update(obj)
 
       model.db.transaction do
-        validate_access(:read_for_update, obj, request_attrs)
+        read_validation = verb == 'remove' ? :can_remove_related_object : :read_related_object_for_update
+        validate_access(read_validation, obj, request_attrs)
         obj.send("#{verb}_#{singular_name}_by_guid", other_guid)
-        validate_access(:update, obj, request_attrs)
+        validate_access(:update_related_object, obj, request_attrs)
       end
 
       after_update(obj)

@@ -106,5 +106,334 @@ module VCAP::CloudController
         expect(last_response.status).to eq(403)
       end
     end
+
+    describe 'DELETE /v2/users/:guid/audited_organizations/:org_guid' do
+      let(:space) { Space.make }
+      let(:org) { space.organization }
+      let(:user) { User.make }
+
+      before do
+        set_current_user(user)
+        org.add_auditor(user)
+      end
+
+      context 'when acting on behalf of the current user' do
+        it 'succeeds' do
+          delete "/v2/users/#{user.guid}/audited_organizations/#{org.guid}"
+          expect(last_response.status).to eq(204)
+        end
+      end
+
+      context 'when acting on another user' do
+        let(:other_user) { User.make }
+
+        before do
+          org.add_auditor(other_user)
+        end
+
+        it 'fails with 403' do
+          delete "/v2/users/#{other_user.guid}/audited_organizations/#{org.guid}"
+          expect(last_response.status).to eq(403)
+          expect(decoded_response['code']).to eq(10003)
+        end
+      end
+
+      context 'as a manager' do
+        context 'when acting on another user' do
+          let(:other_user) { User.make }
+
+          before do
+            org.add_manager(user)
+            org.add_auditor(other_user)
+          end
+
+          it 'succeeds' do
+            delete "/v2/users/#{other_user.guid}/audited_organizations/#{org.guid}"
+            expect(last_response.status).to eq(204)
+          end
+        end
+      end
+    end
+
+    describe 'DELETE /v2/users/:guid/audited_spaces/:space_guid' do
+      let(:space) { Space.make }
+      let(:org) { space.organization }
+      let(:user) { User.make }
+
+      before do
+        set_current_user(user)
+        org.add_user(user)
+        org.add_auditor(user)
+        space.add_auditor(user)
+      end
+
+      context 'when acting on behalf of the current user' do
+        it 'succeeds' do
+          delete "/v2/users/#{user.guid}/audited_spaces/#{space.guid}"
+          expect(last_response.status).to eq(204)
+        end
+      end
+
+      context 'when acting on another user' do
+        let(:other_user) { User.make }
+
+        before do
+          org.add_user(other_user)
+          org.add_auditor(other_user)
+          space.add_auditor(other_user)
+        end
+
+        it 'fails with 403' do
+          delete "/v2/users/#{other_user.guid}/audited_spaces/#{space.guid}"
+          expect(last_response.status).to eq(403)
+          expect(decoded_response['code']).to eq(10003)
+        end
+      end
+
+      context 'as a manager' do
+        context 'when acting on another user' do
+          let(:other_user) { User.make }
+
+          before do
+            org.add_manager(user)
+            space.add_manager(user)
+            org.add_user(other_user)
+            org.add_auditor(other_user)
+            space.add_auditor(other_user)
+          end
+
+          it 'succeeds' do
+            delete "/v2/users/#{other_user.guid}/audited_spaces/#{space.guid}"
+            expect(last_response.status).to eq(204)
+          end
+        end
+      end
+    end
+
+    describe 'DELETE /v2/users/:guid/billing_managed_organizations/:org_guid' do
+      let(:space) { Space.make }
+      let(:org) { space.organization }
+      let(:user) { User.make }
+
+      before do
+        set_current_user(user)
+        org.add_user(user)
+        org.add_billing_manager(user)
+      end
+
+      context 'when acting on behalf of the current user' do
+        it 'succeeds' do
+          delete "/v2/users/#{user.guid}/billing_managed_organizations/#{org.guid}"
+          expect(last_response.status).to eq(204)
+        end
+      end
+
+      context 'when acting on another user' do
+        let(:other_user) { User.make }
+
+        before do
+          org.add_user(other_user)
+          org.add_billing_manager(other_user)
+        end
+
+        it 'fails with 403' do
+          delete "/v2/users/#{other_user.guid}/billing_managed_organizations/#{org.guid}"
+          expect(last_response.status).to eq(403)
+          expect(decoded_response['code']).to eq(10003)
+        end
+      end
+
+      context 'as a manager' do
+        context 'when acting on another user' do
+          let(:other_user) { User.make }
+
+          before do
+            org.add_manager(user)
+            org.add_user(other_user)
+            org.add_billing_manager(other_user)
+          end
+
+          it 'succeeds' do
+            delete "/v2/users/#{other_user.guid}/billing_managed_organizations/#{org.guid}"
+            expect(last_response.status).to eq(204)
+          end
+        end
+      end
+    end
+
+    describe 'DELETE /v2/users/:guid/managed_organizations/:space_guid' do
+      let(:space) { Space.make }
+      let(:org) { space.organization }
+      let(:user) { User.make }
+      let(:other_user) { User.make }
+
+      before do
+        set_current_user(user)
+        org.add_user(user)
+        org.add_user(other_user)
+        org.add_manager(other_user)
+      end
+
+      context 'as a manager' do
+        before do
+          org.add_manager(user)
+        end
+
+        it 'succeeds' do
+          delete "/v2/users/#{other_user.guid}/managed_organizations/#{org.guid}"
+          expect(last_response.status).to eq(204)
+        end
+      end
+
+      context 'as a non manager' do
+        context 'when acting on another user' do
+          it 'fails with 403' do
+            delete "/v2/users/#{other_user.guid}/managed_organizations/#{org.guid}"
+            expect(last_response.status).to eq(403)
+            expect(decoded_response['code']).to eq(10003)
+          end
+        end
+      end
+    end
+
+    describe 'DELETE /v2/users/:guid/organizations/:org_guid' do
+      let(:space) { Space.make }
+      let(:org) { space.organization }
+      let(:user) { User.make }
+
+      before do
+        set_current_user(user)
+        org.add_user(user)
+      end
+
+      context 'when acting on behalf of the current user' do
+        it 'succeeds' do
+          delete "/v2/users/#{user.guid}/organizations/#{org.guid}"
+          expect(last_response.status).to eq(204)
+        end
+      end
+
+      context 'when acting on another user' do
+        let(:other_user) { User.make }
+
+        before do
+          org.add_user(other_user)
+        end
+
+        it 'fails with 403' do
+          delete "/v2/users/#{other_user.guid}/organizations/#{org.guid}"
+          expect(last_response.status).to eq(403)
+          expect(decoded_response['code']).to eq(10003)
+        end
+      end
+
+      context 'as a manager' do
+        context 'when acting on another user' do
+          let(:other_user) { User.make }
+
+          before do
+            org.add_manager(user)
+            org.add_user(other_user)
+          end
+
+          it 'succeeds' do
+            delete "/v2/users/#{other_user.guid}/organizations/#{org.guid}"
+            expect(last_response.status).to eq(204)
+          end
+        end
+      end
+    end
+
+    describe 'DELETE /v2/users/:guid/managed_spaces/:space_guid' do
+      let(:space) { Space.make }
+      let(:org) { space.organization }
+      let(:user) { User.make }
+      let(:other_user) { User.make }
+
+      before do
+        set_current_user(user)
+      end
+
+      context 'as a manager' do
+        before do
+          org.add_user(user)
+          space.add_manager(user)
+        end
+
+        context 'when acting on another user' do
+          before do
+            org.add_user(other_user)
+            space.add_manager(other_user)
+          end
+
+          it 'succeeds' do
+            delete "/v2/users/#{other_user.guid}/managed_spaces/#{space.guid}"
+            expect(last_response.status).to eq(204)
+          end
+        end
+      end
+
+      context 'as a non-manager' do
+        context 'when acting on another user' do
+          it 'succeeds' do
+            delete "/v2/users/#{other_user.guid}/managed_spaces/#{space.guid}"
+            expect(last_response.status).to eq(403)
+          end
+        end
+      end
+    end
+
+    describe 'DELETE /v2/users/:guid/spaces/:space_guid' do
+      let(:space) { Space.make }
+      let(:org) { space.organization }
+      let(:user) { User.make }
+
+      before do
+        set_current_user(user)
+        org.add_user(user)
+        space.add_developer(user)
+      end
+
+      context 'when acting on behalf of the current user' do
+        it 'succeeds' do
+          delete "/v2/users/#{user.guid}/spaces/#{space.guid}"
+          expect(last_response.status).to eq(204)
+          expect(Space.all).to include(space)
+        end
+      end
+
+      context 'when acting on another user' do
+        let(:other_user) { User.make }
+
+        before do
+          org.add_user(other_user)
+          space.add_developer(other_user)
+        end
+
+        it 'fails with 403' do
+          delete "/v2/users/#{other_user.guid}/spaces/#{space.guid}"
+          expect(last_response.status).to eq(403)
+          expect(decoded_response['code']).to eq(10003)
+        end
+      end
+
+      context 'as a manager' do
+        context 'when acting on another user' do
+          let(:other_user) { User.make }
+
+          before do
+            org.add_manager(user)
+            space.add_manager(user)
+            org.add_user(other_user)
+            space.add_developer(other_user)
+          end
+
+          it 'succeeds' do
+            delete "/v2/users/#{other_user.guid}/spaces/#{space.guid}"
+            expect(last_response.status).to eq(204)
+          end
+        end
+      end
+    end
   end
 end
