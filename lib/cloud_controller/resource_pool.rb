@@ -19,10 +19,10 @@ class VCAP::CloudController::ResourcePool
   end
 
   def initialize(config={})
-    options = config.fetch(:resource_pool, {})
+    @options = config.fetch(:resource_pool, {})
 
-    @minimum_size = options[:minimum_size] || 0
-    @maximum_size = options[:maximum_size] || 512 * 1024 * 1024 # MB
+    @minimum_size = @options[:minimum_size] || 0
+    @maximum_size = @options[:maximum_size] || 512 * 1024 * 1024 # MB
   end
 
   def match_resources(descriptors)
@@ -83,8 +83,8 @@ class VCAP::CloudController::ResourcePool
 
   def blobstore
     @blobstore ||= CloudController::Blobstore::ClientProvider.provide(
-      options: options,
-      directory_key: options.fetch(:resource_directory_key, 'cc-resources')
+      options: @options,
+      directory_key: @options.fetch(:resource_directory_key, 'cc-resources')
     )
   end
 
