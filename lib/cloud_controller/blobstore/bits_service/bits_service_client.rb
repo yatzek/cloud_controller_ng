@@ -35,7 +35,8 @@ module CloudController
       def download_from_blobstore(source_key, destination_path, mode: nil)
         FileUtils.mkdir_p(File.dirname(destination_path))
         File.open(destination_path, 'wb') do |file|
-          response = get(private_http_client, resource_path(source_key))
+          uri = URI(resolve_redirects(private_http_client, source_key))
+          response = Net::HTTP.get_response(uri)
           validate_response_code!(200, response)
           file.write(response.body)
           file.chmod(mode) if mode
