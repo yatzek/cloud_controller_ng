@@ -18,7 +18,7 @@ module VCAP::CloudController
     end
 
     def update_related_object?(user, params=nil)
-      params[:verb] == 'remove' ? remove?(user, params) : super
+      params[:verb] == 'remove' ? true : super
     end
 
     private
@@ -26,9 +26,28 @@ module VCAP::CloudController
     def remove?(user, params)
       return true if admin_user?
       return false if context.user.nil?
+
+      if params[:relation] == :billing_managed_organizations && billing_manager_count(user, params) <= 1
+        raise CloudController::Errors::ApiError.new_from_details('LastBillingManagerInOrg')
+      end
+      if params[:relation] == :managed_organizations && org_manager_count(user, params) <= 1
+        raise CloudController::Errors::ApiError.new_from_details('LastManagerInOrg')
+      end
+
       return true if operating_on_managed_space?(params)
       return true if operating_on_managed_org?(params)
-      user.guid == context.user.guid
+
+      return true if user.guid == context.user.guid
+    end
+
+    def billing_manager_count(user, params)
+      org = user.billing_managed_organizations.find{|o| o.guid == params['billing_managed_organization']}
+      return org.billing_managers.count
+    end
+
+    def org_manager_count(user, params)
+      org = user.managed_organizations.find{|o| o.guid == params['managed_organization']}
+      return org.managers.count
     end
 
     def operating_on_managed_org?(params)

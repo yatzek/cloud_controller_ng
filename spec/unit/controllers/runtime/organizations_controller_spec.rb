@@ -1031,6 +1031,30 @@ module VCAP::CloudController
             expect(last_response.status).to eql(204)
           end
         end
+
+        context 'as the org manager' do
+          let(:org_manager) { User.make }
+          before do
+            org.add_manager org_manager
+            set_current_user org_manager
+          end
+          it 'is allowed' do
+            delete "/v2/organizations/#{org.guid}/auditors/#{auditor.guid}"
+            expect(last_response.status).to eql(204)
+          end
+        end
+
+        context 'as a user' do
+          let(:user) { User.make }
+          before do
+            org.add_user user
+            set_current_user user
+          end
+          it 'is not allowed' do
+            delete "/v2/organizations/#{org.guid}/auditors/#{auditor.guid}"
+            expect(last_response.status).to eql(403)
+          end
+        end
       end
     end
 
