@@ -24,7 +24,7 @@ module VCAP::CloudController
         raise ::CloudController::Errors::ApiError.new_from_details('UnprocessableEntity', 'must be an array.')
       end
 
-      fingerprints_existing_in_blobstore = ResourcePool.instance.match_resources(fingerprints_all_clientside_bits)
+      fingerprints_existing_in_blobstore = resource_pool.match_resources(fingerprints_all_clientside_bits)
       MultiJson.dump(fingerprints_existing_in_blobstore)
     end
 
@@ -36,6 +36,10 @@ module VCAP::CloudController
 
     def bits_client
       ::CloudController::DependencyLocator.instance.bits_client
+    end
+
+    def resource_pool
+      @resource_pool ||= ::CloudController::DependencyLocator.instance.resource_pool
     end
   end
 end

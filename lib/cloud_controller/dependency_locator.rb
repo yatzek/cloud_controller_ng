@@ -255,6 +255,13 @@ module CloudController
       bits_service_options[:enabled]
     end
 
+    def resource_pool
+      if use_bits_service
+      else
+        ResourcePool::LegacyPool.new(@config)
+      end
+    end
+
     private
 
     def create_paginated_collection_renderer(opts={})

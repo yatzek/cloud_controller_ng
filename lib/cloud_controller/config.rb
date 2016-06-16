@@ -272,7 +272,6 @@ module VCAP::CloudController
 
         Encryptor.db_encryption_key = config[:db_encryption_key]
         AccountCapacity.configure(config)
-        ResourcePool.instance = ResourcePool.new(config)
 
         QuotaDefinition.configure(config)
         Stack.configure(config[:stacks_file])

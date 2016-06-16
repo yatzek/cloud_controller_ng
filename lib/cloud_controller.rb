@@ -70,7 +70,7 @@ require 'cloud_controller/legacy_api/legacy_api_base'
 require 'cloud_controller/legacy_api/legacy_info'
 require 'cloud_controller/legacy_api/legacy_bulk'
 
-require 'cloud_controller/resource_pool'
+require 'cloud_controller/resource_pool/legacy_pool'
 
 require 'cloud_controller/dea/pool'
 require 'cloud_controller/dea/client'

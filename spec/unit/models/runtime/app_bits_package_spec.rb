@@ -21,9 +21,8 @@ describe AppBitsPackage do
   before do
     allow(packer).to receive(:tmp_dir).and_return(local_tmp_dir)
     allow(packer).to receive(:package_blobstore).and_return(package_blobstore)
-    allow(packer).to receive(:global_app_bits_cache).and_return(global_app_bits_cache)
-    allow_any_instance_of(VCAP::CloudController::ResourcePool).to receive(:blobstore).and_return(global_app_bits_cache)
     allow(packer).to receive(:max_package_size).and_return(max_package_size)
+    allow_any_instance_of(VCAP::CloudController::ResourcePool::LegacyPool).to receive(:blobstore).and_return(global_app_bits_cache)
 
     Fog.unmock!
     allow(FileUtils).to receive(:rm_f).with(compressed_path)

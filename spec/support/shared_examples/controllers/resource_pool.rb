@@ -41,7 +41,7 @@ shared_context 'resource pool' do
     Fog.mock!
   end
 
-  let(:resource_pool_config) do
+  let(:config) do
     {
         maximum_size: @max_file_size,
         resource_directory_key: 'spec-cc-resources',
@@ -51,12 +51,6 @@ shared_context 'resource pool' do
             aws_secret_access_key: 'fake_secret_access_key',
         }
     }
-  end
-
-  before do
-    @resource_pool = VCAP::CloudController::ResourcePool.new(
-      resource_pool: resource_pool_config
-    )
   end
 
   after(:all) do

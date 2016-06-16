@@ -309,11 +309,6 @@ module VCAP::CloudController
         AccountCapacity.admin[:memory] = AccountCapacity::ADMIN_MEM
       end
 
-      it 'sets up the resource pool instance' do
-        Config.configure_components(@test_config.merge(resource_pool: { minimum_size: 9001, fog_connection: {} }))
-        expect(ResourcePool.instance.minimum_size).to eq(9001)
-      end
-
       it 'creates the runners' do
         expect(VCAP::CloudController::Runners).to receive(:new).with(
           @test_config,

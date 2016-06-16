@@ -5,7 +5,7 @@ module VCAP::CloudController
     include_context 'resource pool'
 
     before do
-      @resource_pool.add_directory(@tmpdir)
+      ::CloudController::DependencyLocator.instance.resource_pool.add_directory(@tmpdir)
     end
 
     def resource_match_request(verb, path, matches, non_matches)
