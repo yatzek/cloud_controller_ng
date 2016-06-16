@@ -71,6 +71,7 @@ require 'cloud_controller/legacy_api/legacy_info'
 require 'cloud_controller/legacy_api/legacy_bulk'
 
 require 'cloud_controller/resource_pool/legacy_pool'
+require 'cloud_controller/resource_pool/bits_service_pool'
 
 require 'cloud_controller/dea/pool'
 require 'cloud_controller/dea/client'
