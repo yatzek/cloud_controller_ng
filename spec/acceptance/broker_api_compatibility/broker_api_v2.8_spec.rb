@@ -1,172 +1,100 @@
 require 'spec_helper'
 
 RSpec.describe 'Service Broker API integration' do
+  let(:user) { VCAP::CloudController::User.make }
+  let(:space) { VCAP::CloudController::Space.make }
+
+  before do
+    space.organization.add_user(user)
+    space.add_developer(user)
+  end
+
   describe 'v2.8' do
     include VCAP::CloudController::BrokerApiHelper
+    describe 'max port limit' do
+      let(:post_params) {
+        MultiJson.dump({
+          name: 'maria',
+          space_guid: space.guid,
+          detected_start_command: 'echo meow',
+          diego: true,
+          ports: ports
+        })
+      }
+      context 'with 10 or fewer ports' do
+        let(:ports) { [8080, 8081, 8082, 8083, 8084, 8085, 8086, 8087, 8088, 8089] }
+        it 'creates an app ' do
+          post '/v2/apps', post_params, headers_for(user)
+          expect(last_response.status).to eq(201)
+        end
+      end
+      context 'with 11 or more ports' do
+        let(:ports) { [8080, 8081, 8082, 8083, 8084, 8085, 8086, 8087, 8088, 8089, 8090] }
+        it 'raises an error' do
+          post '/v2/apps', post_params, headers_for(user)
+          expect(last_response.status).to eq(400)
+          expect(last_response.body).to match('The app is invalid: ports Maximum of 10 app ports allowed.')
+        end
+      end
+    end
 
-    describe 'Perform async operations' do
-      let(:catalog) { default_catalog(plan_updateable: true) }
+    describe 'tag limit' do
+      let(:space) { VCAP::CloudController::Space.make }
+      let(:service_plan) { VCAP::CloudController::ServicePlan.make }
+      let(:request_attrs) do
+        MultiJson.dump({
+          'space_guid' => space.guid,
+          'service_plan_guid' => service_plan.guid,
+          'name' => 'my-instance',
+          'tags' => tags
+        })
+      end
 
       before do
-        setup_cc
-        setup_broker(catalog)
-        @broker = VCAP::CloudController::ServiceBroker.find guid: @broker_guid
+        stub_provision(service_plan.service.service_broker, body: {}.to_json)
       end
 
-      context 'update' do
-        let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space_guid: @space_guid, service_plan_guid: @plan_guid) }
-
-        before do
-          @service_instance_guid = service_instance.guid
-        end
-
-        it 'performs the async flow if broker initiates an async operation' do
-          async_update_service
-          stub_async_last_operation
-
-          expect(
-            a_request(:patch, update_url_for_broker(@broker, accepts_incomplete: true))).to have_been_made
-
-          service_instance = VCAP::CloudController::ManagedServiceInstance.find(guid: @service_instance_guid)
-
-          Delayed::Worker.new.work_off
-
-          expect(a_request(:get, %r{#{service_instance_url(service_instance)}/last_operation})).to have_been_made
-
-          expect(service_instance.reload.last_operation.state).to eq 'succeeded'
-          expect(service_instance.reload.last_operation.type).to eq 'update'
-        end
-
-        it 'performs the synchronous flow if broker does not return async response code' do
-          async_update_service(status: 200)
-
-          expect(
-            a_request(:patch, update_url_for_broker(@broker, accepts_incomplete: true))
-          ).to have_been_made
-
-          service_instance = VCAP::CloudController::ManagedServiceInstance.find(guid: @service_instance_guid)
-          expect(service_instance.reload.last_operation.state).to eq 'succeeded'
-          expect(service_instance.reload.last_operation.type).to eq 'update'
-        end
-
-        it 'marks the service instance as failed if the initial request succeeds, but the async provision fails' do
-          async_update_service
-          stub_async_last_operation(state: 'failed')
-
-          expect(
-            a_request(:patch, update_url_for_broker(@broker, accepts_incomplete: true))
-          ).to have_been_made
-
-          Delayed::Worker.new.work_off
-
-          service_instance = VCAP::CloudController::ManagedServiceInstance.find(guid: @service_instance_guid)
-          expect(a_request(:get, %r{#{service_instance_url(service_instance)}/last_operation})).to have_been_made
-
-          expect(service_instance.reload.last_operation.state).to eq 'failed'
-          expect(service_instance.reload.last_operation.type).to eq 'update'
+      context 'with a tag 2048 characters or less' do
+        let(:tags) { ['normal-tag'] }
+        it 'creates a service instance' do
+          post '/v2/service_instances?accepts_incomplete=true', request_attrs, headers_for(user)
+          expect(last_response.status).to eq(201)
+          expect(VCAP::CloudController::ServiceInstance.last.tags).to eq(['normal-tag'])
         end
       end
-
-      context 'delete' do
-        let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space_guid: @space_guid, service_plan_guid: @plan_guid) }
-
-        before do
-          @service_instance_guid = service_instance.guid
-        end
-
-        it 'performs the async flow if broker initiates an async operation' do
-          async_delete_service
-          stub_async_last_operation
-
-          expect(
-            a_request(:delete, deprovision_url(service_instance, accepts_incomplete: true))
-          ).to have_been_made
-
-          service_instance = VCAP::CloudController::ManagedServiceInstance.find(guid: @service_instance_guid)
-          Delayed::Worker.new.work_off
-          expect(a_request(:get, %r{#{service_instance_url(service_instance)}/last_operation})).to have_been_made
-
-          expect { service_instance.reload }.to raise_error(Sequel::Error)
-        end
-
-        it 'performs the synchronous flow if broker does not return async response code' do
-          service_instance = VCAP::CloudController::ManagedServiceInstance.find(guid: @service_instance_guid)
-
-          async_delete_service(status: 200)
-
-          expect(
-            a_request(:delete, deprovision_url(service_instance, accepts_incomplete: true))
-          ).to have_been_made
-
-          expect { service_instance.reload }.to raise_error(Sequel::Error)
-        end
-
-        it 'marks the service instance as failed if the initial request succeeds, but the async provision fails' do
-          async_delete_service
-          stub_async_last_operation(state: 'failed')
-
-          expect(
-            a_request(:delete, deprovision_url(service_instance, accepts_incomplete: true))
-          ).to have_been_made
-
-          service_instance = VCAP::CloudController::ManagedServiceInstance.find(guid: @service_instance_guid)
-          Delayed::Worker.new.work_off
-          expect(a_request(:get, %r{#{service_instance_url(service_instance)}/last_operation})).to have_been_made
-
-          expect(service_instance.reload.last_operation.state).to eq 'failed'
-          expect(service_instance.reload.last_operation.type).to eq 'delete'
+      context 'with a tag 2049 characters or more' do
+        let(:tags) { ['*'*2049] }
+        it 'creates a service instance' do
+          post '/v2/service_instances?accepts_incomplete=true', request_attrs, headers_for(user)
+          expect(last_response.status).to eq(400)
+          expect(last_response.body).to match('Combined length of tags for service my-instance must be 2048 characters or less.')
         end
       end
+    end
 
-      context 'provision' do
-        it 'performs the async flow if broker initiates an async operation' do
-          async_provision_service
-          stub_async_last_operation
+    describe 'route forwarding' do
+      let(:service) { VCAP::CloudController::Service.make(requires: requires) }
+      let(:service_plan) { VCAP::CloudController::ServicePlan.make(service: service) }
+      let(:service_instance) do
+        VCAP::CloudController::ManagedServiceInstance.make(
+          service_plan: service_plan,
+          name: 'meow'
+        )
+      end
+      context 'service that does require route_forwarding' do
+        let(:requires) { ['route_forwarding'] }
 
-          expect(
-            a_request(:put, provision_url_for_broker(@broker, accepts_incomplete: true))
-          ).to have_been_made
-
-          service_instance = VCAP::CloudController::ManagedServiceInstance.find(guid: @service_instance_guid)
-
-          Delayed::Worker.new.work_off
-
-          expect(a_request(:get, %r{#{service_instance_url(service_instance)}/last_operation})).to have_been_made
-
-          expect(service_instance.reload.last_operation.state).to eq 'succeeded'
-          expect(service_instance.reload.last_operation.type).to eq 'create'
-        end
-
-        it 'performs the synchronous flow if broker does not return async response code' do
-          async_provision_service(status: 201)
-          stub_async_last_operation
-
-          expect(
-            a_request(:put, provision_url_for_broker(@broker, accepts_incomplete: true))
-          ).to have_been_made
-
-          service_instance = VCAP::CloudController::ManagedServiceInstance.find(guid: @service_instance_guid)
-          expect(service_instance.reload.last_operation.state).to eq 'succeeded'
-          expect(service_instance.reload.last_operation.type).to eq 'create'
-        end
-
-        it 'marks the service instance as failed if the initial request succeeds, but the async provision fails' do
-          async_provision_service
-          stub_async_last_operation(state: 'failed')
-
-          expect(
-            a_request(:put, provision_url_for_broker(@broker, accepts_incomplete: true))
-          ).to have_been_made
-
-          Delayed::Worker.new.work_off
-
-          service_instance = VCAP::CloudController::ManagedServiceInstance.find(guid: @service_instance_guid)
-          expect(a_request(:get, %r{#{service_instance_url(service_instance)}/last_operation})).to have_been_made
-
-          expect(service_instance.reload.last_operation.state).to eq 'failed'
-          expect(service_instance.reload.last_operation.type).to eq 'create'
+        it 'should allow service_binding with route_forwarding???' do
+          expect {
+            service_binding = VCAP::CloudController::ServiceBinding.make(service_instance: service_instance)
+            service_binding.route_forwarding = nil
+            service_binding.save
+          }.not_to raise_error
         end
       end
     end
   end
 end
+
+
+
