@@ -78,7 +78,7 @@ module VCAP::CloudController
 
     def packer_class
       if CloudController::DependencyLocator.instance.use_bits_service
-        Jobs::Runtime::ExternalPacker
+        Jobs::Runtime::BitsServicePacker
       else
         Jobs::Runtime::AppBitsPacker
       end

@@ -5,11 +5,11 @@ module VCAP::CloudController
       return ApiError.new_from_details('NotAuthorized') unless user
       FeatureFlag.raise_unless_enabled!(:app_bits_upload)
 
-      if use_bits_client?
+      if bits_service_resource_pool
         begin
-          response = bits_client.matches(body.read)
+          response = bits_service_resource_pool.matches(body.read)
           return response.body
-        rescue BitsClient::Errors::Error => e
+        rescue BitsService::Errors::Error => e
           raise ::CloudController::Errors::ApiError.new_from_details('BitsServiceError', e.message)
         end
       end
@@ -30,12 +30,8 @@ module VCAP::CloudController
 
     private
 
-    def use_bits_client?
-      !!::CloudController::DependencyLocator.instance.use_bits_service
-    end
-
-    def bits_client
-      ::CloudController::DependencyLocator.instance.bits_client
+    def bits_service_resource_pool
+      ::CloudController::DependencyLocator.instance.bits_service_resource_pool
     end
   end
 end

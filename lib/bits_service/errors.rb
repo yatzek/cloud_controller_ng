@@ -1,4 +1,4 @@
-module BitsClient::Errors
+module BitsService::Errors
   class Error < StandardError; end
 
   class FileDoesNotExist < Error; end

@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module VCAP::CloudController
   module Jobs::Runtime
-    describe ExternalPacker do
+    describe BitsServicePacker do
       let(:uploaded_path) { 'tmp/uploaded.zip' }
       let(:app) { App.make }
       let(:app_guid) { app.guid }
@@ -10,20 +10,20 @@ module VCAP::CloudController
       let(:receipt) { [{ 'sha1' => '12345', 'fn' => 'app.rb' }] }
       let(:fingerprints) { [{ 'sha1' => 'abcde', 'fn' => 'lib.rb' }] }
       let(:package_file) { Tempfile.new('package') }
-      let(:bits_client) { double(BitsClient) }
+      let(:resource_pool) { double(BitsService::ResourcePool) }
 
       subject(:job) do
-        ExternalPacker.new(app_guid, uploaded_path, fingerprints)
+        BitsServicePacker.new(app_guid, uploaded_path, fingerprints)
       end
 
       before do
-        allow_any_instance_of(CloudController::DependencyLocator).to receive(:bits_client).
-          and_return(bits_client)
+        allow_any_instance_of(CloudController::DependencyLocator).to receive(:bits_service_resource_pool).
+          and_return(resource_pool)
         allow_any_instance_of(CloudController::DependencyLocator).to receive(:package_blobstore).
           and_return(package_blobstore)
-        allow(bits_client).to receive(:upload_entries).
+        allow(resource_pool).to receive(:upload_entries).
           and_return(double(:response, code: 201, body: receipt.to_json))
-        allow(bits_client).to receive(:bundles).
+        allow(resource_pool).to receive(:bundles).
           and_return(double(:response, code: 200, body: 'contents'))
         allow(package_blobstore).to receive(:cp_to_blobstore)
         allow(Tempfile).to receive(:new).and_return(package_file)
@@ -32,14 +32,14 @@ module VCAP::CloudController
       it { is_expected.to be_a_valid_job }
 
       describe '#perform' do
-        it 'uses the bits_client to upload the zip file' do
-          expect(bits_client).to receive(:upload_entries).with(uploaded_path)
+        it 'uses the resource_pool to upload the zip file' do
+          expect(resource_pool).to receive(:upload_entries).with(uploaded_path)
           job.perform
         end
 
         it 'merges the bits-service receipt with the cli resources to ask for the bundles' do
           merged_fingerprints = fingerprints + receipt
-          expect(bits_client).to receive(:bundles).
+          expect(resource_pool).to receive(:bundles).
             with(merged_fingerprints.to_json)
           job.perform
         end
@@ -53,7 +53,7 @@ module VCAP::CloudController
         end
 
         it 'knows its job name' do
-          expect(job.job_name_in_configuration).to equal(:external_packer)
+          expect(job.job_name_in_configuration).to equal(:bits_service_packer)
         end
 
         it 'logs an error if the app cannot be found' do
@@ -95,12 +95,12 @@ module VCAP::CloudController
           let(:uploaded_path) { nil }
 
           it 'does not upload new entries to the bits service' do
-            expect(bits_client).to_not receive(:upload_entries)
+            expect(resource_pool).to_not receive(:upload_entries)
             job.perform
           end
 
           it 'downloads a bundle with the original fingerprints' do
-            expect(bits_client).to receive(:bundles).with(fingerprints.to_json)
+            expect(resource_pool).to receive(:bundles).with(fingerprints.to_json)
             job.perform
           end
 
@@ -120,8 +120,8 @@ module VCAP::CloudController
 
         context 'when `upload_entries` fails' do
           before do
-            allow(bits_client).to receive(:upload_entries).
-              and_raise(BitsClient::Errors::UnexpectedResponseCode)
+            allow(resource_pool).to receive(:upload_entries).
+              and_raise(BitsService::Errors::UnexpectedResponseCode)
           end
 
           it_behaves_like 'a packaging failure'
@@ -129,8 +129,8 @@ module VCAP::CloudController
 
         context 'when `bundles` fails' do
           before do
-            allow(bits_client).to receive(:bundles).
-              and_raise(BitsClient::Errors::UnexpectedResponseCode)
+            allow(resource_pool).to receive(:bundles).
+              and_raise(BitsService::Errors::UnexpectedResponseCode)
           end
 
           it_behaves_like 'a packaging failure'
@@ -159,8 +159,8 @@ module VCAP::CloudController
 
         context 'when the bits service has an internal error on upload_entries' do
           before do
-            allow(bits_client).to receive(:upload_entries).
-              and_raise(BitsClient::Errors::UnexpectedResponseCode)
+            allow(resource_pool).to receive(:upload_entries).
+              and_raise(BitsService::Errors::UnexpectedResponseCode)
           end
 
           it_behaves_like 'a packaging failure'
@@ -168,8 +168,8 @@ module VCAP::CloudController
 
         context 'when the bits service has an internal error on bundles' do
           before do
-            allow(bits_client).to receive(:bundles).
-              and_raise(BitsClient::Errors::UnexpectedResponseCode)
+            allow(resource_pool).to receive(:bundles).
+              and_raise(BitsService::Errors::UnexpectedResponseCode)
           end
 
           it_behaves_like 'a packaging failure'

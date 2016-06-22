@@ -374,8 +374,8 @@ module VCAP::CloudController
           TestConfig.override(bits_service_config)
         end
 
-        it 'instantiates an ExternalPacker job' do
-          expect(Jobs::Runtime::ExternalPacker).to receive(:new).with(app_obj.guid, anything, order)
+        it 'instantiates an BitsServicePacker job' do
+          expect(Jobs::Runtime::BitsServicePacker).to receive(:new).with(app_obj.guid, anything, order)
           put "/v2/apps/#{app_obj.guid}/bits", req_body, admin_headers
         end
       end

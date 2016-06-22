@@ -3,7 +3,7 @@ require 'cloud_controller/dependency_locator'
 module VCAP::CloudController
   module Jobs
     module Runtime
-      class ExternalPacker < VCAP::CloudController::Jobs::CCJob
+      class BitsServicePacker < VCAP::CloudController::Jobs::CCJob
         attr_accessor :app_guid, :uploaded_compressed_path, :fingerprints
 
         def initialize(app_guid, uploaded_compressed_path, fingerprints)
@@ -22,14 +22,14 @@ module VCAP::CloudController
             return
           end
 
-          bits_client = CloudController::DependencyLocator.instance.bits_client
+          resource_pool = CloudController::DependencyLocator.instance.bits_service_resource_pool
 
           if uploaded_compressed_path.to_s != ''
-            entries_response = bits_client.upload_entries(uploaded_compressed_path)
+            entries_response = resource_pool.upload_entries(uploaded_compressed_path)
             receipt = JSON.parse(entries_response.body)
             fingerprints.concat(receipt)
           end
-          package_response = bits_client.bundles(fingerprints.to_json)
+          package_response = resource_pool.bundles(fingerprints.to_json)
 
           package = Tempfile.new('package.zip').binmode
           package.write(package_response.body)
@@ -40,12 +40,12 @@ module VCAP::CloudController
           app.save
         rescue => e
           app.mark_as_failed_to_stage
-          raise CloudController::Errors::ApiError.new_from_details('BitsServiceError', e.message) if e.is_a?(BitsClient::Errors::Error)
+          raise CloudController::Errors::ApiError.new_from_details('BitsServiceError', e.message) if e.is_a?(BitsService::Errors::Error)
           raise
         end
 
         def job_name_in_configuration
-          :external_packer
+          :bits_service_packer
         end
 
         def max_attempts
@@ -60,12 +60,6 @@ module VCAP::CloudController
 
         def package_blobstore
           @package_blobstore ||= CloudController::DependencyLocator.instance.package_blobstore
-        end
-
-        def upload_package(bits_client, file_path)
-          bits_client.upload_package(file_path)
-        rescue BitsClient::Errors::Error => e
-          raise CloudController::Errors::ApiError.new_from_details('BitsServiceError', e.message)
         end
       end
     end

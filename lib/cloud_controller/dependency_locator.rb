@@ -12,7 +12,7 @@ require 'cloud_controller/diego/stager_client'
 require 'cloud_controller/diego/tps_client'
 require 'cloud_controller/diego/messenger'
 require 'cloud_controller/blobstore/client_provider'
-require 'bits_client/client'
+require 'bits_service/resource_pool'
 
 module CloudController
   class DependencyLocator
@@ -234,9 +234,9 @@ module CloudController
       end
     end
 
-    def bits_client
+    def bits_service_resource_pool
       return nil unless use_bits_service
-      BitsClient.new(public_endpoint: bits_service_options[:public_endpoint], private_endpoint: bits_service_options[:private_endpoint])
+      BitsService::ResourcePool.new(endpoint: bits_service_options[:private_endpoint])
     end
 
     def bits_service_options

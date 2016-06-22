@@ -91,7 +91,6 @@ module VCAP::CloudController
         {
           bits_service: {
             enabled: true,
-            public_endpoint: 'https://bits-service.example.com',
             private_endpoint: 'https://bits-service.service.cf.internal'
           }
         }
@@ -104,22 +103,22 @@ module VCAP::CloudController
       end
 
       it 'forwards the request using the bits_service client' do
-        expect_any_instance_of(BitsClient).to receive(:matches).with(resources.to_json)
+        expect_any_instance_of(BitsService::ResourcePool).to receive(:matches).with(resources.to_json)
         send(:put, '/v2/resource_match', resources.to_json)
       end
 
       it 'returns back the matches' do
-        allow_any_instance_of(BitsClient).to receive(:matches).
+        allow_any_instance_of(BitsService::ResourcePool).to receive(:matches).
           and_return(double(:response, code: 200, body: resources.to_json))
 
         send(:put, '/v2/resource_match', resources.to_json)
         expect(last_response.body).to eq(resources.to_json)
       end
 
-      context 'when the bits_client response is not 200' do
+      context 'when the bits_service response is not 200' do
         before do
-          allow_any_instance_of(BitsClient).to receive(:matches).
-            and_raise(BitsClient::Errors::Error, 'Failed in bits-service')
+          allow_any_instance_of(BitsService::ResourcePool).to receive(:matches).
+            and_raise(BitsService::Errors::Error, 'Failed in bits-service')
         end
 
         it 'retuns HTTP status 500' do
