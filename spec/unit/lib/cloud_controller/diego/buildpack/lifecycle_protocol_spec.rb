@@ -117,6 +117,20 @@ module VCAP
                 expect(droplet_uri).to eq('www.droplet.com')
               end
             end
+
+            context 'droplet_md5' do
+              before do
+                app.add_new_droplet('meowmeowmeow')
+                app.current_droplet.droplet_hash = "some_md5_hash"
+                app.current_droplet.save
+              end
+
+              it 'includes the droplet_uri' do
+                droplet_md5 = lifecycle_protocol.desired_app_message(app)['droplet_md5']
+
+                expect(droplet_md5).to eq('some_md5_hash')
+              end
+            end
           end
         end
       end
