@@ -22,12 +22,6 @@ RSpec.describe 'Service Broker API integration' do
       end
       let(:app_guid) { @app_guid }
       let(:service_instance_guid) { @service_instance_guid }
-      let(:request_from_cc_to_broker) do
-        {
-          plan_id: 'plan1-guid-here',
-          service_id: 'service-guid-here'
-        }
-      end
       let(:catalog) { default_catalog(requires: ['volume_mount']) }
 
       before do

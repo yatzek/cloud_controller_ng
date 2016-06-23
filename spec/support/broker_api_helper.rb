@@ -224,6 +224,23 @@ module VCAP::CloudController::BrokerApiHelper
     @binding_id = JSON.parse(last_response.body)['metadata']['guid']
   end
 
+  def bind_route_to_service_instance
+    stub_request(:put, %r{/v2/service_instances/#{@service_instance_guid}/service_bindings/[[:alnum:]-]+}).
+      to_return(status: 201, body: {}.to_json)
+
+    route = VCAP::CloudController::Route.make(space: @space)
+    @route_binding = VCAP::CloudController::RouteBinding.make(route: route)
+
+    body = { app_guid: @app_guid, service_instance_guid: @service_instance_guid, parameters: { bind_resource: @route_binding.required_params } }
+
+    post('/v2/service_bindings',
+      body.to_json,
+      json_headers(admin_headers)
+    )
+
+    @bind_route_service_instance_id = JSON.parse(last_response.body)['metadata']['guid']
+  end
+
   def unbind_service
     stub_request(:delete, %r{/v2/service_instances/#{@service_instance_guid}/service_bindings/[[:alnum:]-]+}).
       to_return(status: 204, body: {}.to_json)

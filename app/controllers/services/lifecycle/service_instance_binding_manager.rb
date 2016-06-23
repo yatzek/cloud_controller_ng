@@ -40,7 +40,8 @@ module VCAP::CloudController
       @access_validator.validate_access(:update, instance)
 
       raise Sequel::ValidationFailed.new(route_binding) unless route_binding.valid?
-
+      puts "route_binding: #{route_binding}"
+      puts "arbitrary_parameters: #{arbitrary_parameters}"
       raw_attributes = bind(route_binding, arbitrary_parameters)
       attributes_to_update = {
         route_service_url: raw_attributes[:route_service_url]
@@ -124,6 +125,7 @@ module VCAP::CloudController
 
     def bind(binding_obj, arbitrary_parameters)
       raise_if_locked(binding_obj.service_instance)
+      puts "binding_obj: #{binding_obj}"
       binding_obj.client.bind(binding_obj, arbitrary_parameters)
     end
 

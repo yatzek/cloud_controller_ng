@@ -3,170 +3,62 @@ require 'spec_helper'
 RSpec.describe 'Service Broker API integration' do
   describe 'v2.8' do
     include VCAP::CloudController::BrokerApiHelper
-
-    describe 'Perform async operations' do
-      let(:catalog) { default_catalog(plan_updateable: true) }
+      let(:route) { VCAP::CloudController::Route.make(space: @space) }
+      let(:catalog) { default_catalog(requires: ['route_forwarding']) }
+      let(:binding_request) { %r{ /v2/service_instances/#{@service_instance_guid}/service_bindings/#{guid_pattern} } }
+      let(:request_body) { { bind_resource: { route: route.uri } }.to_json  }
 
       before do
         setup_cc
         setup_broker(catalog)
-        @broker = VCAP::CloudController::ServiceBroker.find guid: @broker_guid
+        create_app
+        provision_service
+        bind_service
+        bind_route_to_service_instance
       end
 
-      context 'update' do
-        let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space_guid: @space_guid, service_plan_guid: @plan_guid) }
-
-        before do
-          @service_instance_guid = service_instance.guid
-        end
-
-        it 'performs the async flow if broker initiates an async operation' do
-          async_update_service
-          stub_async_last_operation
-
-          expect(
-            a_request(:patch, update_url_for_broker(@broker, accepts_incomplete: true))).to have_been_made
-
-          service_instance = VCAP::CloudController::ManagedServiceInstance.find(guid: @service_instance_guid)
-
-          Delayed::Worker.new.work_off
-
-          expect(a_request(:get, %r{#{service_instance_url(service_instance)}/last_operation})).to have_been_made
-
-          expect(service_instance.reload.last_operation.state).to eq 'succeeded'
-          expect(service_instance.reload.last_operation.type).to eq 'update'
-        end
-
-        it 'performs the synchronous flow if broker does not return async response code' do
-          async_update_service(status: 200)
-
-          expect(
-            a_request(:patch, update_url_for_broker(@broker, accepts_incomplete: true))
-          ).to have_been_made
-
-          service_instance = VCAP::CloudController::ManagedServiceInstance.find(guid: @service_instance_guid)
-          expect(service_instance.reload.last_operation.state).to eq 'succeeded'
-          expect(service_instance.reload.last_operation.type).to eq 'update'
-        end
-
-        it 'marks the service instance as failed if the initial request succeeds, but the async provision fails' do
-          async_update_service
-          stub_async_last_operation(state: 'failed')
-
-          expect(
-            a_request(:patch, update_url_for_broker(@broker, accepts_incomplete: true))
-          ).to have_been_made
-
-          Delayed::Worker.new.work_off
-
-          service_instance = VCAP::CloudController::ManagedServiceInstance.find(guid: @service_instance_guid)
-          expect(a_request(:get, %r{#{service_instance_url(service_instance)}/last_operation})).to have_been_made
-
-          expect(service_instance.reload.last_operation.state).to eq 'failed'
-          expect(service_instance.reload.last_operation.type).to eq 'update'
-        end
+      after do
+        delete_broker
       end
 
-      context 'delete' do
-        let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space_guid: @space_guid, service_plan_guid: @plan_guid) }
+    describe 'route forwarding for service bindings' do
+      it 'cc responds with success' do
 
-        before do
-          @service_instance_guid = service_instance.guid
-        end
+        # √ set up broker
+        # √ setup service instance
+        # √ setup binding between instance and app
+        # makes another service binding request, with the route being the bind resource
 
-        it 'performs the async flow if broker initiates an async operation' do
-          async_delete_service
-          stub_async_last_operation
+        stub_request(:put, binding_request).to_return(status: 201, body: {}.to_json)
 
-          expect(
-            a_request(:delete, deprovision_url(service_instance, accepts_incomplete: true))
-          ).to have_been_made
+        put("/v2/service_instances/#{@service_instance_guid}/routes/#{route.guid}", request_body, json_headers(admin_headers))
+        expect(last_response.status).to eq 201
 
-          service_instance = VCAP::CloudController::ManagedServiceInstance.find(guid: @service_instance_guid)
-          Delayed::Worker.new.work_off
-          expect(a_request(:get, %r{#{service_instance_url(service_instance)}/last_operation})).to have_been_made
-
-          expect { service_instance.reload }.to raise_error(Sequel::Error)
-        end
-
-        it 'performs the synchronous flow if broker does not return async response code' do
-          service_instance = VCAP::CloudController::ManagedServiceInstance.find(guid: @service_instance_guid)
-
-          async_delete_service(status: 200)
-
-          expect(
-            a_request(:delete, deprovision_url(service_instance, accepts_incomplete: true))
-          ).to have_been_made
-
-          expect { service_instance.reload }.to raise_error(Sequel::Error)
-        end
-
-        it 'marks the service instance as failed if the initial request succeeds, but the async provision fails' do
-          async_delete_service
-          stub_async_last_operation(state: 'failed')
-
-          expect(
-            a_request(:delete, deprovision_url(service_instance, accepts_incomplete: true))
-          ).to have_been_made
-
-          service_instance = VCAP::CloudController::ManagedServiceInstance.find(guid: @service_instance_guid)
-          Delayed::Worker.new.work_off
-          expect(a_request(:get, %r{#{service_instance_url(service_instance)}/last_operation})).to have_been_made
-
-          expect(service_instance.reload.last_operation.state).to eq 'failed'
-          expect(service_instance.reload.last_operation.type).to eq 'delete'
-        end
+        get("/v2/service_instances/#{@service_instance_guid}/routes", {}, json_headers(admin_headers))
+        expect(last_response.status).to eq 200
+        expect(MultiJson.load(last_response.body)['total_results']).to eq(1)
       end
 
-      context 'provision' do
-        it 'performs the async flow if broker initiates an async operation' do
-          async_provision_service
-          stub_async_last_operation
-
-          expect(
-            a_request(:put, provision_url_for_broker(@broker, accepts_incomplete: true))
-          ).to have_been_made
-
-          service_instance = VCAP::CloudController::ManagedServiceInstance.find(guid: @service_instance_guid)
-
-          Delayed::Worker.new.work_off
-
-          expect(a_request(:get, %r{#{service_instance_url(service_instance)}/last_operation})).to have_been_made
-
-          expect(service_instance.reload.last_operation.state).to eq 'succeeded'
-          expect(service_instance.reload.last_operation.type).to eq 'create'
-        end
-
-        it 'performs the synchronous flow if broker does not return async response code' do
-          async_provision_service(status: 201)
-          stub_async_last_operation
-
-          expect(
-            a_request(:put, provision_url_for_broker(@broker, accepts_incomplete: true))
-          ).to have_been_made
-
-          service_instance = VCAP::CloudController::ManagedServiceInstance.find(guid: @service_instance_guid)
-          expect(service_instance.reload.last_operation.state).to eq 'succeeded'
-          expect(service_instance.reload.last_operation.type).to eq 'create'
-        end
-
-        it 'marks the service instance as failed if the initial request succeeds, but the async provision fails' do
-          async_provision_service
-          stub_async_last_operation(state: 'failed')
-
-          expect(
-            a_request(:put, provision_url_for_broker(@broker, accepts_incomplete: true))
-          ).to have_been_made
-
-          Delayed::Worker.new.work_off
-
-          service_instance = VCAP::CloudController::ManagedServiceInstance.find(guid: @service_instance_guid)
-          expect(a_request(:get, %r{#{service_instance_url(service_instance)}/last_operation})).to have_been_made
-
-          expect(service_instance.reload.last_operation.state).to eq 'failed'
-          expect(service_instance.reload.last_operation.type).to eq 'create'
-        end
-      end
+      # context 'when the broker returns a route service url' do
+      #   # let(:service_broker_client) { instance_double(VCAP::Services::ServiceBrokers::V2::HttpClient, put: {'route_service_url' => 'www.neopets.com'}) }
+      #
+      #   it 'cc proxies the bind request' do
+      #     # allow(service_broker_client).to receive(:put).with(anything, anything).and_return({'route_service_url' => 'www.neopets.com'})
+      #
+      #     # stub_request(:put, binding_request).to_return(status: 201, body: {'route_service_url' => 'www.neopets.com'}.to_json)
+      #     put("/v2/service_instances/#{@service_instance_guid}/routes/#{route.guid}", request_body, json_headers(admin_headers))
+      #     # expect(service_broker_client).to have_received(:put).with(anything, anything)
+      #
+      #     service_instance = VCAP::CloudController::ServiceInstance.find(guid: @service_instance_guid)
+      #
+      #     expect(last_response.status).to eq 201
+      #     expect(service_instance.route_service_url).to eq('www.neopets.com')
+      #   end
+      # end
     end
   end
 end
+
+# cc user /v2/service_instances/:service_instance_guid/routes/:route_guid
+
+# cc proxys over to sb v2/service_instances/#{service_instance.guid}/service_bindings/:service_binding_guid
