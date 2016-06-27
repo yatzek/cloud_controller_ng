@@ -360,26 +360,16 @@ RSpec.describe CloudController::DependencyLocator do
 
   describe '#blob_sender' do
     let(:sender) { double('sender') }
+    it 'returns the correct sender when using ngx' do
+      config[:nginx][:use_nginx] = true
+      expect(CloudController::BlobSender::NginxLocalBlobSender).to receive(:new).and_return(sender)
+      expect(locator.blob_sender).to eq(sender)
+    end
 
-    context 'when using local' do
-      context 'with nginx' do
-        before do
-          config[:nginx][:use_nginx] = true
-        end
-
-        it 'returns the correct sender' do
-          expect(CloudController::BlobSender::NginxLocalBlobSender).to receive(:new).and_return(sender)
-          expect(locator.blob_sender).to eq(sender)
-        end
-      end
-
-      context 'without nginx' do
-        it 'returns the correct sender' do
-          config[:nginx][:use_nginx] = false
-          expect(CloudController::BlobSender::DefaultLocalBlobSender).to receive(:new).and_return(sender)
-          expect(locator.blob_sender).to eq(sender)
-        end
-      end
+    it 'returns the correct sender when not using ngx' do
+      config[:nginx][:use_nginx] = false
+      expect(CloudController::BlobSender::DefaultLocalBlobSender).to receive(:new).and_return(sender)
+      expect(locator.blob_sender).to eq(sender)
     end
   end
 

@@ -142,7 +142,7 @@ module CloudController
         package_blobstore,
         buildpack_cache_blobstore,
         buildpack_blobstore,
-        droplet_blobstore,
+        droplet_blobstore
       )
     end
 
