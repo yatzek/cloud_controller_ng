@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module VCAP::CloudController
   module Jobs::Runtime
-    describe BitsServicePacker do
+    RSpec.describe BitsServicePacker do
       let(:uploaded_path) { 'tmp/uploaded.zip' }
       let(:app) { App.make }
       let(:app_guid) { app.guid }

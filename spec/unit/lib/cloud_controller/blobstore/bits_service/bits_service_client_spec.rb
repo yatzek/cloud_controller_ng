@@ -4,7 +4,7 @@ require_relative '../client_shared'
 
 module CloudController
   module Blobstore
-    describe BitsServiceClient do
+    RSpec.describe BitsServiceClient do
       let(:resource_type) { [:buildpacks, :droplets, :packages].sample }
       let(:resource_type_singular) { resource_type.to_s.singularize }
       let(:key) { SecureRandom.uuid }

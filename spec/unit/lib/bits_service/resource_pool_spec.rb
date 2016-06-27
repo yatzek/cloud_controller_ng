@@ -4,7 +4,7 @@ require 'bits_service/resource_pool'
 require 'securerandom'
 
 module BitsService
-  describe ResourcePool do
+  RSpec.describe ResourcePool do
     let(:endpoint) { 'http://bits-service.service.cf.internal/' }
 
     let(:guid) { SecureRandom.uuid }
