@@ -381,17 +381,6 @@ RSpec.describe CloudController::DependencyLocator do
         end
       end
     end
-
-    context 'when using bits service' do
-      before do
-        config[:bits_service] = { enabled: true }
-      end
-
-      it 'returns the correct sender' do
-        expect(CloudController::BlobSender::BitsServiceBlobSender).to receive(:new).and_return(sender)
-        expect(locator.blob_sender).to eq(sender)
-      end
-    end
   end
 
   describe '#nsync_client' do
