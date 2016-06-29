@@ -568,3 +568,7 @@ properties:
   cc.bits_service.private_endpoint:
     description: "Private url for the bits-service service"
     default: ""
+  cc.bits_service.signer_user.username:
+    description: username to sign bits-service urls
+  cc.bits_service.signer_user.password:
+    description: password to sign bits-service urls

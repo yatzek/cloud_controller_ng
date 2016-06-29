@@ -21,7 +21,8 @@ module CloudController
         {
           enabled: true,
           private_endpoint: 'http://bits-service.service.cf.internal',
-          public_endpoint: 'http://bits-service.bosh-lite.com'
+          public_endpoint: 'http://bits-service.bosh-lite.com',
+          signer_user: { username: 'admin', password: 'admin' }
         }
       end
 
@@ -202,6 +203,7 @@ module CloudController
         let(:blob) { subject.blob(key) }
 
         before do
+          allow_any_instance_of(BitsService::UrlSigner).to receive(:sign) { |_, params| params[:url] }
           private_endpoint_request
           public_endpoint_request
         end

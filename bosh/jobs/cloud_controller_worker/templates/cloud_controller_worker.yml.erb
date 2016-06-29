@@ -339,4 +339,7 @@ bits_service:
   <% if p("cc.bits_service.enabled") %>
   public_endpoint: <%= p("cc.bits_service.public_endpoint") %>
   private_endpoint: <%= p("cc.bits_service.private_endpoint") %>
+  signer_user:
+    username: <%= p("cc.bits_service.signer_user.username") %>
+    password: <%= p("cc.bits_service.signer_user.password") %>
   <% end %>

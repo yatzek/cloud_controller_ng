@@ -1,5 +1,6 @@
 require 'net/http/post/multipart'
 require 'cloud_controller/blobstore/bits_service/blob'
+require 'cloud_controller/blobstore/bits_service/url_signer'
 
 module CloudController
   module Blobstore
@@ -10,6 +11,10 @@ module CloudController
         @resource_type = resource_type
         @resource_type_singular = @resource_type.to_s.singularize
         @options = bits_service_options
+
+        username = bits_service_options.fetch(:signer_user).fetch(:username)
+        password = bits_service_options.fetch(:signer_user).fetch(:password)
+        @signer = BitsService::UrlSigner.new(http_client: private_http_client, username: username, password: password)
       end
 
       def local?
@@ -61,8 +66,9 @@ module CloudController
       def blob(key)
         BitsServiceBlob.new(
           guid: key,
-          public_download_url: resolve_redirects(public_http_client, key),
-          internal_download_url: resolve_redirects(private_http_client, key)
+          public_url: resolve_redirects(public_http_client, key),
+          internal_url: resolve_redirects(private_http_client, key),
+          signer: @signer
         )
       end
 
