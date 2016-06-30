@@ -84,7 +84,7 @@ namespace :spec do
   end
 
   def run_specs(path)
-    sh "bundle exec rspec #{path} --require rspec/instafail --format RSpec::Instafail"
+    sh "bundle exec rspec #{path} --seed 65001 --require rspec/instafail --format RSpec::Instafail"
   end
 
   def run_docs(path="")
