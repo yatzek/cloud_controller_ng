@@ -18,7 +18,7 @@ before_script:
   - bundle exec rake db:create
 
 script:
-  - bundle exec rake $TASKS
+  - bundle exec $TASKS
 
 services:
   - mysql
@@ -29,7 +29,7 @@ env:
     - secure: "ikEVVNPGAX1NqgBPXdjxcPJ3ihO9TyTtaN4iX3d2Wv0GdlSKgRqtCXrWuttVfYGqSoHHWwvCR3qum7N44akLsntrkcIQXGu6CsTsvqDC+vAKHtC31TVmuTEXZyIYA7455+B+a8nMsrO5LjX1ylucV1ZhGLzA84lMRQYkr6PklK0=" # CODECLIMATE_REPO_TOKEN
 
   matrix:
-    - COVERAGE=true DB=postgres TASKS=spec:all
-    - DB=mysql TASKS=spec:all
-    - DB=postgres TASKS=spec:api
-    - TASKS=rubocop
+    - COVERAGE=true DB=postgres TASKS='rspec spec/unit/lib/vcap/uaa_token_decoder_spec.rb'
+    - DB=mysql TASKS='rake spec:all'
+    - DB=postgres TASKS='rake spec:api'
+    - TASKS='rake rubocop'
