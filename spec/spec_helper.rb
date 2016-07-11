@@ -34,7 +34,7 @@ Dir[File.expand_path('support/**/*.rb', File.dirname(__FILE__))].each { |file| r
 
 RSpec.configure do |rspec_config|
   rspec_config.expose_dsl_globally = false
-  rspec_config.backtrace_exclusion_patterns = [%r{/gems/}, %r{/bin/rspec}]
+  # rspec_config.backtrace_exclusion_patterns = [%r{/gems/}, %r{/bin/rspec}]
 
   rspec_config.expect_with(:rspec) { |config| config.syntax = :expect }
   rspec_config.include Rack::Test::Methods
