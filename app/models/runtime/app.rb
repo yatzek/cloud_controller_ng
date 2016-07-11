@@ -30,7 +30,9 @@ module VCAP::CloudController
     DEFAULT_HTTP_PORT = 8080
     DEFAULT_PORTS = [DEFAULT_HTTP_PORT].freeze
 
-    one_to_many :droplets
+    many_through_many :droplets, [[App.table_name, :id, :app_guid]],
+      class: 'VCAP::CloudController::DropletModel', right_primary_key: :app_guid
+
     one_to_many :service_bindings
     one_to_many :events, class: VCAP::CloudController::AppEvent
     many_to_one :app, class: 'VCAP::CloudController::AppModel', key: :app_guid, primary_key: :guid, without_guid_generation: true
@@ -76,6 +78,10 @@ module VCAP::CloudController
       end
     end
 
+    # def droplet_hash
+    #   droplet.try(:droplet_hash)
+    # end
+
     def package_updated_at
       package.try(:updated_at) || package.try(:created_at)
     end
@@ -98,14 +104,17 @@ module VCAP::CloudController
                  after_add: :handle_add_route,
                  after_remove: :handle_remove_route
 
-    one_to_one :current_saved_droplet,
-               class: '::VCAP::CloudController::Droplet',
-               key: :droplet_hash,
-               primary_key: :droplet_hash
+    one_through_one :current_saved_droplet,
+      class:             '::VCAP::CloudController::DropletModel',
+      join_table:        AppModel.table_name,
+      left_primary_key:  :app_guid, left_key: :guid,
+      right_primary_key: :guid, right_key: :droplet_guid
 
     one_to_many :route_mappings
 
-    add_association_dependencies routes: :nullify, events: :delete, droplets: :destroy
+    add_association_dependencies routes: :nullify,
+      events: :delete
+      #droplets: :destroy
 
     export_attributes :name, :production, :space_guid, :stack_guid, :buildpack,
                       :detected_buildpack, :environment_json, :memory, :instances, :disk_quota,

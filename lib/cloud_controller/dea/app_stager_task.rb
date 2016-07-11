@@ -17,7 +17,14 @@ module VCAP::CloudController
       end
 
       def task_id
-        @task_id ||= VCAP.secure_uuid
+        @task_id ||=
+          DropletModel.create({
+            app_guid:              @app.guid,
+            # package_guid:          package.guid,
+            state:                 DropletModel::PENDING_STATE,
+            staging_memory_in_mb:  @app.memory,
+            # staging_disk_in_mb:    staging_details.staging_disk_in_mb
+          }).guid
       end
 
       def stage(&completion_callback)
@@ -205,11 +212,33 @@ module VCAP::CloudController
       end
 
       def staging_completion(stager_response)
+        droplet = DropletModel.find(guid: task_id)
+
+
+        droplet.class.db.transaction do
+          droplet.lock!
+          droplet.app.lock!
+
+          droplet.process_types               = stager_response.procfile
+          droplet.execution_metadata          = stager_response.execution_metadata
+          droplet.buildpack_receipt_buildpack = stager_response.detected_buildpack if stager_response.detected_buildpack
+          droplet.update_buildpack_receipt(stager_response.buildpack_key) if stager_response.buildpack_key
+          droplet.mark_as_staged
+          droplet.save_changes(raise_on_save_failure: true)
+
+          droplet.app.droplet = droplet
+          droplet.app.save
+        end
+
+        puts 'hello'
+
         @app.db.transaction do
           @app.lock!
-          @app.mark_as_staged
-          @app.update_detected_buildpack(stager_response.detected_buildpack, stager_response.buildpack_key)
-          @app.current_droplet.update_detected_start_command(stager_response.detected_start_command) if @app.current_droplet
+          @app.droplet_hash = droplet.droplet_hash
+          @app.save
+        #   @app.mark_as_staged
+        #   @app.update_detected_buildpack(stager_response.detected_buildpack, stager_response.buildpack_key)
+        #   @app.current_droplet.update_detected_start_command(stager_response.detected_start_command) if @app.current_droplet
         end
       end
 

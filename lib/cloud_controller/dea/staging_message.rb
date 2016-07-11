@@ -7,6 +7,9 @@ module VCAP::CloudController
       end
 
       def staging_request(app, task_id)
+
+
+
         {
           app_id:                       app.guid,
           stack:                        app.stack.name,
@@ -14,9 +17,11 @@ module VCAP::CloudController
           properties:                   staging_task_properties(app),
           # All url generation should go to blobstore_url_generator
           download_uri:                 @blobstore_url_generator.package_download_url(app.package),
-          upload_uri:                   @blobstore_url_generator.droplet_upload_url(app),
+          upload_uri:                   @blobstore_url_generator.package_droplet_upload_url(task_id),
+          # upload_uri:                   @blobstore_url_generator.droplet_upload_url(app),
           buildpack_cache_download_uri: @blobstore_url_generator.buildpack_cache_download_url(app),
-          buildpack_cache_upload_uri:   @blobstore_url_generator.buildpack_cache_upload_url(app),
+          # buildpack_cache_upload_uri:   @blobstore_url_generator.buildpack_cache_upload_url(app),
+          buildpack_cache_upload_uri:   @blobstore_url_generator.v3_app_buildpack_cache_upload_url(app.app.guid, app.app.lifecycle_data.stack),
           start_message:                start_app_message(app),
           admin_buildpacks:             admin_buildpacks,
           egress_network_rules:         staging_egress_rules,

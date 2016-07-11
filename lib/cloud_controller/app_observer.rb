@@ -65,7 +65,19 @@ module VCAP::CloudController
 
         if app.needs_staging?
           @stagers.validate_app(app)
-          @stagers.stager_for_app(app).stage
+
+          if app.diego?
+            droplet_creator = DropletCreate.new(
+              actor: SecurityContext.current_user,
+              actor_email: SecurityContext.current_user_email
+            )
+
+            message = DropletCreateMessage.new({ staging_memory_in_mb: app.memory })
+            lifecycle = LifecycleProvider.provide(app.package, message)
+            droplet_creator.create_and_stage(app.package, lifecycle, message)
+          else
+           @stagers.stager_for_app(app).stage
+          end
         else
           @runners.runner_for_app(app).start
         end

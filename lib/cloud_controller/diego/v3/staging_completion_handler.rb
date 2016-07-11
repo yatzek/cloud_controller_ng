@@ -74,6 +74,20 @@ module VCAP::CloudController
           else
             begin
               save_staging_result(payload)
+
+              app = droplet.app.processes_dataset.find(type: 'web').first
+              app.db.transaction do
+                app.lock!
+                app.app.lock!
+
+                app.app.droplet=droplet
+                app.app.save
+
+                app.droplet_hash = droplet.droplet_hash
+                app.save
+              end
+
+              CloudController::DependencyLocator.instance.runners.runner_for_app(app).start
             rescue => e
               logger.error(@logger_prefix + 'saving-staging-result-failed', staging_guid: droplet.guid, response: payload, error: e.message)
             end

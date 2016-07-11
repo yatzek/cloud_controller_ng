@@ -25,7 +25,13 @@ module VCAP::CloudController
       matching_validitor = subject.validation_policies.select { |validator| validator.is_a?(validator_class) }
       expect(matching_validitor).to be_empty
     end
-
+it 'does' do
+  a = App.make
+  d = DropletModel.make(app: a.app, state: 'STAGED')
+  a.app.update(droplet_guid: d.guid)
+  a.reload
+  puts a
+end
     before do
       VCAP::CloudController::Seeds.create_seed_stacks
     end
