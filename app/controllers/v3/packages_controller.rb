@@ -79,6 +79,42 @@ class PackagesController < ApplicationController
     render status: :ok, json: Presenters::V3::PackagePresenter.new(package)
   end
 
+  def update
+    logger.info("package guid: #{params[:guid]}; params body: #{params[:body]}")
+
+    package_guid = params[:guid]
+
+    package = VCAP::CloudController::PackageModel.find(guid: package_guid)
+    raise PackageNotFound if package.nil?
+
+    begin
+      package.db.transaction do
+        package.lock!
+        package.package_hash = params[:body]['hash']
+        package.state = VCAP::CloudController::PackageModel::READY_STATE
+        package.save
+      end
+
+      VCAP::CloudController::BitsExpiration.new.expire_packages!(package.app)
+
+      render status: :ok, json: Presenters::V3::PackagePresenter.new(package)
+
+    rescue => e
+      package.db.transaction do
+        package.lock!
+        package.state = VCAP::CloudController::PackageModel::FAILED_STATE
+        package.error = e.message
+        package.save
+      end
+      raise e
+    end
+
+  end
+
+  def logger
+    @logger ||= Steno.logger('cc.XXX')
+  end
+
   def destroy
     package = PackageModel.where(guid: params[:guid]).eager(:space, space: :organization).all.first
     package_not_found! unless package && can_read?(package.space.guid, package.space.organization.guid)

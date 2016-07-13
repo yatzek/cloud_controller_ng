@@ -23,6 +23,12 @@ module CloudController
         response.code.to_i != 404
       end
 
+      def sign_url(key)
+        response = get(private_http_client, '/sign'+resource_path(key))
+        validate_response_code!(200, response)
+        response.body
+      end
+
       def cp_to_blobstore(source_path, destination_key)
         filename = File.basename(source_path)
         with_file_attachment!(source_path, filename) do |file_attachment|
@@ -177,6 +183,8 @@ module CloudController
         })
 
         request.add_field(VCAP::Request::HEADER_NAME, VCAP::Request.current_id)
+        request.basic_auth 'admin', 'admin'
+
         http_client.request(request).tap do |response|
           logger.info('Response', { code: response.code, vcap_id: VCAP::Request.current_id, request_id: request_id })
         end

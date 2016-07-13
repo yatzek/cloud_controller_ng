@@ -24,6 +24,16 @@ module CloudController
       :delete_blob,
       :download_uri,
       :blob
+
+      def sign_url(arg)
+        logger.info("Delegating to #{@wrapped_client.class} methods: #{@wrapped_client.public_methods - Object.public_instance_methods}")
+
+        @wrapped_client.sign_url(arg)
+      end
+
+      def logger
+        @logger ||= Steno.logger('cc.XXX')
+      end
     end
   end
 end

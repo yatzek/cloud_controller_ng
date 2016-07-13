@@ -48,7 +48,8 @@ module VCAP::CloudController
         def build_links
           upload_link = nil
           if package.type == 'bits'
-            upload_link   = { href: "/v3/packages/#{package.guid}/upload", method: 'POST' }
+            package_blobstore = CloudController::DependencyLocator.instance.package_blobstore
+            upload_link   = { href: package_blobstore.sign_url(package.guid), method: 'PUT' }
             download_link = { href: "/v3/packages/#{package.guid}/download", method: 'GET' }
           end
 
@@ -65,6 +66,10 @@ module VCAP::CloudController
           }
 
           links.delete_if { |_, v| v.nil? }
+        end
+
+        def logger
+          @logger ||= Steno.logger('cc.XXX')
         end
       end
     end
