@@ -648,7 +648,6 @@ module VCAP::CloudController
           end
         end
 
-
         context 'when route_creation feature flag is disabled' do
           before do
             allow_any_instance_of(RouteValidator).to receive(:validate)

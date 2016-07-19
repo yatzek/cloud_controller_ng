@@ -45,7 +45,7 @@ module VCAP::CloudController
     end
 
     def validate_router_group
-      route.errors.add(:router_group, "#{route.domain.router_group_guid}") if domain_has_router_group_guid? && router_group.nil?
+      route.errors.add(:router_group, route.domain.router_group_guid.to_s) if domain_has_router_group_guid? && router_group.nil?
     end
 
     def validate_host_not_included

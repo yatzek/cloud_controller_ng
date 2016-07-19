@@ -18,7 +18,8 @@ module VCAP::CloudController
         let(:space) { Space.make }
         it { is_expected.to have_associated :routes,
              test_instance: SharedDomain.make,
-             associated_instance: ->(domain) { Route.make(space: space, domain: domain) } }
+             associated_instance: ->(domain) { Route.make(space: space, domain: domain) }
+        }
       end
 
       context 'owning_organization' do
