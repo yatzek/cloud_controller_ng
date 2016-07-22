@@ -375,6 +375,7 @@ module VCAP::CloudController
           end
         end
 
+        # IS THIS TRUE?
         context 'by developer' do
           it 'redacts the credentials' do
             set_current_user(space_developer)

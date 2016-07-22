@@ -164,7 +164,7 @@ RSpec.describe 'Routes' do
                       'package_updated_at'         => iso8601,
                       'detected_start_command'     => '',
                       'enable_ssh'                 => true,
-                      'docker_credentials_json'    => { 'redacted_message' => '[PRIVATE DATA HIDDEN]' },
+                      'docker_credentials_json'    => nil,
                       'ports'                      => nil,
                       'space_url'                  => "/v2/spaces/#{space.guid}",
                       'stack_url'                  => "/v2/stacks/#{process.stack.guid}",

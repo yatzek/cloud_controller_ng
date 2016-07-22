@@ -40,11 +40,11 @@ RSpec.describe 'Apps' do
             },
             'entity' => {
               'name'                       => process.name,
-              'production'                 => false,
               'space_guid'                 => space.guid,
               'stack_guid'                 => process.stack.guid,
               'buildpack'                  => nil,
-              'detected_buildpack'         => nil,
+              # 'detected_buildpack'         => nil,
+              # 'detected_buildpack_guid'         => nil,
               'environment_json'           => { 'RAILS_ENV' => 'staging' },
               'memory'                     => 1024,
               'instances'                  => 1,
@@ -52,8 +52,6 @@ RSpec.describe 'Apps' do
               'state'                      => 'STOPPED',
               'version'                    => process.version,
               'command'                    => 'hello_world',
-              'console'                    => false,
-              'debug'                      => nil,
               'staging_task_id'            => nil,
               'package_state'              => 'PENDING',
               'health_check_type'          => 'port',
@@ -65,9 +63,7 @@ RSpec.describe 'Apps' do
               'package_updated_at'         => iso8601,
               'detected_start_command'     => '',
               'enable_ssh'                 => true,
-              'docker_credentials_json'    => {
-                'redacted_message' => '[PRIVATE DATA HIDDEN]'
-              },
+              'docker_credentials_json'    => { 'docker_user' => 'bob', 'docker_password' => 'password', 'docker_email' => 'blah@blah.com' },
               'ports'                      => nil,
               'space_url'                  => "/v2/spaces/#{space.guid}",
               'stack_url'                  => "/v2/stacks/#{process.stack.guid}",
@@ -103,11 +99,11 @@ RSpec.describe 'Apps' do
               },
               'entity' => {
                 'name'                       => process.name,
-                'production'                 => false,
                 'space_guid'                 => space.guid,
                 'stack_guid'                 => process.stack.guid,
                 'buildpack'                  => nil,
-                'detected_buildpack'         => nil,
+                # 'detected_buildpack'         => nil,
+                # 'detected_buildpack_guid'         => nil,
                 'environment_json'           => { 'RAILS_ENV' => 'staging' },
                 'memory'                     => 1024,
                 'instances'                  => 1,
@@ -115,8 +111,6 @@ RSpec.describe 'Apps' do
                 'state'                      => 'STOPPED',
                 'version'                    => process.version,
                 'command'                    => 'hello_world',
-                'console'                    => false,
-                'debug'                      => nil,
                 'staging_task_id'            => nil,
                 'package_state'              => 'PENDING',
                 'health_check_type'          => 'port',
@@ -128,9 +122,7 @@ RSpec.describe 'Apps' do
                 'package_updated_at'         => iso8601,
                 'detected_start_command'     => '',
                 'enable_ssh'                 => true,
-                'docker_credentials_json'    => {
-                  'redacted_message' => '[PRIVATE DATA HIDDEN]'
-                },
+                'docker_credentials_json'    => { 'docker_user' => 'bob', 'docker_password' => 'password', 'docker_email' => 'blah@blah.com' },
                 'ports'                      => nil,
                 'space_url'                  => "/v2/spaces/#{space.guid}",
                 'space'                      => {
@@ -210,11 +202,11 @@ RSpec.describe 'Apps' do
           },
           'entity' => {
             'name'                       => 'app-name',
-            'production'                 => false,
             'space_guid'                 => process.space.guid,
             'stack_guid'                 => process.stack.guid,
             'buildpack'                  => nil,
-            'detected_buildpack'         => nil,
+            # 'detected_buildpack'         => nil,
+            # 'detected_buildpack_guid'    => ,
             'environment_json'           => nil,
             'memory'                     => 1024,
             'instances'                  => 1,
@@ -222,8 +214,6 @@ RSpec.describe 'Apps' do
             'state'                      => 'STOPPED',
             'version'                    => process.version,
             'command'                    => 'app-command',
-            'console'                    => false,
-            'debug'                      => nil,
             'staging_task_id'            => nil,
             'package_state'              => 'PENDING',
             'health_check_type'          => 'port',
@@ -235,9 +225,7 @@ RSpec.describe 'Apps' do
             'package_updated_at'         => iso8601,
             'detected_start_command'     => '',
             'enable_ssh'                 => true,
-            'docker_credentials_json'    => {
-              'redacted_message' => '[PRIVATE DATA HIDDEN]'
-            },
+            'docker_credentials_json'    => { 'docker_user' => 'bob', 'docker_password' => 'password', 'docker_email' => 'blah@blah.com' },
             'ports'                      => nil,
             'space_url'                  => "/v2/spaces/#{process.space.guid}",
             'stack_url'                  => "/v2/stacks/#{process.stack.guid}",
@@ -274,11 +262,11 @@ RSpec.describe 'Apps' do
           },
           'entity' => {
             'name'                       => 'maria',
-            'production'                 => false,
             'space_guid'                 => space.guid,
             'stack_guid'                 => process.stack.guid,
             'buildpack'                  => nil,
-            'detected_buildpack'         => nil,
+            # 'detected_buildpack'         => nil,
+            # 'detected_buildpack_guid'         => nil,
             'environment_json'           => {
 
             },
@@ -288,8 +276,6 @@ RSpec.describe 'Apps' do
             'state'                      => 'STOPPED',
             'version'                    => process.version,
             'command'                    => nil,
-            'console'                    => false,
-            'debug'                      => nil,
             'staging_task_id'            => nil,
             'package_state'              => 'PENDING',
             'health_check_type'          => 'port',
@@ -301,9 +287,7 @@ RSpec.describe 'Apps' do
             'package_updated_at'         => nil,
             'detected_start_command'     => '',
             'enable_ssh'                 => true,
-            'docker_credentials_json'    => {
-              'redacted_message' => '[PRIVATE DATA HIDDEN]'
-            },
+            'docker_credentials_json'    => { 'docker_user' => 'bob', 'docker_password' => 'password', 'docker_email' => 'blah@blah.com' },
             'ports'                      => nil,
             'space_url'                  => "/v2/spaces/#{space.guid}",
             'stack_url'                  => "/v2/stacks/#{process.stack.guid}",
@@ -323,8 +307,7 @@ RSpec.describe 'Apps' do
         space:                   space,
         name:                    'mario',
         environment_json:        { 'RAILS_ENV' => 'staging' },
-        command:                 'hello_world',
-        docker_credentials_json: { 'docker_user' => 'bob', 'docker_password' => 'password', 'docker_email' => 'blah@blah.com' }
+        command:                 'hello_world'
       )
     }
 
@@ -350,11 +333,11 @@ RSpec.describe 'Apps' do
           },
           'entity' => {
             'name'                       => 'maria',
-            'production'                 => false,
             'space_guid'                 => space.guid,
             'stack_guid'                 => process.stack.guid,
             'buildpack'                  => nil,
-            'detected_buildpack'         => nil,
+            # 'detected_buildpack'       => nil,
+            # 'detected_guid'            => nil,
             'environment_json'           => {
               'RAILS_ENV' => 'production'
             },
@@ -364,8 +347,6 @@ RSpec.describe 'Apps' do
             'state'                      => 'STARTED',
             'version'                    => process.version,
             'command'                    => 'hello_world',
-            'console'                    => false,
-            'debug'                      => nil,
             'staging_task_id'            => nil,
             'package_state'              => 'PENDING',
             'health_check_type'          => 'port',
@@ -377,9 +358,7 @@ RSpec.describe 'Apps' do
             'package_updated_at'         => iso8601,
             'detected_start_command'     => '',
             'enable_ssh'                 => true,
-            'docker_credentials_json'    => {
-              'redacted_message' => '[PRIVATE DATA HIDDEN]'
-            },
+            'docker_credentials_json'    => nil,
             'ports'                      => nil,
             'space_url'                  => "/v2/spaces/#{space.guid}",
             'stack_url'                  => "/v2/stacks/#{process.stack.guid}",
@@ -692,11 +671,11 @@ RSpec.describe 'Apps' do
           },
           'entity' => {
             'name'                       => 'maria',
-            'production'                 => false,
             'space_guid'                 => space.guid,
             'stack_guid'                 => process.stack.guid,
             'buildpack'                  => nil,
-            'detected_buildpack'         => nil,
+            # 'detected_buildpack'         => nil,
+            # 'detected_buildpack_guid'         => nil,
             'environment_json'           => nil,
             'memory'                     => 1024,
             'instances'                  => 1,
@@ -704,8 +683,6 @@ RSpec.describe 'Apps' do
             'state'                      => 'STARTED',
             'version'                    => process.version,
             'command'                    => nil,
-            'console'                    => false,
-            'debug'                      => nil,
             'staging_task_id'            => nil,
             'package_state'              => 'PENDING',
             'health_check_type'          => 'port',
@@ -717,10 +694,8 @@ RSpec.describe 'Apps' do
             'package_updated_at'         => iso8601,
             'detected_start_command'     => '',
             'enable_ssh'                 => true,
-            'docker_credentials_json'    => {
-              'redacted_message' => '[PRIVATE DATA HIDDEN]'
-            },
-            'ports' => []
+            'docker_credentials_json'    => nil,
+            'ports' => nil
           }
         }
       )
@@ -956,11 +931,11 @@ RSpec.describe 'Apps' do
             },
           'entity'   => {
             'name'                       => process.name,
-            'production'                 => false,
             'space_guid'                 => space.guid,
             'stack_guid'                 => process.stack.guid,
             'buildpack'                  => nil,
-            'detected_buildpack'         => nil,
+            # 'detected_buildpack'         => nil,
+            # 'detected_buildpack_guid'         => nil,
             'environment_json'           => nil,
             'memory'                     => 1024,
             'instances'                  => 1,
@@ -968,8 +943,6 @@ RSpec.describe 'Apps' do
             'state'                      => 'STOPPED',
             'version'                    => process.version,
             'command'                    => nil,
-            'console'                    => false,
-            'debug'                      => nil,
             'staging_task_id'            => nil,
             'package_state'              => 'PENDING',
             'health_check_type'          => 'port',
@@ -981,7 +954,7 @@ RSpec.describe 'Apps' do
             'package_updated_at'         => iso8601,
             'detected_start_command'     => '',
             'enable_ssh'                 => true,
-            'docker_credentials_json'    => { 'redacted_message' => '[PRIVATE DATA HIDDEN]' },
+            'docker_credentials_json'    => nil,
             'ports'                      => nil,
             'space_url'                  => "/v2/spaces/#{space.guid}",
             'stack_url'                  => "/v2/stacks/#{process.stack.guid}",
