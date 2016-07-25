@@ -55,16 +55,16 @@ module VCAP::CloudController
         return CloudController::Errors::ApiError.new_from_details('RoutePortTaken', port_taken_error_message)
       end
 
+      if e.errors.on(:router_group)
+        return CloudController::Errors::ApiError.new_from_details('RouterGroupNotFound', e.errors.on(:router_group))
+      end
+
       if e.errors.on(:port) == [:port_unsupported]
         return CloudController::Errors::ApiError.new_from_details('RouteInvalid', 'Port is supported for domains of TCP router groups only.')
       end
 
       if e.errors.on(:port) == [:port_required]
         return CloudController::Errors::ApiError.new_from_details('RouteInvalid', 'For TCP routes you must specify a port or request a random one.')
-      end
-
-      if e.errors.on(:router_group)
-        return CloudController::Errors::ApiError.new_from_details('RouterGroupNotFound', e.errors.on(:router_group))
       end
 
       if e.errors.on(:port) == [:port_unavailable]
