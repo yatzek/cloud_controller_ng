@@ -96,7 +96,7 @@ module VCAP::CloudController
         end
 
         it 'sets a default value for the bits service' do
-          expect(config[:bits_service]).to eq({enabled: false})
+          expect(config[:bits_service]).to eq({ enabled: false })
         end
       end
 
