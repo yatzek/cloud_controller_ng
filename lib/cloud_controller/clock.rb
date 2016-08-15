@@ -25,7 +25,7 @@ module VCAP::CloudController
         @logger.info("Queueing #{klass} at #{Time.now.utc}")
         expiration = config.fetch(:expiration_in_seconds)
         job        = klass.new(expiration)
-        Jobs::Enqueuer.new(job, queue: 'cc-generic').enqueue
+        Jobs::Enqueuer.new(job, queue: 'cc-api_z1-0').enqueue
       end
     end
   end

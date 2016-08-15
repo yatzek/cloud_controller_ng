@@ -27,6 +27,7 @@ module VCAP::CloudController
     post '/internal/v3/staging/:staging_guid/droplet_completed', :droplet_completed
 
     def droplet_completed(staging_guid)
+      return [200, '{}']
       staging_response = read_body
       droplet = DropletModel.find(guid: staging_guid)
       raise CloudController::Errors::ApiError.new_from_details('ResourceNotFound', 'Droplet not found') if droplet.nil?
