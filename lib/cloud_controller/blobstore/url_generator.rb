@@ -45,6 +45,7 @@ module CloudController
       end
 
       def droplet_download_url(droplet)
+
         if @droplet_blobstore.local?
           @local_url_generator.droplet_download_url(droplet)
         else
