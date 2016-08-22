@@ -24,5 +24,33 @@ module VCAP::CloudController
 
       process
     end
+
+    def create_v2_process(app, message)
+      process = nil
+
+      App.db.transaction do
+        process = App.new(
+          guid:                    app.guid,
+          memory:                  message.memory,
+          instances:               message.instances,
+          disk_quota:              message.disk_quota,
+          state:                   message.state,
+          command:                 message.command,
+          health_check_type:       message.health_check_type,
+          health_check_timeout:    message.health_check_timeout,
+          diego:                   message.diego,
+          enable_ssh:              message.enable_ssh,
+          docker_credentials_json: message.docker_credentials_json,
+          ports:                   message.ports,
+          route_guids:             message.route_guids,
+          metadata:                {},
+          app:                     app
+        )
+
+        Repositories::ProcessEventRepository.record_create(process, @user_guid, @user_email)
+      end
+
+      process
+    end
   end
 end

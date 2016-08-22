@@ -37,7 +37,7 @@ module VCAP::CloudController
         end
       end
 
-      context 'when staging_memory_in_mb is not an number' do
+      context 'when staging_memory_in_mb is not a number' do
         let(:params) do
           {
             staging_memory_in_mb: 'silly string thing',

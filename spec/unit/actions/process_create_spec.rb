@@ -1,5 +1,6 @@
 require 'spec_helper'
 require 'actions/process_create'
+require 'messages/process_create_message'
 
 module VCAP::CloudController
   RSpec.describe ProcessCreate do
@@ -82,6 +83,21 @@ module VCAP::CloudController
           expect(process.ports).to eq(nil)
           expect(process.diego).to be_truthy
         end
+      end
+    end
+
+    describe '#create_v2_process' do
+      let(:message) { ProcessCreateMessage.create_from_http_request('state' => 'STARTED', 'health_check_type' => 'process') }
+
+      it 'creates the process' do
+        process = process_create.create_v2_process(app, message)
+
+        app.reload
+        expect(app.processes.count).to eq(1)
+
+        expect(app.processes.first.guid).to eq(process.guid)
+        expect(process.state).to eq('STARTED')
+        expect(process.health_check_type).to eq('process')
       end
     end
   end

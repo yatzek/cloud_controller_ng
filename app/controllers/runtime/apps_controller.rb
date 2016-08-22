@@ -1,6 +1,7 @@
 require 'presenters/system_env_presenter'
 require 'queries/v2/app_query'
 require 'actions/v2/app_stage'
+require 'messages/process_create_message'
 
 module VCAP::CloudController
   class AppsController < RestController::ModelController
@@ -9,33 +10,33 @@ module VCAP::CloudController
     end
 
     define_attributes do
-      attribute :enable_ssh,              Message::Boolean, default: nil
-      attribute :buildpack,               String,           default: nil
-      attribute :command,                 String,           default: nil
-      attribute :console,                 Message::Boolean, default: false
-      attribute :diego,                   Message::Boolean, default: nil
-      attribute :docker_image,            String,           default: nil
-      attribute :docker_credentials_json, Hash,             default: {}, redact_in: [:create, :update]
-      attribute :debug,                   String,           default: nil
-      attribute :disk_quota,              Integer,          default: nil
-      attribute :environment_json,        Hash,             default: {}
-      attribute :health_check_type,       String,           default: 'port'
-      attribute :health_check_timeout,    Integer,          default: nil
-      attribute :instances,               Integer,          default: 1
-      attribute :memory,                  Integer,          default: nil
-      attribute :name,                    String
-      attribute :production,              Message::Boolean, default: false
-      attribute :state,                   String,           default: 'STOPPED'
-      attribute :detected_start_command,  String,           exclude_in: [:create, :update]
-      attribute :ports,                   [Integer],        default: nil
+      attribute :enable_ssh, Message::Boolean, default: nil
+      attribute :buildpack, String, default: nil
+      attribute :command, String, default: nil
+      attribute :console, Message::Boolean, default: false
+      attribute :diego, Message::Boolean, default: nil
+      attribute :docker_image, String, default: nil
+      attribute :docker_credentials_json, Hash, default: {}, redact_in: [:create, :update]
+      attribute :debug, String, default: nil
+      attribute :disk_quota, Integer, default: nil
+      attribute :environment_json, Hash, default: {}
+      attribute :health_check_type, String, default: 'port'
+      attribute :health_check_timeout, Integer, default: nil
+      attribute :instances, Integer, default: 1
+      attribute :memory, Integer, default: nil
+      attribute :name, String
+      attribute :production, Message::Boolean, default: false
+      attribute :state, String, default: 'STOPPED'
+      attribute :detected_start_command, String, exclude_in: [:create, :update]
+      attribute :ports, [Integer], default: nil
 
       to_one :space
       to_one :stack, optional_in: :create
 
-      to_many :routes,              exclude_in: [:create, :update], route_for: :get
-      to_many :events,              exclude_in: [:create, :update], link_only: true
-      to_many :service_bindings,    exclude_in: [:create, :update], route_for: [:get]
-      to_many :route_mappings,      exclude_in: [:create, :update], link_only: true, route_for: :get, association_controller: :RouteMappingsController
+      to_many :routes, exclude_in: [:create, :update], route_for: :get
+      to_many :events, exclude_in: [:create, :update], link_only: true
+      to_many :service_bindings, exclude_in: [:create, :update], route_for: [:get]
+      to_many :route_mappings, exclude_in: [:create, :update], link_only: true, route_for: :get, association_controller: :RouteMappingsController
     end
 
     query_parameters :name, :space_guid, :organization_guid, :diego, :stack_guid
@@ -63,13 +64,13 @@ module VCAP::CloudController
     end
 
     def self.translate_validation_exception(e, attributes)
-      space_and_name_errors  = e.errors.on([:space_guid, :name])
-      memory_errors          = e.errors.on(:memory)
-      instance_number_errors = e.errors.on(:instances)
+      space_and_name_errors     = e.errors.on([:space_guid, :name])
+      memory_errors             = e.errors.on(:memory)
+      instance_number_errors    = e.errors.on(:instances)
       app_instance_limit_errors = e.errors.on(:app_instance_limit)
-      state_errors           = e.errors.on(:state)
-      docker_errors          = e.errors.on(:docker)
-      diego_to_dea_errors    = e.errors.on(:diego_to_dea)
+      state_errors              = e.errors.on(:state)
+      docker_errors             = e.errors.on(:docker)
+      diego_to_dea_errors       = e.errors.on(:diego_to_dea)
 
       if space_and_name_errors
         CloudController::Errors::ApiError.new_from_details('AppNameTaken', attributes['name'])
@@ -116,7 +117,7 @@ module VCAP::CloudController
     end
 
     def delete(guid)
-      app = find_guid_and_validate_access(:delete, guid)
+      app   = find_guid_and_validate_access(:delete, guid)
       space = app.space
 
       if !recursive_delete? && app.service_bindings.present?
@@ -159,7 +160,7 @@ module VCAP::CloudController
     def before_update(app)
       verify_enable_ssh(app.space)
       updated_diego_flag = request_attrs['diego']
-      ports = request_attrs['ports']
+      ports              = request_attrs['ports']
       ignore_empty_ports! if ports == []
       if should_warn_about_changed_ports?(app.diego, updated_diego_flag, ports)
         add_warning('App ports have changed but are unknown. The app should now listen on the port specified by environment variable PORT.')
@@ -177,15 +178,15 @@ module VCAP::CloudController
     end
 
     def verify_enable_ssh(space)
-      app_enable_ssh = request_attrs['enable_ssh']
+      app_enable_ssh   = request_attrs['enable_ssh']
       global_allow_ssh = VCAP::CloudController::Config.config[:allow_app_ssh_access]
-      ssh_allowed = global_allow_ssh && (space.allow_ssh || roles.admin?)
+      ssh_allowed      = global_allow_ssh && (space.allow_ssh || roles.admin?)
 
       if app_enable_ssh && !ssh_allowed
         raise CloudController::Errors::ApiError.new_from_details(
           'InvalidRequest',
           'enable_ssh must be false due to global allow_ssh setting',
-          )
+        )
       end
     end
 
@@ -201,12 +202,12 @@ module VCAP::CloudController
     # rubocop:disable MethodLength
     # rubocop:disable Metrics/CyclomaticComplexity
     def update(guid)
-      json_msg = self.class::UpdateMessage.decode(body)
+      json_msg       = self.class::UpdateMessage.decode(body)
       @request_attrs = json_msg.extract(stringify_keys: true)
       logger.debug 'cc.update', guid: guid, attributes: redact_attributes(:update, request_attrs)
       raise InvalidRequest unless request_attrs
 
-      app = find_guid(guid)
+      app    = find_guid(guid)
       v3_app = app.app
 
       before_update(app)
@@ -218,10 +219,10 @@ module VCAP::CloudController
         validate_access(:read_for_update, app, request_attrs)
         validate_not_changing_lifecycle_type!(app, request_attrs)
 
-        buildpack_type_requested = request_attrs.key?('buildpack') || request_attrs.key?('stack_guid')
+        buildpack_type_requested     = request_attrs.key?('buildpack') || request_attrs.key?('stack_guid')
 
-        v3_app.name = request_attrs['name'] if request_attrs.key?('name')
-        v3_app.space_guid = request_attrs['space_guid'] if request_attrs.key?('space_guid')
+        v3_app.name                  = request_attrs['name'] if request_attrs.key?('name')
+        v3_app.space_guid            = request_attrs['space_guid'] if request_attrs.key?('space_guid')
         v3_app.environment_variables = request_attrs['environment_json'] if request_attrs.key?('environment_json')
 
         if buildpack_type_requested
@@ -286,88 +287,63 @@ module VCAP::CloudController
 
       [HTTP::CREATED, object_renderer.render_json(self.class, app, @opts)]
     end
+
     # rubocop:enable Metrics/CyclomaticComplexity
     # rubocop:enable MethodLength
 
-    # rubocop:disable MethodLength
     def create
-      json_msg = self.class::CreateMessage.decode(body)
+      @request_attrs = self.class::CreateMessage.decode(body).extract(stringify_keys: true)
 
-      @request_attrs = json_msg.extract(stringify_keys: true)
+      message        = AppCreateMessage.new({
+        name:                  request_attrs['name'],
+        environment_variables: request_attrs['environment_json'],
+        relationships:         {
+          space: { guid: request_attrs['space_guid'] }
+        }
+      }.merge!(lifecycle_object))
+      process_message = ProcessCreateMessage.create_from_http_request(request_attrs)
 
+      verify_enable_ssh(Space[guid: message.space_guid])
       logger.debug 'cc.create', model: self.class.model_class_name, attributes: redact_attributes(:create, request_attrs)
 
-      space = VCAP::CloudController::Space[guid: request_attrs['space_guid']]
-      verify_enable_ssh(space)
+      process = nil
 
-      app = nil
-      model.db.transaction do
-        v3_app = AppModel.create(
-          name:                  request_attrs['name'],
-          space_guid:            request_attrs['space_guid'],
-          environment_variables: request_attrs['environment_json'],
-        )
+      AppModel.db.transaction do
+        lifecycle = AppLifecycleProvider.provide_for_create(message)
 
-        buildpack_type_requested = request_attrs.key?('buildpack') || request_attrs.key?('stack_guid')
-        if buildpack_type_requested || !request_attrs.key?('docker_image')
-          stack = request_attrs['stack_guid'] ? Stack.find(guid: request_attrs['stack_guid']) : Stack.default
-          v3_app.buildpack_lifecycle_data = BuildpackLifecycleDataModel.new(
-            buildpack: request_attrs['buildpack'],
-            stack:     stack.try(:name),
-          )
-          v3_app.save
-        end
+        v3_app = AppCreate.new(SecurityContext.current_user, SecurityContext.current_user_email).create(message, lifecycle)
 
-        if request_attrs.key?('docker_image')
-          create_message = PackageCreateMessage.new({ type: 'docker', app_guid: v3_app.guid, data: { image: request_attrs['docker_image'] } })
-          creator        = PackageCreate.new(SecurityContext.current_user.guid, SecurityContext.current_user_email)
+        if lifecycle.type == 'docker'
+          create_message = PackageCreateMessage.new({ type: 'docker', app_guid: v3_app.guid, data: { image: message.lifecycle_data[:image] } })
+          creator        = PackageCreate.new(SecurityContext.current_user, SecurityContext.current_user_email)
           creator.create(create_message)
         end
 
-        app = App.new(
-          guid:                    v3_app.guid,
-          production:              request_attrs['production'],
-          memory:                  request_attrs['memory'],
-          instances:               request_attrs['instances'],
-          disk_quota:              request_attrs['disk_quota'],
-          state:                   request_attrs['state'],
-          command:                 request_attrs['command'],
-          console:                 request_attrs['console'],
-          debug:                   request_attrs['debug'],
-          health_check_type:       request_attrs['health_check_type'],
-          health_check_timeout:    request_attrs['health_check_timeout'],
-          diego:                   request_attrs['diego'],
-          enable_ssh:              request_attrs['enable_ssh'],
-          docker_credentials_json: request_attrs['docker_credentials_json'],
-          ports:                   request_attrs['ports'],
-          route_guids:             request_attrs['route_guids'],
-          app:                     v3_app
-        )
+        process = ProcessCreate.new(SecurityContext.current_user, SecurityContext.current_user_email).create_v2_process(v3_app, process_message)
 
-        validate_buildpack!(app)
-        validate_package_is_uploaded!(app)
+        validate_buildpack!(process)
+        validate_package_is_uploaded!(process)
+        process.save
 
-        app.save
+        validate_access(:create, process, request_attrs)
 
-        validate_access(:create, app, request_attrs)
+        @app_event_repository.record_app_create(
+          process,
+          process.space,
+          SecurityContext.current_user.guid,
+          SecurityContext.current_user_email,
+          request_attrs)
       end
-
-      @app_event_repository.record_app_create(
-        app,
-        app.space,
-        SecurityContext.current_user.guid,
-        SecurityContext.current_user_email,
-        request_attrs)
 
       [
         HTTP::CREATED,
-        { 'Location' => "#{self.class.path}/#{app.guid}" },
-        object_renderer.render_json(self.class, app, @opts)
+        { 'Location' => "#{self.class.path}/#{process.guid}" },
+        object_renderer.render_json(self.class, process, @opts)
       ]
     end
-    # rubocop:enable MethodLength
 
     put '/v2/apps/:app_guid/routes/:route_guid', :add_route
+
     def add_route(app_guid, route_guid)
       logger.debug 'cc.association.add', guid: app_guid, association: 'routes', other_guid: route_guid
       @request_attrs = { 'route' => route_guid, verb: 'add', relation: 'routes', related_guid: route_guid }
@@ -458,9 +434,9 @@ module VCAP::CloudController
 
     def validate_not_changing_lifecycle_type!(app, request_attrs)
       buildpack_type_requested = request_attrs.key?('buildpack') || request_attrs.key?('stack_guid')
-      docker_type_requested = request_attrs.key?('docker_image')
+      docker_type_requested    = request_attrs.key?('docker_image')
 
-      type_is_docker = app.app.lifecycle_type == DockerLifecycleDataModel::LIFECYCLE_TYPE
+      type_is_docker    = app.app.lifecycle_type == DockerLifecycleDataModel::LIFECYCLE_TYPE
       type_is_buildpack = !type_is_docker
 
       if (type_is_docker && buildpack_type_requested) || (type_is_buildpack && docker_type_requested)
@@ -478,6 +454,29 @@ module VCAP::CloudController
     def validate_package_is_uploaded!(app)
       if app.needs_package_in_current_state? && !app.package_hash
         raise CloudController::Errors::ApiError.new_from_details('AppPackageInvalid', 'bits have not been uploaded')
+      end
+    end
+
+    def lifecycle_object
+      if request_attrs.key?('buildpack') || request_attrs.key?('stack_guid')
+        {
+          lifecycle: {
+            type: 'buildpack',
+            data: {
+              buildpack: request_attrs['buildpack'],
+              stack:     Stack.find(guid: request_attrs['stack_guid']).try(:name)
+            }
+          }
+        }
+      elsif request_attrs.key?('docker_image')
+        {
+          lifecycle: {
+            type: 'docker',
+            data: { image: request_attrs['docker_image'], }
+          }
+        }
+      else
+        {}
       end
     end
   end

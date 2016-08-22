@@ -329,23 +329,24 @@ module VCAP::CloudController
 
         post '/v2/apps', MultiJson.dump(request)
 
-        v2_app = App.last
-        expect(v2_app.name).to eq('maria')
-        expect(v2_app.space).to eq(space)
-        expect(v2_app.environment_json).to eq({ 'KEY' => 'val' })
-        expect(v2_app.stack).to eq(Stack.default)
-        expect(v2_app.buildpack.url).to eq('http://example.com/buildpack')
+        process = App.last
+        expect(process).to be
+        expect(process.name).to eq('maria')
+        expect(process.space).to eq(space)
+        expect(process.environment_json).to eq({ 'KEY' => 'val' })
+        expect(process.stack).to eq(Stack.default)
+        expect(process.buildpack.url).to eq('http://example.com/buildpack')
 
-        v3_app = v2_app.app
+        v3_app = process.app
         expect(v3_app.name).to eq('maria')
         expect(v3_app.space).to eq(space)
         expect(v3_app.environment_variables).to eq({ 'KEY' => 'val' })
         expect(v3_app.lifecycle_type).to eq(BuildpackLifecycleDataModel::LIFECYCLE_TYPE)
         expect(v3_app.lifecycle_data.stack).to eq(Stack.default.name)
         expect(v3_app.lifecycle_data.buildpack).to eq('http://example.com/buildpack')
-        expect(v3_app.desired_state).to eq(v2_app.state)
+        expect(v3_app.desired_state).to eq(process.state)
 
-        expect(v3_app.guid).to eq(v2_app.guid)
+        expect(v3_app.guid).to eq(process.guid)
       end
 
       context 'creating a buildpack app' do
