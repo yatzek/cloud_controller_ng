@@ -18,7 +18,7 @@ gem 'sinatra', '~> 1.4'
 gem 'sinatra-contrib'
 gem 'multi_json'
 gem 'yajl-ruby'
-gem 'mime-types', '~> 2.6.2'
+gem 'mime-types', '~> 3.1'
 gem 'membrane', '~> 1.0'
 gem 'httpclient'
 gem 'steno'
@@ -28,7 +28,7 @@ gem 'allowy'
 gem 'loggregator_emitter', '~> 5.0'
 gem 'delayed_job_sequel', git: 'https://github.com/cloudfoundry/delayed_job_sequel.git'
 gem 'thin', '~> 1.6.0'
-gem 'newrelic_rpm', '3.12.0.288'
+gem 'newrelic_rpm', '~>3.16.2.321'
 gem 'clockwork', require: false
 gem 'statsd-ruby'
 gem 'activemodel', '~> 4.2.7.1'
@@ -50,7 +50,7 @@ gem 'bits_service_client', github: 'cloudfoundry-incubator/bits-service-client'
 
 group :db do
   gem 'mysql2', '0.4.4'
-  gem 'pg', '0.16.0'
+  gem 'pg', '~>0.18.4'
 end
 
 group :operations do
@@ -61,7 +61,7 @@ end
 group :test do
   gem 'codeclimate-test-reporter', require: false
   gem 'fakefs', require: 'fakefs/safe'
-  gem 'machinist', '~> 1.0.6'
+  gem 'machinist', '~> 2.0'
   gem 'parallel_tests'
   gem 'rack-test'
   gem 'rspec', '~> 3.0'
@@ -72,7 +72,7 @@ group :test do
   gem 'rspec-rails'
   gem 'rubocop'
   gem 'timecop'
-  gem 'webmock'
+  gem 'webmock', '~> 2.1.0'
 end
 
 group :development do
