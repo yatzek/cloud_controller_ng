@@ -348,25 +348,7 @@ module VCAP::CloudController
         expect(v3_app.guid).to eq(v2_app.guid)
       end
 
-      context 'creating a buildpack app' do
-        it 'creates the app correctly' do
-          stack = Stack.make(name: 'stack-name')
-          request = {
-            name: 'maria',
-            space_guid: space.guid,
-            stack_guid: stack.guid,
-            buildpack: 'http://example.com/buildpack'
-          }
-
-          set_current_user(admin_user, admin: true)
-
-          post '/v2/apps', MultiJson.dump(request)
-
-          v2_app = App.last
-          expect(v2_app.stack).to eq(stack)
-          expect(v2_app.buildpack.url).to eq('http://example.com/buildpack')
-        end
-
+      describe 'validations' do
         context 'when custom buildpacks are disabled and the buildpack attribute is being changed' do
           before do
             TestConfig.override({ disable_custom_buildpacks: true })
@@ -414,27 +396,6 @@ module VCAP::CloudController
             expect(last_response.status).to eq(400)
             expect(last_response.body).to include('custom buildpacks are disabled')
           end
-        end
-      end
-
-      context 'creating a docker app' do
-        it 'creates the app correctly' do
-          request = {
-            name:         'maria',
-            space_guid:   space.guid,
-            docker_image: 'some-image:latest',
-          }
-
-          set_current_user(admin_user, admin: true)
-
-          post '/v2/apps', MultiJson.dump(request)
-
-          v2_app = App.last
-          expect(v2_app.docker_image).to eq('some-image:latest')
-          expect(v2_app.package_hash).to eq('some-image:latest')
-
-          package = v2_app.package
-          expect(package.image).to eq('some-image:latest')
         end
       end
 

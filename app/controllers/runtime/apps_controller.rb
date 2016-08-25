@@ -1,6 +1,7 @@
 require 'presenters/system_env_presenter'
 require 'queries/v2/app_query'
 require 'actions/v2/app_stage'
+require 'actions/v2/lifecycle_create'
 
 module VCAP::CloudController
   class AppsController < RestController::ModelController
@@ -286,46 +287,27 @@ module VCAP::CloudController
 
       [HTTP::CREATED, object_renderer.render_json(self.class, app, @opts)]
     end
-    # rubocop:enable Metrics/CyclomaticComplexity
-    # rubocop:enable MethodLength
 
-    # rubocop:disable MethodLength
     def create
-      json_msg = self.class::CreateMessage.decode(body)
-
-      @request_attrs = json_msg.extract(stringify_keys: true)
+      @request_attrs = self.class::CreateMessage.decode(body).extract(stringify_keys: true)
 
       logger.debug 'cc.create', model: self.class.model_class_name, attributes: redact_attributes(:create, request_attrs)
 
       space = VCAP::CloudController::Space[guid: request_attrs['space_guid']]
       verify_enable_ssh(space)
 
-      app = nil
+      process = nil
       model.db.transaction do
-        v3_app = AppModel.create(
+        app = AppModel.create(
           name:                  request_attrs['name'],
           space_guid:            request_attrs['space_guid'],
           environment_variables: request_attrs['environment_json'],
         )
 
-        buildpack_type_requested = request_attrs.key?('buildpack') || request_attrs.key?('stack_guid')
-        if buildpack_type_requested || !request_attrs.key?('docker_image')
-          stack = request_attrs['stack_guid'] ? Stack.find(guid: request_attrs['stack_guid']) : Stack.default
-          v3_app.buildpack_lifecycle_data = BuildpackLifecycleDataModel.new(
-            buildpack: request_attrs['buildpack'],
-            stack:     stack.try(:name),
-          )
-          v3_app.save
-        end
+        V2::LifecycleCreate.new(SecurityContext.current_user.guid, SecurityContext.current_user_email).create(request_attrs, app)
 
-        if request_attrs.key?('docker_image')
-          create_message = PackageCreateMessage.new({ type: 'docker', app_guid: v3_app.guid, data: { image: request_attrs['docker_image'] } })
-          creator        = PackageCreate.new(SecurityContext.current_user.guid, SecurityContext.current_user_email)
-          creator.create(create_message)
-        end
-
-        app = App.new(
-          guid:                    v3_app.guid,
+        process = App.new(
+          guid:                    app.guid,
           production:              request_attrs['production'],
           memory:                  request_attrs['memory'],
           instances:               request_attrs['instances'],
@@ -341,31 +323,30 @@ module VCAP::CloudController
           docker_credentials_json: request_attrs['docker_credentials_json'],
           ports:                   request_attrs['ports'],
           route_guids:             request_attrs['route_guids'],
-          app:                     v3_app
+          app:                     app
         )
 
-        validate_buildpack!(app)
-        validate_package_is_uploaded!(app)
+        validate_custom_buildpack!(process)
+        validate_package_is_uploaded!(process)
 
-        app.save
+        process.save
 
-        validate_access(:create, app, request_attrs)
+        validate_access(:create, process, request_attrs)
       end
 
       @app_event_repository.record_app_create(
-        app,
-        app.space,
+        process,
+        process.space,
         SecurityContext.current_user.guid,
         SecurityContext.current_user_email,
         request_attrs)
 
       [
         HTTP::CREATED,
-        { 'Location' => "#{self.class.path}/#{app.guid}" },
-        object_renderer.render_json(self.class, app, @opts)
+        { 'Location' => "#{self.class.path}/#{process.guid}" },
+        object_renderer.render_json(self.class, process, @opts)
       ]
     end
-    # rubocop:enable MethodLength
 
     put '/v2/apps/:app_guid/routes/:route_guid', :add_route
     def add_route(app_guid, route_guid)
@@ -446,7 +427,7 @@ module VCAP::CloudController
       dataset.where(type: 'web')
     end
 
-    def validate_buildpack!(app)
+    def validate_custom_buildpack!(app)
       if app.buildpack.custom? && custom_buildpacks_disabled?
         raise CloudController::Errors::ApiError.new_from_details('AppInvalid', 'custom buildpacks are disabled')
       end
