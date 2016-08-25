@@ -138,7 +138,7 @@ module VCAP::CloudController
       let(:space_guid) { space.guid.to_s }
       let(:initial_hash) do
         {
-          name: 'maria',
+          name:       'maria',
           space_guid: space_guid
         }
       end
@@ -148,14 +148,13 @@ module VCAP::CloudController
       describe 'events' do
         it 'records app create' do
           set_current_user(admin_user, admin: true)
-
-          expected_attrs = AppsController::CreateMessage.decode(initial_hash.to_json).extract(stringify_keys: true)
           allow(app_event_repository).to receive(:record_app_create).and_call_original
 
+          attrs = AppsController::CreateMessage.decode(initial_hash.to_json).extract(stringify_keys: true)
           post '/v2/apps', MultiJson.dump(initial_hash)
+          process = App.last
 
-          app = App.last
-          expect(app_event_repository).to have_received(:record_app_create).with(app, app.space, admin_user.guid, SecurityContext.current_user_email, expected_attrs)
+          expect(app_event_repository).to have_received(:record_app_create).with(process, space, admin_user.guid, SecurityContext.current_user_email, attrs)
         end
       end
 
@@ -319,10 +318,10 @@ module VCAP::CloudController
 
       it 'creates the app' do
         request = {
-          name: 'maria',
-          space_guid: space.guid,
+          name:             'maria',
+          space_guid:       space.guid,
           environment_json: { 'KEY' => 'val' },
-          buildpack: 'http://example.com/buildpack'
+          buildpack:        'http://example.com/buildpack'
         }
 
         set_current_user(admin_user, admin: true)
@@ -351,21 +350,24 @@ module VCAP::CloudController
 
       context 'creating a buildpack app' do
         it 'creates the app correctly' do
-          stack = Stack.make(name: 'stack-name')
+          stack   = Stack.make(name: 'stack-name')
           request = {
-            name: 'maria',
+            name:       'maria',
             space_guid: space.guid,
             stack_guid: stack.guid,
-            buildpack: 'http://example.com/buildpack'
+            buildpack:  'http://example.com/buildpack',
+            state:      'STARTED'
           }
 
           set_current_user(admin_user, admin: true)
 
           post '/v2/apps', MultiJson.dump(request)
+          p last_response
 
           v2_app = App.last
           expect(v2_app.stack).to eq(stack)
           expect(v2_app.buildpack.url).to eq('http://example.com/buildpack')
+          expect(v2_app.state).to eq(v2_app.app.desired_state)
         end
 
         context 'when custom buildpacks are disabled and the buildpack attribute is being changed' do
@@ -442,9 +444,9 @@ module VCAP::CloudController
       context 'when starting an app without a package' do
         it 'raises an error' do
           request = {
-            name: 'maria',
+            name:       'maria',
             space_guid: space.guid,
-            state: 'STARTED'
+            state:      'STARTED'
           }
 
           set_current_user(admin_user, admin: true)
@@ -461,7 +463,7 @@ module VCAP::CloudController
       let(:space_guid) { space.guid.to_s }
       let(:initial_hash) do
         {
-          name: 'maria',
+          name:       'maria',
           space_guid: space_guid
         }
       end
@@ -474,9 +476,9 @@ module VCAP::CloudController
       let(:docker_credentials) do
         {
           docker_login_server: login_server,
-          docker_user: user,
-          docker_password: password,
-          docker_email: email
+          docker_user:         user,
+          docker_password:     password,
+          docker_email:        email
         }
       end
       let(:body) do
@@ -764,13 +766,13 @@ module VCAP::CloudController
       it 'updates the app' do
         v2_app = App.make
         v3_app = v2_app.app
-        stack = Stack.make(name: 'stack-name')
+        stack  = Stack.make(name: 'stack-name')
 
         request = {
-          name: 'maria',
+          name:             'maria',
           environment_json: { 'KEY' => 'val' },
-          stack_guid: stack.guid,
-          buildpack: 'http://example.com/buildpack',
+          stack_guid:       stack.guid,
+          buildpack:        'http://example.com/buildpack',
         }
 
         set_current_user(admin_user, admin: true)
@@ -858,7 +860,7 @@ module VCAP::CloudController
           let(:app_obj) do
             AppFactory.make(
               instances: 1,
-              state: 'STARTED')
+              state:     'STARTED')
           end
 
           it 'marks the app for re-staging' do
@@ -941,7 +943,7 @@ module VCAP::CloudController
 
       describe 'updating docker_image' do
         it 'creates a new docker package' do
-          app = AppFactory.make(app: AppModel.make(:docker), docker_image: 'repo/original-image')
+          app              = AppFactory.make(app: AppModel.make(:docker), docker_image: 'repo/original-image')
           original_package = app.package
 
           expect(app.docker_image).not_to eq('repo/new-image')
@@ -956,7 +958,7 @@ module VCAP::CloudController
 
         context 'when the docker image is requested but is not a change' do
           it 'does not create a new package' do
-            app = AppFactory.make(app: AppModel.make(:docker), docker_image: 'repo/original-image')
+            app              = AppFactory.make(app: AppModel.make(:docker), docker_image: 'repo/original-image')
             original_package = app.package
 
             expect(app.docker_image).not_to eq('repo/new-image')
@@ -1129,9 +1131,9 @@ module VCAP::CloudController
 
           before do
             service_broker = svc_instance.service.service_broker
-            uri = URI(service_broker.broker_url)
-            broker_url = uri.host + uri.path
-            broker_auth = "#{service_broker.auth_username}:#{service_broker.auth_password}"
+            uri            = URI(service_broker.broker_url)
+            broker_url     = uri.host + uri.path
+            broker_auth    = "#{service_broker.auth_username}:#{service_broker.auth_password}"
             stub_request(
               :delete,
               %r{https://#{broker_auth}@#{broker_url}/v2/service_instances/#{guid_pattern}/service_bindings/#{guid_pattern}}).
@@ -1231,10 +1233,10 @@ module VCAP::CloudController
     end
 
     describe "read an app's env" do
-      let(:space)     { app_obj.space }
+      let(:space) { app_obj.space }
       let(:developer) { make_developer_for_space(space) }
-      let(:auditor)   { make_auditor_for_space(space) }
-      let(:app_obj)   { AppFactory.make(detected_buildpack: 'buildpack-name') }
+      let(:auditor) { make_auditor_for_space(space) }
+      let(:app_obj) { AppFactory.make(detected_buildpack: 'buildpack-name') }
       let(:decoded_response) { MultiJson.load(last_response.body) }
 
       before do
@@ -1279,7 +1281,7 @@ module VCAP::CloudController
             expect(decoded_response['application_env_json']).to have_key('VCAP_APPLICATION')
             expect(decoded_response['application_env_json']).to match({
               'VCAP_APPLICATION' => {
-                'limits' => {
+                'limits'              => {
                   'mem'  => app_obj.memory,
                   'disk' => app_obj.disk_quota,
                   'fds'  => 16384
@@ -1314,7 +1316,7 @@ module VCAP::CloudController
 
         context 'when the staging env variable group is set' do
           before do
-            staging_group = EnvironmentVariableGroup.staging
+            staging_group                  = EnvironmentVariableGroup.staging
             staging_group.environment_json = { POTATO: 'delicious' }
             staging_group.save
           end
@@ -1331,7 +1333,7 @@ module VCAP::CloudController
 
         context 'when the running env variable group is set' do
           before do
-            running_group = EnvironmentVariableGroup.running
+            running_group                  = EnvironmentVariableGroup.running
             running_group.environment_json = { PIE: 'sweet' }
             running_group.save
           end
@@ -1365,7 +1367,7 @@ module VCAP::CloudController
         let!(:app_obj) do
           AppFactory.make(
             detected_buildpack: 'buildpack-name',
-            app:              parent_app
+            app:                parent_app
           )
         end
         let!(:service_instance) { ManagedServiceInstance.make(space: app_obj.space) }
@@ -1513,7 +1515,7 @@ module VCAP::CloudController
           expect(last_response.status).to eq(200)
           expect(decoded_response['application_env_json']).to match({
             'VCAP_APPLICATION' => {
-              'limits' => {
+              'limits'              => {
                 'mem'  => app_obj.memory,
                 'disk' => app_obj.disk_quota,
                 'fds'  => 16384
@@ -1635,7 +1637,7 @@ module VCAP::CloudController
 
       it 'tells the dea client to update when we add one url through PUT /v2/apps/:guid' do
         route = domain.add_route(
-          host: 'app',
+          host:  'app',
           space: space,
         )
 
@@ -1653,8 +1655,8 @@ module VCAP::CloudController
         let(:pre_mapped_route) { domain.add_route(host: 'pre_mapped_route', space: space) }
         let(:docker_app) do
           AppFactory.make(
-            state: 'STARTED',
-            diego: true,
+            state:        'STARTED',
+            diego:        true,
             docker_image: 'some-image',
           )
         end
@@ -1687,14 +1689,14 @@ module VCAP::CloudController
 
       it 'tells the dea client to update when we remove a url through PUT /v2/apps/:guid' do
         bar_route = Route.make(
-          host: 'bar',
-          space: space,
+          host:   'bar',
+          space:  space,
           domain: domain,
         )
         RouteMappingModel.make(app: app_obj.app, route: bar_route, process_type: app_obj.type)
         new_route = Route.make(
-          host: 'foo',
-          space: space,
+          host:   'foo',
+          space:  space,
           domain: domain,
         )
         get "/v2/apps/#{app_obj.guid}/routes"
@@ -1782,8 +1784,8 @@ module VCAP::CloudController
           let(:member_b) { @org_b_manager }
 
           include_examples 'permission enumeration', 'OrgManager',
-            name: 'app',
-            path: '/v2/apps',
+            name:      'app',
+            path:      '/v2/apps',
             enumerate: 1
         end
 
@@ -1792,8 +1794,8 @@ module VCAP::CloudController
           let(:member_b) { @org_b_member }
 
           include_examples 'permission enumeration', 'OrgUser',
-            name: 'app',
-            path: '/v2/apps',
+            name:      'app',
+            path:      '/v2/apps',
             enumerate: 0
         end
 
@@ -1802,8 +1804,8 @@ module VCAP::CloudController
           let(:member_b) { @org_b_billing_manager }
 
           include_examples 'permission enumeration', 'BillingManager',
-            name: 'app',
-            path: '/v2/apps',
+            name:      'app',
+            path:      '/v2/apps',
             enumerate: 0
         end
 
@@ -1812,8 +1814,8 @@ module VCAP::CloudController
           let(:member_b) { @org_b_auditor }
 
           include_examples 'permission enumeration', 'Auditor',
-            name: 'app',
-            path: '/v2/apps',
+            name:      'app',
+            path:      '/v2/apps',
             enumerate: 0
         end
       end
@@ -1824,8 +1826,8 @@ module VCAP::CloudController
           let(:member_b) { @space_b_manager }
 
           include_examples 'permission enumeration', 'SpaceManager',
-            name: 'app',
-            path: '/v2/apps',
+            name:      'app',
+            path:      '/v2/apps',
             enumerate: 1
         end
 
@@ -1834,8 +1836,8 @@ module VCAP::CloudController
           let(:member_b) { @space_b_developer }
 
           include_examples 'permission enumeration', 'Developer',
-            name: 'app',
-            path: '/v2/apps',
+            name:      'app',
+            path:      '/v2/apps',
             enumerate: 1
         end
 
@@ -1844,8 +1846,8 @@ module VCAP::CloudController
           let(:member_b) { @space_b_auditor }
 
           include_examples 'permission enumeration', 'SpaceAuditor',
-            name: 'app',
-            path: '/v2/apps',
+            name:      'app',
+            path:      '/v2/apps',
             enumerate: 1
         end
       end

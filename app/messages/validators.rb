@@ -1,6 +1,26 @@
 require 'active_model'
 
 module VCAP::CloudController::Validators
+
+
+  class ArrayOfIntegersValidator < ActiveModel::EachValidator
+    def validate_each(record, attr_name, value)
+      record.errors.add(attr_name, 'must be an array of integers') unless value.is_a?(Array) && value.all? { |item| item.is_a?(Integer) }
+    end
+  end
+
+  class ArrayOfGuidsValidator < ActiveModel::EachValidator
+    def validate_each(record, attr_name, value)
+      record.errors.add(attr_name, 'must be an array of guids') unless value.is_a?(Array) && value.all? { |item| guid?(item) }
+    end
+
+    private
+
+    def guid?(string)
+      string.is_a?(String) && (1..200).cover?(string.size)
+    end
+  end
+
   class ArrayValidator < ActiveModel::EachValidator
     def validate_each(record, attr_name, value)
       record.errors.add(attr_name, 'must be an array') unless value.is_a? Array
@@ -22,7 +42,7 @@ module VCAP::CloudController::Validators
   class GuidValidator < ActiveModel::EachValidator
     def validate_each(record, attribute, value)
       record.errors.add attribute, 'must be a string' unless value.is_a?(String)
-      record.errors.add attribute, 'must be between 1 and 200 characters' unless value.is_a?(String) && (1..200).cover?(value.size)
+      record.errors.add attribute, 'must be between 1 and 200 characters' unless value.is_a?(String) && (1..200).include?(value.size)
     end
   end
 

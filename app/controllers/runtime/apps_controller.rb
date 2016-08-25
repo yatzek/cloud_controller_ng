@@ -1,7 +1,8 @@
 require 'presenters/system_env_presenter'
 require 'queries/v2/app_query'
 require 'actions/v2/app_stage'
-require 'messages/process_create_message'
+require 'actions/app_process_create'
+require 'messages/app_process_create_message'
 
 module VCAP::CloudController
   class AppsController < RestController::ModelController
@@ -137,6 +138,7 @@ module VCAP::CloudController
     end
 
     get '/v2/apps/:guid/droplet/download', :download_droplet
+
     def download_droplet(guid)
       app = find_guid_and_validate_access(:read, guid)
       blob_dispatcher.send_or_redirect(guid: app.current_droplet.try(:blobstore_key))
@@ -267,10 +269,10 @@ module VCAP::CloudController
 
         if request_attrs.key?('state')
           case request_attrs['state']
-          when 'STARTED'
-            AppStart.new(SecurityContext.current_user, SecurityContext.current_user_email).start(v3_app)
-          when 'STOPPED'
-            AppStop.new(SecurityContext.current_user, SecurityContext.current_user_email).stop(v3_app)
+            when 'STARTED'
+              AppStart.new(SecurityContext.current_user, SecurityContext.current_user_email).start(v3_app)
+            when 'STOPPED'
+              AppStop.new(SecurityContext.current_user, SecurityContext.current_user_email).stop(v3_app)
           end
         end
       end
@@ -288,51 +290,32 @@ module VCAP::CloudController
       [HTTP::CREATED, object_renderer.render_json(self.class, app, @opts)]
     end
 
-    # rubocop:enable Metrics/CyclomaticComplexity
-    # rubocop:enable MethodLength
-
     def create
       @request_attrs = self.class::CreateMessage.decode(body).extract(stringify_keys: true)
 
-      message        = AppCreateMessage.new({
-        name:                  request_attrs['name'],
-        environment_variables: request_attrs['environment_json'],
-        relationships:         {
-          space: { guid: request_attrs['space_guid'] }
-        }
-      }.merge!(lifecycle_object))
-      process_message = ProcessCreateMessage.create_from_http_request(request_attrs)
+      message = VCAP::CloudController::AppProcessCreateMessage.create_from_http_request(request_attrs)
 
-      verify_enable_ssh(Space[guid: message.space_guid])
+      space_guid = message.space_guid
+      verify_enable_ssh(VCAP::CloudController::Space[guid: space_guid])
       logger.debug 'cc.create', model: self.class.model_class_name, attributes: redact_attributes(:create, request_attrs)
 
       process = nil
-
       AppModel.db.transaction do
-        lifecycle = AppLifecycleProvider.provide_for_create(message)
-
-        v3_app = AppCreate.new(SecurityContext.current_user, SecurityContext.current_user_email).create(message, lifecycle)
-
-        if lifecycle.type == 'docker'
-          create_message = PackageCreateMessage.new({ type: 'docker', app_guid: v3_app.guid, data: { image: message.lifecycle_data[:image] } })
-          creator        = PackageCreate.new(SecurityContext.current_user, SecurityContext.current_user_email)
-          creator.create(create_message)
-        end
-
-        process = ProcessCreate.new(SecurityContext.current_user, SecurityContext.current_user_email).create_v2_process(v3_app, process_message)
+        process = VCAP::CloudController::AppProcessCreate.new(SecurityContext.current_user.guid, SecurityContext.current_user_email).create(message)
 
         validate_buildpack!(process)
         validate_package_is_uploaded!(process)
-        process.save
-
         validate_access(:create, process, request_attrs)
+
+        process.save
 
         @app_event_repository.record_app_create(
           process,
-          process.space,
+          Space.find(guid: space_guid),
           SecurityContext.current_user.guid,
           SecurityContext.current_user_email,
-          request_attrs)
+          request_attrs
+        )
       end
 
       [
@@ -374,6 +357,7 @@ module VCAP::CloudController
     end
 
     delete '/v2/apps/:app_guid/routes/:route_guid', :remove_route
+
     def remove_route(app_guid, route_guid)
       logger.debug 'cc.association.remove', guid: app_guid, association: 'routes', other_guid: route_guid
       @request_attrs = { 'route' => route_guid, verb: 'remove', relation: 'routes', related_guid: route_guid }
@@ -395,6 +379,7 @@ module VCAP::CloudController
     end
 
     delete '/v2/apps/:app_guid/service_bindings/:service_binding_guid', :remove_service_binding
+
     def remove_service_binding(app_guid, service_binding_guid)
       logger.debug 'cc.association.remove', guid: app_guid, association: 'service_bindings', other_guid: service_binding_guid
       @request_attrs = { 'service_binding' => service_binding_guid, verb: 'remove', relation: 'service_bindings', related_guid: service_binding_guid }
@@ -422,16 +407,6 @@ module VCAP::CloudController
       dataset.where(type: 'web')
     end
 
-    def validate_buildpack!(app)
-      if app.buildpack.custom? && custom_buildpacks_disabled?
-        raise CloudController::Errors::ApiError.new_from_details('AppInvalid', 'custom buildpacks are disabled')
-      end
-    end
-
-    def custom_buildpacks_disabled?
-      VCAP::CloudController::Config.config[:disable_custom_buildpacks]
-    end
-
     def validate_not_changing_lifecycle_type!(app, request_attrs)
       buildpack_type_requested = request_attrs.key?('buildpack') || request_attrs.key?('stack_guid')
       docker_type_requested    = request_attrs.key?('docker_image')
@@ -457,26 +432,13 @@ module VCAP::CloudController
       end
     end
 
-    def lifecycle_object
-      if request_attrs.key?('buildpack') || request_attrs.key?('stack_guid')
-        {
-          lifecycle: {
-            type: 'buildpack',
-            data: {
-              buildpack: request_attrs['buildpack'],
-              stack:     Stack.find(guid: request_attrs['stack_guid']).try(:name)
-            }
-          }
-        }
-      elsif request_attrs.key?('docker_image')
-        {
-          lifecycle: {
-            type: 'docker',
-            data: { image: request_attrs['docker_image'], }
-          }
-        }
-      else
-        {}
+    def custom_buildpacks_disabled?
+      VCAP::CloudController::Config.config[:disable_custom_buildpacks]
+    end
+
+    def validate_buildpack!(app)
+      if app.buildpack.custom? && custom_buildpacks_disabled?
+        raise CloudController::Errors::ApiError.new_from_details('AppInvalid', 'custom buildpacks are disabled')
       end
     end
   end

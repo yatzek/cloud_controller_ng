@@ -12,6 +12,58 @@ module VCAP::CloudController::Validators
       end
     end
 
+    describe 'ArrayOfGuidsValidator' do
+      let(:array_class) do
+        Class.new(fake_class) do
+          validates :field, array_of_guids: true
+        end
+      end
+
+      it 'adds an error if the field is not an array' do
+        fake_class = array_class.new field: 'not array'
+        expect(fake_class.valid?).to be_falsey
+        expect(fake_class.errors[:field]).to include 'must be an array of guids'
+      end
+
+      it 'adds an error if the field is not an array of valid guids' do
+        fake_class = array_class.new field: ["sadhsakskhjaadas", 1, "a"*450]
+        expect(fake_class.valid?).to be_falsey
+        expect(fake_class.errors[:field]).to include 'must be an array of guids'
+      end
+
+      it 'does not add an error if the field is an array of guids' do
+        fake_class = array_class.new field: ["abcd1234", "xyz013", "power"]
+        expect(fake_class.valid?).to be_truthy
+        expect(fake_class.errors[:field]).to_not include 'must be an array of guids'
+      end
+    end
+
+    describe 'ArrayOfIntegersValidator' do
+      let(:array_class) do
+        Class.new(fake_class) do
+          validates :field, array_of_integers: true
+        end
+      end
+
+      it 'adds an error if the field is not an array' do
+        fake_class = array_class.new field: 'not array'
+        expect(fake_class.valid?).to be_falsey
+        expect(fake_class.errors[:field]).to include 'must be an array of integers'
+      end
+
+      it 'adds an error if the field is an array of strings' do
+        fake_class = array_class.new field: %w(an array)
+        expect(fake_class.valid?).to be_falsey
+        expect(fake_class.errors[:field]).to include 'must be an array of integers'
+      end
+
+      it 'does not add an error if the field is an array of integers' do
+        fake_class = array_class.new field: [1, 2, 3]
+        expect(fake_class.valid?).to be_truthy
+        expect(fake_class.errors[:field]).to_not include 'must be an array of integers'
+      end
+    end
+
     describe 'ArrayValidator' do
       let(:array_class) do
         Class.new(fake_class) do

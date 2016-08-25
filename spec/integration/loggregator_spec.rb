@@ -48,8 +48,9 @@ RSpec.describe 'Cloud controller Loggregator Integration', type: :integration do
     app_id = app.json_body['metadata']['guid']
     messages = @loggregator_server.messages
 
-    expect(messages.size).to eq(1)
+    expect(messages.size).to eq(2)
 
+    # TODO: Fix this to not be brittle
     message = messages.first
     expect(message.message).to eq "Created app with guid #{app_id}"
     expect(message.app_id).to eq app_id
