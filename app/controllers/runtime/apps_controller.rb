@@ -2,6 +2,7 @@ require 'presenters/system_env_presenter'
 require 'queries/v2/app_query'
 require 'actions/v2/app_stage'
 require 'actions/v2/lifecycle_create'
+require 'actions/v2/lifecycle_update'
 
 module VCAP::CloudController
   class AppsController < RestController::ModelController
@@ -219,25 +220,11 @@ module VCAP::CloudController
         validate_access(:read_for_update, app, request_attrs)
         validate_not_changing_lifecycle_type!(app, request_attrs)
 
-        buildpack_type_requested = request_attrs.key?('buildpack') || request_attrs.key?('stack_guid')
-
         v3_app.name = request_attrs['name'] if request_attrs.key?('name')
         v3_app.space_guid = request_attrs['space_guid'] if request_attrs.key?('space_guid')
         v3_app.environment_variables = request_attrs['environment_json'] if request_attrs.key?('environment_json')
 
-        if buildpack_type_requested
-          v3_app.lifecycle_data.buildpack = request_attrs['buildpack'] if request_attrs.key?('buildpack')
-
-          if request_attrs.key?('stack_guid')
-            v3_app.lifecycle_data.stack = Stack.find(guid: request_attrs['stack_guid']).try(:name)
-            v3_app.update(droplet: nil)
-            app.reload
-          end
-        elsif request_attrs.key?('docker_image') && !case_insensitive_equals(app.docker_image, request_attrs['docker_image'])
-          create_message = PackageCreateMessage.new({ type: 'docker', app_guid: v3_app.guid, data: { image: request_attrs['docker_image'] } })
-          creator        = PackageCreate.new(SecurityContext.current_user.guid, SecurityContext.current_user_email)
-          creator.create(create_message)
-        end
+        V2::LifecycleUpdate.new(SecurityContext.current_user.guid, SecurityContext.current_user_email).update(request_attrs, app)
 
         app.production              = request_attrs['production'] if request_attrs.key?('production')
         app.memory                  = request_attrs['memory'] if request_attrs.key?('memory')
@@ -257,9 +244,11 @@ module VCAP::CloudController
 
         validate_package_is_uploaded!(app)
 
+        buildpack_type_requested = request_attrs.key?('buildpack') || request_attrs.key?('stack_guid')
+
         app.save
         v3_app.save
-        v3_app.lifecycle_data.save && validate_buildpack!(app.reload) if buildpack_type_requested
+        v3_app.lifecycle_data.save && validate_custom_buildpack!(app.reload) if buildpack_type_requested
         v3_app.reload
 
         app.reload

@@ -22,6 +22,11 @@ module VCAP::CloudController
         end
       end
 
+      # def create_docker_lifecycle(attrs, app)
+      #   create_message = PackageCreateMessage.new({ type: 'docker', app_guid: app.guid, data: { image: attrs['docker_image'] } })
+      #   PackageCreate.new(@user_guid, @user_email).create(create_message)
+      # end
+
       private
 
       def get_stack_name(stack_guid)
