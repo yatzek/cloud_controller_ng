@@ -5,7 +5,7 @@ gem 'railties', '~>4.2.7.1'
 gem 'rake'
 
 # nats wants to lock us to an older version. we already use eventmachine 1.0.9, so do not want a downgrade.
-gem 'eventmachine', '~> 1.0.9'
+gem 'eventmachine', '~> 1.2'
 
 gem 'fog'
 gem 'i18n'
@@ -23,7 +23,7 @@ gem 'membrane', '~> 1.0'
 gem 'httpclient'
 gem 'steno'
 gem 'cloudfront-signer'
-gem 'vcap_common', '~> 4.0.4'
+gem 'vcap_common', '4.0.5'
 gem 'allowy'
 gem 'loggregator_emitter', '~> 5.0'
 gem 'delayed_job_sequel', git: 'https://github.com/cloudfoundry/delayed_job_sequel.git'
@@ -36,16 +36,13 @@ gem 'actionpack', '~> 4.2.7.1'
 gem 'actionview', '~> 4.2.7.1'
 gem 'public_suffix'
 
-# Requiring this particular commit to get a fix to a race condition when subscribing before a connection is made.
-# (see https://github.com/nats-io/ruby-nats/commit/3f3efc6bc41cc483f2d90cb9d401ba4aa3e727d3)
-# If a release newer than 0.5.1 is made that includes this commit, we may wish to switch to that.
-gem 'nats', git: 'https://github.com/nats-io/ruby-nats', ref: '8571cf9d685b6063002486614b66a28bad254a64'
+gem 'nats', '0.8.0'
 
 # We need to use https for git urls as the git protocol is blocked by various
 # firewalls
 gem 'vcap-concurrency', git: 'https://github.com/cloudfoundry/vcap-concurrency.git', ref: '2a5b0179'
 gem 'cf-uaa-lib', git: 'https://github.com/cloudfoundry/cf-uaa-lib.git', ref: 'db8fe11b56a1d008131a7d757b49c8a00242b9ab'
-gem 'cf-message-bus', '~> 0.3.0'
+gem 'cf-message-bus', '~> 0.3'
 gem 'bits_service_client', github: 'cloudfoundry-incubator/bits-service-client'
 
 group :db do
