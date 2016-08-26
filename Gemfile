@@ -61,7 +61,7 @@ group :test do
   gem 'machinist', '~> 2.0'
   gem 'parallel_tests'
   gem 'rack-test'
-  gem 'rspec', '~> 3.0'
+  gem 'rspec', '~> 3.5.0'
   gem 'rspec-instafail'
   gem 'rspec_api_documentation', git: 'https://github.com/zipmark/rspec_api_documentation.git'
   gem 'rspec-collection_matchers'

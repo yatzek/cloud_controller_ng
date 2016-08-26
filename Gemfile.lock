@@ -1,8 +1,10 @@
 GIT
   remote: git://github.com/cloudfoundry-incubator/bits-service-client.git
-  revision: 589a62ae68f4d10528bd33b4a22b94ddf539c94e
+  revision: 1f8f88c586ed5d10636841707a6e79b828baec7a
   specs:
-    bits_service_client (0.1.0)
+    bits_service_client (0.2.0)
+      activesupport
+      steno
 
 GIT
   remote: https://github.com/cloudfoundry/cf-uaa-lib.git
@@ -14,7 +16,7 @@ GIT
 
 GIT
   remote: https://github.com/cloudfoundry/delayed_job_sequel.git
-  revision: 908f3883e136bdf53d3b7caac1b88710ef1c7742
+  revision: 21adfbd692236eb079a48de75e43c61c8480b4b8
   specs:
     delayed_job_sequel (4.1.0)
       delayed_job (~> 4.0.0)
@@ -30,13 +32,12 @@ GIT
 
 GIT
   remote: https://github.com/zipmark/rspec_api_documentation.git
-  revision: de69a7a87adace29f39cbe937ae7bb8da9a4c9c1
+  revision: 470da85aafdb0383c1435c6bee31a432ad2678d5
   specs:
-    rspec_api_documentation (4.4.0)
+    rspec_api_documentation (4.8.0)
       activesupport (>= 3.0.0)
-      json (~> 1.4, >= 1.4.6)
-      mustache (~> 0.99, >= 0.99.4)
-      rspec (>= 3.0.0)
+      mustache (~> 1.0, >= 0.99.4)
+      rspec (~> 3.0, >= 3.0.0)
 
 GEM
   remote: https://rubygems.org/
@@ -104,7 +105,7 @@ GEM
       eventmachine (>= 1.0.0.beta.4)
     erubis (2.7.0)
     eventmachine (1.2.0.1)
-    excon (0.51.0)
+    excon (0.52.0)
     fakefs (0.9.0)
     fission (0.5.0)
       CFPropertyList (~> 2.2)
@@ -147,7 +148,7 @@ GEM
     fog-atmos (0.1.0)
       fog-core
       fog-xml
-    fog-aws (0.9.4)
+    fog-aws (0.11.0)
       fog-core (~> 1.38)
       fog-json (~> 1.0)
       fog-xml (~> 0.1)
@@ -181,7 +182,7 @@ GEM
       multi_json (~> 1.10)
     fog-local (0.3.0)
       fog-core (~> 1.27)
-    fog-openstack (0.1.7)
+    fog-openstack (0.1.11)
       fog-core (>= 1.40)
       fog-json (>= 1.0)
       ipaddress (>= 0.8)
@@ -227,9 +228,9 @@ GEM
     fog-voxel (0.1.0)
       fog-core
       fog-xml
-    fog-vsphere (0.8.0)
+    fog-vsphere (1.0.1)
       fog-core
-      rbvmomi (~> 1.8)
+      rbvmomi (~> 1.8.0)
     fog-xenserver (0.2.3)
       fog-core
       fog-xml
@@ -259,7 +260,7 @@ GEM
     msgpack (0.5.12)
     multi_json (1.12.1)
     multipart-post (2.0.0)
-    mustache (0.99.8)
+    mustache (1.0.3)
     mysql2 (0.4.4)
     nats (0.8.0)
       eventmachine (~> 1.2, >= 1.2.0)
@@ -277,7 +278,7 @@ GEM
     pkg-config (1.1.7)
     posix-spawn (0.3.11)
     powerpack (0.1.1)
-    pry (0.10.3)
+    pry (0.10.4)
       coderay (~> 1.1.0)
       method_source (~> 0.8.1)
       slop (~> 3.4)
@@ -312,34 +313,34 @@ GEM
     rfc822 (0.1.5)
     roodi (5.0.0)
       ruby_parser (~> 3.2, >= 3.2.2)
-    rspec (3.4.0)
-      rspec-core (~> 3.4.0)
-      rspec-expectations (~> 3.4.0)
-      rspec-mocks (~> 3.4.0)
+    rspec (3.5.0)
+      rspec-core (~> 3.5.0)
+      rspec-expectations (~> 3.5.0)
+      rspec-mocks (~> 3.5.0)
     rspec-collection_matchers (1.1.2)
       rspec-expectations (>= 2.99.0.beta1)
-    rspec-core (3.4.4)
-      rspec-support (~> 3.4.0)
-    rspec-expectations (3.4.0)
+    rspec-core (3.5.2)
+      rspec-support (~> 3.5.0)
+    rspec-expectations (3.5.0)
       diff-lcs (>= 1.2.0, < 2.0)
-      rspec-support (~> 3.4.0)
+      rspec-support (~> 3.5.0)
     rspec-instafail (1.0.0)
       rspec
     rspec-its (1.2.0)
       rspec-core (>= 3.0.0)
       rspec-expectations (>= 3.0.0)
-    rspec-mocks (3.4.1)
+    rspec-mocks (3.5.0)
       diff-lcs (>= 1.2.0, < 2.0)
-      rspec-support (~> 3.4.0)
-    rspec-rails (3.4.0)
-      actionpack (>= 3.0, < 4.3)
-      activesupport (>= 3.0, < 4.3)
-      railties (>= 3.0, < 4.3)
-      rspec-core (~> 3.4.0)
-      rspec-expectations (~> 3.4.0)
-      rspec-mocks (~> 3.4.0)
-      rspec-support (~> 3.4.0)
-    rspec-support (3.4.1)
+      rspec-support (~> 3.5.0)
+    rspec-rails (3.5.2)
+      actionpack (>= 3.0)
+      activesupport (>= 3.0)
+      railties (>= 3.0)
+      rspec-core (~> 3.5.0)
+      rspec-expectations (~> 3.5.0)
+      rspec-mocks (~> 3.5.0)
+      rspec-support (~> 3.5.0)
+    rspec-support (3.5.0)
     rubocop (0.42.0)
       parser (>= 2.3.1.1, < 3.0)
       powerpack (~> 0.1)
@@ -354,9 +355,9 @@ GEM
     safe_yaml (1.0.4)
     sequel (4.37.0)
     sexp_processor (4.7.0)
-    simplecov (0.11.2)
+    simplecov (0.12.0)
       docile (~> 1.1.0)
-      json (~> 1.8)
+      json (>= 1.8, < 3)
       simplecov-html (~> 0.10.0)
     simplecov-html (0.10.0)
     sinatra (1.4.7)
@@ -381,14 +382,14 @@ GEM
       rack (~> 1.0)
     thor (0.19.1)
     thread_safe (0.3.5)
-    tilt (2.0.2)
+    tilt (2.0.5)
     timecop (0.8.1)
     trollop (2.1.2)
     tzinfo (1.2.2)
       thread_safe (~> 0.1)
     unf (0.1.4)
       unf_ext
-    unf_ext (0.0.6)
+    unf_ext (0.0.7.2)
     unicode-display_width (1.1.0)
     uuidtools (2.1.5)
     vcap_common (4.0.5)
@@ -457,7 +458,7 @@ DEPENDENCIES
   rake
   rfc822
   roodi
-  rspec (~> 3.0)
+  rspec (~> 3.5.0)
   rspec-collection_matchers
   rspec-instafail
   rspec-its
