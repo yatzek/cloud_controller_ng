@@ -7,14 +7,6 @@ GIT
       steno
 
 GIT
-  remote: https://github.com/cloudfoundry/cf-uaa-lib.git
-  revision: db8fe11b56a1d008131a7d757b49c8a00242b9ab
-  ref: db8fe11b56a1d008131a7d757b49c8a00242b9ab
-  specs:
-    cf-uaa-lib (3.6.0)
-      multi_json
-
-GIT
   remote: https://github.com/cloudfoundry/delayed_job_sequel.git
   revision: 21adfbd692236eb079a48de75e43c61c8480b4b8
   specs:
@@ -25,8 +17,8 @@ GIT
 
 GIT
   remote: https://github.com/cloudfoundry/vcap-concurrency.git
-  revision: 2a5b0179642cb3d3e7f912a6453ec5731979d115
-  ref: 2a5b0179
+  revision: f80806310f121118f0638728fb1c1e94a57bd623
+  ref: f80806310f121118f0638728fb1c1e94a57bd623
   specs:
     vcap-concurrency (0.1.0)
 
@@ -80,6 +72,8 @@ GEM
       nats (~> 0.7, >= 0.5.0)
       vcap-concurrency
       yajl-ruby
+    cf-uaa-lib (3.6.0)
+      multi_json
     clockwork (2.0.0)
       activesupport
       tzinfo
@@ -429,7 +423,7 @@ DEPENDENCIES
   bits_service_client!
   byebug
   cf-message-bus (~> 0.3)
-  cf-uaa-lib!
+  cf-uaa-lib (~> 3.6)
   clockwork
   cloudfront-signer
   codeclimate-test-reporter

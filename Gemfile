@@ -1,7 +1,7 @@
 source 'https://rubygems.org'
 
 gem 'addressable'
-gem 'railties', '~>4.2.7.1'
+gem 'railties', '~> 4.2.7.1'
 gem 'rake'
 
 # nats wants to lock us to an older version. we already use eventmachine 1.0.9, so do not want a downgrade.
@@ -38,10 +38,9 @@ gem 'public_suffix'
 
 gem 'nats', '0.8.0'
 
-# We need to use https for git urls as the git protocol is blocked by various
-# firewalls
-gem 'vcap-concurrency', git: 'https://github.com/cloudfoundry/vcap-concurrency.git', ref: '2a5b0179'
-gem 'cf-uaa-lib', git: 'https://github.com/cloudfoundry/cf-uaa-lib.git', ref: 'db8fe11b56a1d008131a7d757b49c8a00242b9ab'
+# We need to use https for git urls as the git protocol is blocked by various firewalls
+gem 'vcap-concurrency', git: 'https://github.com/cloudfoundry/vcap-concurrency.git', ref: 'f80806310f121118f0638728fb1c1e94a57bd623'
+gem 'cf-uaa-lib', '~> 3.6'
 gem 'cf-message-bus', '~> 0.3'
 gem 'bits_service_client', github: 'cloudfoundry-incubator/bits-service-client'
 
