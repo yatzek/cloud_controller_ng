@@ -72,9 +72,10 @@ module VCAP::CloudController
         },
 
         :uaa => {
-          :url                => String,
-          :resource_id        => String,
-          optional(:symmetric_secret) => String,
+          :url                          => String,
+          :resource_id                  => String,
+          optional(:cert_file)          => String,
+          optional(:symmetric_secret)   => String,
         },
 
         :logging => {

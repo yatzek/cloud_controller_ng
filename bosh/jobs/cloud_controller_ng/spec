@@ -33,6 +33,7 @@ templates:
   check_for_domain_overlap.rb: bin/check_for_domain_overlap.rb
   migrate_db.sh.erb: bin/migrate_db
   seed_db.sh.erb: bin/seed_db
+  uaa_ssl.crt.erb: config/certs/uaa_ssl.crt
 
 packages:
   - capi_utils
@@ -450,6 +451,8 @@ properties:
     description: "Symmetric secret used to decode uaa tokens. Used for testing."
   uaa.url:
     description: "URL of the UAA server"
+  uaa.sslCertificate:
+    description: "UAA certificate"
   login.protocol:
     description: "http or https"
     default: "https"

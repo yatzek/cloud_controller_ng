@@ -50,6 +50,7 @@ hm9000:
   internal_url: "http://localhost:5155/internal"
 
 uaa:
+  cert_file: /var/vcap/jobs/cloud_controller_ng/config/certs/uaa_ssl.crt
   url: "http://localhost:8080/uaa"
   resource_id: "cloud_controller"
   symmetric_secret: "tokensecret"

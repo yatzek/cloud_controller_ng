@@ -98,6 +98,7 @@ login:
 
 uaa:
   url: https://uaa.bosh-lite.com
+  cert_file: /var/vcap/jobs/cloud_controller_ng/config/certs/uaa_ssl.crt
   resource_id: cloud_controller,cloud_controller_service_permissions
   verification_key: |
       -----BEGIN PUBLIC KEY-----
