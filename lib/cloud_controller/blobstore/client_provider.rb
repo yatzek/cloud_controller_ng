@@ -2,6 +2,7 @@ require 'cloud_controller/blobstore/client'
 require 'cloud_controller/blobstore/retryable_client'
 require 'cloud_controller/blobstore/fog/fog_client'
 require 'cloud_controller/blobstore/fog/error_handling_client'
+require 'cloud_controller/blobstore/webdav/dav_error_handling_client'
 require 'cloud_controller/blobstore/webdav/dav_client'
 require 'cloud_controller/blobstore/safe_delete_client'
 require 'bits_service_client'
@@ -74,7 +75,7 @@ module CloudController
           errors = [StandardError]
           retryable_client = RetryableClient.new(client: client, errors: errors, logger: logger)
 
-          Client.new(SafeDeleteClient.new(retryable_client, root_dir))
+          Client.new(WebdavErrorHandlingClient.new(SafeDeleteClient.new(retryable_client, root_dir)))
         end
       end
     end
