@@ -49,6 +49,17 @@ module VCAP::CloudController
       end
 
       context 'with bogus characters at the end of the URI' do
+        let(:url) { "https://foo:bar*github.com/cloudfoundry/ruby-buildpack" }
+
+        its(:to_json) { should == '"https://foo:bar*github.com/cloudfoundry/ruby-buildpack"' }
+
+        it 'should not be valid' do
+          expect(buildpack).not_to be_valid
+          expect(buildpack.errors).to include "#{url} is not valid public url or a known buildpack name"
+        end
+      end
+
+      context 'with bogus characters at the end of the URI' do
         let(:url) { "http://foo_bar/baz\r\n\0" }
 
         its(:to_json) { should == '"http://foo_bar/baz\r\n\u0000"' }

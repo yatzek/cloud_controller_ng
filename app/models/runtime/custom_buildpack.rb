@@ -9,15 +9,16 @@ module VCAP::CloudController
     end
 
     def valid?
-      @errors = []
-      unless url.is_uri?
-        @errors << "#{url} is not valid public url or a known buildpack name"
-      end
-      @errors.empty?
+      errors << error_message unless url_valid?
+      errors.empty?
+    rescue Addressable::URI::InvalidURIError
+      errors << error_message
+      errors.empty?
     end
 
+
     def errors
-      @errors || []
+      @errors ||= []
     end
 
     def staging_message
@@ -29,6 +30,16 @@ module VCAP::CloudController
 
     def custom?
       true
+    end
+
+    private
+
+    def url_valid?
+      url =~ URI_REGEXP && Addressable::URI.parse(url)
+    end
+
+    def error_message
+      "#{url} is not valid public url or a known buildpack name"
     end
   end
 end
