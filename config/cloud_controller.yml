@@ -83,6 +83,7 @@ db:
 uaa:
   url: "http://localhost:8080/uaa"
   resource_id: "cloud_controller"
+  sslCertificate: "/var/vcap/jobs/cloud_controller_ng/config/certs/uaa_ssl.crt"
   symmetric_secret: "tokensecret"
 
 hm9000:

@@ -198,6 +198,7 @@ login:
 uaa:
   url: <%= p("uaa.url", "#{scheme}://uaa.#{system_domain}") %>
   resource_id: <%= p("cc.uaa_resource_id") %>
+  sslCertificate: <%= p("uaa.sslCertificate") %>
   <% if_p("uaa.cc.token_secret") do |token_secret| %>
   symmetric_secret: "<%= token_secret %>"
   <% end %>
